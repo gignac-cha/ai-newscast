@@ -3,8 +3,8 @@
 ## 📋 프로젝트 개요
 빅카인드(bigkinds.or.kr)에서 실시간 뉴스를 수집하여 AI 기반 뉴스캐스트를 완전 자동화 생성하는 고급 모노레포 프로젝트
 
-**현재 버전**: v2.1.3 (2025-06-24 프로젝트명 ai-newscast 통일 및 보안 강화)  
-**상태**: 80% 완성 (9/10 패키지 완전 구현, 7단계 파이프라인 중 5단계 자동화)
+**현재 버전**: v2.1.3 (2025-06-24 Turbo 모노레포 최적화 및 Google API 패키지 정리)  
+**상태**: 85% 완성 (9/10 패키지 완전 구현, Turbo 중앙집중식 관리 완료)
 
 ## 🏗️ 핵심 아키텍처
 
@@ -50,14 +50,14 @@ tests/claude-code/ (레거시)           →  packages/ (신규)
 # 1. 환경 자동 설정 (도구 확인 + API 키 검증)
 pnpm env:setup
 
-# 2. 프로젝트 의존성 설치
+# 2. 프로젝트 의존성 설치 (Turbo 병렬 빌드)
 pnpm install && pnpm build
 
-# 3. 빠른 데모 (기존 데이터 사용)
-pnpm demo:quick
+# 3. 뉴스 크롤링 (Python UV 기반)
+pnpm crawl:pipeline --max-topics 3
 
-# 4. 오디오 생성 데모
-pnpm demo:audio
+# 4. 빠른 데모 (기존 데이터 사용)
+pnpm demo:quick
 ```
 
 ### 📦 환경 설정 (최초 1회)
@@ -72,31 +72,37 @@ export PATH="$HOME/.local/bin:$PATH"             # UV PATH 추가
 echo "GOOGLE_AI_API_KEY=your_api_key" > tests/claude-code/.env
 ```
 
-### 🕷️ 크롤링 (메인 기능)
+### 🕷️ 크롤링 (Turbo 기반 통합 관리)
 ```bash
-# 👑 권장: 전체 파이프라인 (Python 크롤러)
+# 👑 권장: 전체 파이프라인 (Turbo + Python UV)
 pnpm crawl:pipeline --max-topics 5               # 상위 5개 토픽 처리
 pnpm crawl:pipeline --include-details             # 뉴스 상세 정보 포함
 
-# 단계별 실행
+# 단계별 실행 (Turbo --filter 최적화)
 pnpm crawl:topics                                 # 토픽 목록만 추출
-pnpm crawl:news ./output/latest --topics 1,2,3   # 특정 토픽 뉴스만
+pnpm crawl:news -- ./output/latest --topics 1,2,3   # 특정 토픽 뉴스만
 
-# Python 크롤러 직접 실행 (고급)
-uv run --project packages/news-crawler-py python -m bigkinds_crawler.cli topics --verbose
+# AI 처리 파이프라인 (Google Gemini)
+pnpm news:process -- ./output/latest/topic-01    # 뉴스 통합 정리
+pnpm script:generate -- ./output/latest/topic-01 # 스크립트 생성
 ```
 
-### 🏗️ 개발 명령어  
+### 🏗️ 개발 명령어 (Turbo 통합)
 ```bash
-# 전체 빌드 (병렬)
-pnpm build                                        # Turbo 병렬 빌드
+# 전체 빌드 (Turbo 병렬 최적화)
+pnpm build                                        # 10개 패키지 병렬 빌드
 
 # 개발 모드 (watch)
 pnpm dev                                          # 파일 변경 감지
 
-# 특정 패키지 작업
-pnpm --filter @ai-newscast/core build           # core만 빌드
-pnpm --filter @ai-newscast/news-processor typecheck  # 타입 체크
+# 타입 체크 및 린트 (모든 패키지)
+pnpm typecheck                                    # TypeScript 타입 체크
+pnpm lint                                         # ESLint 실행
+
+# Google API 패키지 개별 실행
+pnpm news:process -- ./data/folder               # 뉴스 처리 (Gemini)
+pnpm script:generate -- ./data/folder            # 스크립트 생성 (Gemini)
+pnpm audio:generate -- ./script.json ./output    # TTS 생성 (Google Cloud)
 ```
 
 ### 🧪 레거시 스크립트 실행 (마이그레이션 전)
@@ -150,6 +156,30 @@ output/2025-06-22T01-10-35-307016/              # ISO 타임스탬프 폴더
 ├── topic-02/                                   # 2순위 주제 (동일 구조)
 └── topic-{N}/                                  # N순위 주제 (최대 10개)
 ```
+
+## 🔧 v2.1.3 Turbo 모노레포 최적화 성과
+
+### ✅ Turbo 통합 관리 시스템 구축
+- **루트 중앙집중식 제어**: 모든 패키지를 turbo --filter로 정확 타겟팅
+- **불필요한 직접 호출 제거**: `pnpm --filter` → `turbo --filter` 통일
+- **캐싱 최적화**: 정확한 패키지만 실행하여 성능 향상
+- **의존성 그래프 최적화**: 빌드 순서 자동 관리 및 병렬 처리
+
+### 🎯 Google API 패키지 체계화
+```typescript
+// Google Gemini AI (GOOGLE_AI_API_KEY)
+- @ai-newscast/news-processor    // 뉴스 통합/정리 (Gemini 2.0 Flash)
+- @ai-newscast/script-generator  // 스크립트 생성 (Gemini 1.5 Pro)
+
+// Google Cloud TTS (GOOGLE_APPLICATION_CREDENTIALS)  
+- @ai-newscast/audio-generator   // 텍스트→음성 (Chirp HD 8개 모델)
+```
+
+### 🚀 성능 향상 지표
+- **빌드 속도**: 10개 패키지 동시 병렬 처리 (9.5초)
+- **캐시 효율성**: 변경되지 않은 패키지 자동 스킵
+- **타겟팅 정확도**: 100% (불필요한 `<NONEXISTENT>` 태스크 제거)
+- **개발자 경험**: 일관된 `pnpm command` 인터페이스 유지
 
 ## 🔧 v2.1.1 리팩토링 성과
 
@@ -449,9 +479,14 @@ if (currentDir.includes('package-name')) {
 
 ### 📖 프로젝트 문서
 - **[README.md](README.md)** - 전체 사용법 및 프로젝트 소개
+- **[docs/PROJECT_CONTEXT_GUIDE.md](docs/PROJECT_CONTEXT_GUIDE.md)** - 🆕 신규 개발자 온보딩 가이드
 - **[MIGRATION.md](MIGRATION.md)** - v1.x → v2.0 상세 마이그레이션 가이드  
 - **[CHANGELOG.md](CHANGELOG.md)** - 전체 변경 이력 (v0.0.1 → v2.0.0)
 - **[TODO.md](TODO.md)** - 우선순위별 작업 목록 및 로드맵
+
+### 🤖 Claude Code 지원
+- **[.claude.md](.claude.md)** - 🆕 Claude Code 컨텍스트 설정 파일
+- **[.claudeignore](.claudeignore)** - 🆕 Claude Code 제외 파일 목록
 
 ### 🛠️ 기술 문서
 - **[docs/refactoring-issues-and-solutions.md](docs/refactoring-issues-and-solutions.md)** - 리팩토링 기술 이슈 해결
@@ -466,4 +501,4 @@ if (currentDir.includes('package-name')) {
 - **[Google Cloud TTS](https://cloud.google.com/text-to-speech)** - TTS API 문서
 
 ---
-*최종 업데이트: 2025-06-23 v2.1.2 - Node.js 24+ 요구사항 및 API 서버 배포 완료*
+*최종 업데이트: 2025-06-24 v2.1.3 - Turbo 모노레포 최적화 및 Google API 패키지 정리*

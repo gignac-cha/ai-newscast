@@ -3,7 +3,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
+      "inputs": ["src/**", "package.json", "tsconfig.json", "pyproject.toml"]
     },
     "test": {
       "dependsOn": ["^build"],
@@ -54,6 +55,26 @@
     "merge": {
       "dependsOn": ["@ai-newscast/core#build"],
       "outputs": ["output/**"],
+      "cache": false
+    },
+    "crawl:topics": {
+      "outputs": ["output/**"],
+      "cache": false
+    },
+    "crawl:news": {
+      "outputs": ["output/**"],
+      "cache": false
+    },
+    "crawl:details": {
+      "outputs": ["output/**"],
+      "cache": false
+    },
+    "crawl:pipeline": {
+      "outputs": ["output/**"],
+      "cache": false
+    },
+    "deploy": {
+      "dependsOn": ["^build"],
       "cache": false
     }
   }

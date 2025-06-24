@@ -12,5 +12,34 @@
         "cmd": "sh .vscode/scripts/git-auto-synchronize.sh"
       }
     ]
-  }
+  },
+  "claude.projectContext": ".claude.md",
+  "claude.ignoreFile": ".claudeignore",
+  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "python.defaultInterpreterPath": "uv",
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/*.tsbuildinfo": true,
+    "**/output/**/audio/*.mp3": true,
+    "**/output/**/newscast*.mp3": true,
+    "**/.env": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/output": true,
+    "**/test-output": true,
+    "**/*.mp3": true,
+    "**/*.wav": true
+  },
+  "turbo.useGlobalTurbo": false,
+  "eslint.workingDirectories": ["packages/*"],
+  "typescript.preferences.workspaceSymbolsExcludePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/output/**"
+  ]
 }

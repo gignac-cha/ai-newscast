@@ -1,0 +1,52 @@
+# Claude Code에서 제외할 파일들
+
+# 의존성 및 빌드 결과물
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+uv.lock
+pnpm-lock.yaml
+
+# 출력 결과물 (용량이 큰 파일들)
+output/*/audio/*.mp3
+output/*/newscast*.mp3
+test-output/
+*.mp3
+*.wav
+
+# 환경 설정 및 비밀 정보
+.env
+.env.*
+*.key
+*.pem
+*.json.bak
+config.json
+
+# 임시 파일
+*.tmp
+*.temp
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE 설정
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# 대용량 데이터 파일
+output/*/news/
+bigkinds/
+*.zip
+*.tar.gz
+
+# 레거시 코드 (참고용으로만)
+tests/manual/
+tests/claude-code/node_modules/
+
+# 테스트 결과물
+coverage/
+*.coverage
+test-results/

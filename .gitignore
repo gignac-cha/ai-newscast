@@ -430,6 +430,8 @@ pyrightconfig.json
 # AI News Cast output directories
 output/
 data/
+tests/claude-code/
+tests/manual/
 
 # AI News Cast - Security (API keys, credentials)
 *.key

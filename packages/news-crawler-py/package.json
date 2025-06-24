@@ -7,6 +7,7 @@
   "version": "1.0.0",
   "description": "Python-based BigKinds news crawler",
   "scripts": {
+    "build": "uv sync",
     "install-deps": "uv sync",
     "dev-install": "uv sync --dev",
     "crawl": "uv run --project . python -m bigkinds_crawler.cli",

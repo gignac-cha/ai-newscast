@@ -10,7 +10,7 @@
   },
   "packageManager": "pnpm@10.12.2",
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --platform=node --target=esnext --format=esm --outfile=dist/index.js --sourcemap --external:zod",
+    "build": "pnpm run clean && tsc --emitDeclarationOnly && esbuild src/index.ts --bundle --platform=node --target=esnext --format=esm --outfile=dist/index.js --sourcemap --external:zod",
     "dev": "tsc --emitDeclarationOnly --watch & esbuild src/index.ts --bundle --platform=node --target=esnext --format=esm --outfile=dist/index.js --sourcemap --watch --external:zod",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit"

@@ -15,19 +15,19 @@
     "test": "turbo test",
     "clean": "turbo clean",
     
-    "crawl": "uv run --project packages/news-crawler-py python -m bigkinds_crawler.cli",
-    "crawl:topics": "uv run --project packages/news-crawler-py python -m bigkinds_crawler.cli topics",
-    "crawl:news": "uv run --project packages/news-crawler-py python -m bigkinds_crawler.cli news",
-    "crawl:details": "uv run --project packages/news-crawler-py python -m bigkinds_crawler.cli details",
-    "crawl:pipeline": "uv run --project packages/news-crawler-py python -m bigkinds_crawler.cli pipeline",
+    "crawl": "turbo crawl --filter=@ai-newscast/news-crawler-py",
+    "crawl:topics": "turbo crawl:topics --filter=@ai-newscast/news-crawler-py",
+    "crawl:news": "turbo crawl:news --filter=@ai-newscast/news-crawler-py",
+    "crawl:details": "turbo crawl:details --filter=@ai-newscast/news-crawler-py",
+    "crawl:pipeline": "turbo crawl:pipeline --filter=@ai-newscast/news-crawler-py",
     
-    "news:process": "export $(cat .env | grep -v '^#' | xargs) && pnpm --filter @ai-newscast/news-processor process",
-    "script:generate": "pnpm --filter @ai-newscast/script-generator generate-script",
-    "audio:generate": "pnpm --filter @ai-newscast/audio-generator generate-audio",
-    "audio:merge": "pnpm --filter @ai-newscast/audio-processor merge",
+    "news:process": "turbo process --filter=@ai-newscast/news-processor",
+    "script:generate": "turbo generate-script --filter=@ai-newscast/script-generator",
+    "audio:generate": "turbo generate-audio --filter=@ai-newscast/audio-generator",
+    "audio:merge": "turbo merge --filter=@ai-newscast/audio-processor",
     
-    "api:deploy": "pnpm --filter @ai-newscast/api-server deploy",
-    "api:dev": "pnpm --filter @ai-newscast/api-server dev",
+    "api:deploy": "turbo deploy --filter=@ai-newscast/api-server",
+    "api:dev": "turbo dev --filter=@ai-newscast/api-server",
     "api:test": "curl https://ai-newscast-latest-id.r-s-account.workers.dev/latest",
     
     "env:check": "node -e \"console.log('GOOGLE_AI_API_KEY:', process.env.GOOGLE_AI_API_KEY ? 'SET' : 'NOT SET')\"",
@@ -36,16 +36,16 @@
     
     "pipeline:full": "./scripts/run-full-pipeline.sh",
     "pipeline:fast": "./scripts/run-full-pipeline.sh -t 1 -s",
-    "pipeline:audio": "./scripts/run-full-pipeline.sh -t 1",
+    "pipeline:script": "./scripts/run-full-pipeline.sh -t 1",
     "pipeline:dev": "./scripts/run-full-pipeline.sh -t 1 -n -s -v",
     
-    "demo:quick": "echo 'Quick demo using latest data...' && pnpm news:process output/$(ls output/ | tail -1)/topic-01",
-    "demo:audio": "echo 'Audio generation demo...' && pnpm audio:generate ./demo-script.json ./demo-output --verbose",
+    "demo:quick": "echo 'Quick demo using latest data...' && pnpm news:process -- output/$(ls output/ | tail -1)/topic-01",
+    "demo:audio": "echo 'Audio generation demo...' && pnpm audio:generate -- ./demo-script.json ./demo-output --verbose",
     
-    "steps:crawl": "pnpm crawl:topics && pnpm crawl:news output/$(ls output/ | tail -1) --topics 1,2,3",
-    "steps:process": "pnpm crawl:details output/$(ls output/ | tail -1) --topics 1,2,3 && pnpm news:process output/$(ls output/ | tail -1)/topic-01",
-    "steps:generate": "pnpm script:generate output/$(ls output/ | tail -1)/topic-01",
-    "steps:audio": "pnpm audio:generate output/$(ls output/ | tail -1)/topic-01 && pnpm audio:merge output/$(ls output/ | tail -1)/topic-01"
+    "workflow:crawl": "pnpm crawl:topics && pnpm crawl:news -- output/$(ls output/ | tail -1) --topics 1,2,3",
+    "workflow:process": "pnpm crawl:details -- output/$(ls output/ | tail -1) --topics 1,2,3 && pnpm news:process -- output/$(ls output/ | tail -1)/topic-01",
+    "workflow:generate": "pnpm script:generate -- output/$(ls output/ | tail -1)/topic-01",
+    "workflow:audio": "pnpm audio:generate -- output/$(ls output/ | tail -1)/topic-01 && pnpm audio:merge -- output/$(ls output/ | tail -1)/topic-01"
   },
   "keywords": ["ai", "news", "cast", "tts", "automation"],
   "author": "",
