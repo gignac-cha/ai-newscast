@@ -1,0 +1,33 @@
+{
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "pnpm@10.12.2",
+  "name": "@ai-newscast/cli",
+  "version": "2.1.1",
+  "description": "Command-line interface for AI News Cast pipeline",
+  "main": "dist/index.js",
+  "bin": {
+    "ai-newscast": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "pnpm run clean && esbuild src/index.ts --bundle --platform=node --target=esnext --format=esm --outfile=dist/index.js --sourcemap --external:@ai-newscast/core --external:@ai-newscast/news-crawler --external:@ai-newscast/news-processor --external:@ai-newscast/script-generator --external:@ai-newscast/audio-generator --external:@ai-newscast/audio-processor --external:commander && cp dist/index.js dist/cli.js",
+    "dev": "esbuild src/index.ts --bundle --platform=node --target=esnext --format=esm --outfile=dist/index.js --sourcemap --watch --external:@ai-newscast/core --external:@ai-newscast/news-crawler --external:@ai-newscast/news-processor --external:@ai-newscast/script-generator --external:@ai-newscast/audio-generator --external:@ai-newscast/audio-processor --external:commander",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-newscast/core": "workspace:*",
+    "@ai-newscast/news-crawler": "workspace:*",
+    "@ai-newscast/news-processor": "workspace:*",
+    "@ai-newscast/script-generator": "workspace:*",
+    "@ai-newscast/audio-generator": "workspace:*",
+    "@ai-newscast/audio-processor": "workspace:*",
+    "commander": "^14.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.3",
+    "esbuild": "^0.25.5",
+    "typescript": "^5.8.3"
+  }
+}

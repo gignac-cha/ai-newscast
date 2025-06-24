@@ -1,0 +1,60 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    },
+    "lint": {
+      "outputs": []
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "clean": {
+      "cache": false
+    },
+    "crawl": {
+      "dependsOn": ["@ai-newscast/core#build"],
+      "outputs": ["output/**"],
+      "cache": false
+    },
+    "process": {
+      "dependsOn": ["@ai-newscast/core#build"],
+      "outputs": ["output/**"],
+      "cache": false,
+      "env": ["GOOGLE_AI_API_KEY"]
+    },
+    "generate-script": {
+      "dependsOn": ["@ai-newscast/core#build"],
+      "outputs": ["output/**"],
+      "cache": false,
+      "env": ["GOOGLE_AI_API_KEY"]
+    },
+    "generate-audio": {
+      "dependsOn": ["@ai-newscast/core#build"],
+      "outputs": ["output/**"],
+      "cache": false,
+      "env": ["GOOGLE_AI_API_KEY", "GOOGLE_APPLICATION_CREDENTIALS"]
+    },
+    "process-audio": {
+      "dependsOn": ["@ai-newscast/core#build"],
+      "outputs": ["output/**"],
+      "cache": false
+    },
+    "merge": {
+      "dependsOn": ["@ai-newscast/core#build"],
+      "outputs": ["output/**"],
+      "cache": false
+    }
+  }
+}

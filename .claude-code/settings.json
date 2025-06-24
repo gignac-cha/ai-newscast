@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod:*)",
+      "Bash(find:*)", 
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)"
+    ],
+    "deny": [
+      "Bash(rm:*)",
+      "Bash(sudo:*)",
+      "Bash(rmdir:*)",
+      "Bash(mv:*)",
+      "Bash(cp:*)"
+    ]
+  },
+  "workspace": {
+    "name": "ai-newscast",
+    "description": "AI News Cast 프로젝트 - 뉴스 크롤링 및 TTS 생성",
+    "auto_approve": [
+      "pnpm",
+      "uv run",
+      "node --experimental-transform-types"
+    ]
+  }
+}

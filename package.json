@@ -1,19 +1,59 @@
 {
-  "name": "ai-news-cast",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "name": "ai-newscast",
+  "version": "2.1.1",
+  "description": "AI-powered news cast generation system",
+  "private": true,
+  "engines": {
+    "node": ">=24.0.0"
   },
-  "keywords": [],
+  "packageManager": "pnpm@10.12.2",
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "clean": "turbo clean",
+    
+    "crawl": "uv run --project packages/news-crawler-py python -m bigkinds_crawler.cli",
+    "crawl:topics": "uv run --project packages/news-crawler-py python -m bigkinds_crawler.cli topics",
+    "crawl:news": "uv run --project packages/news-crawler-py python -m bigkinds_crawler.cli news",
+    "crawl:details": "uv run --project packages/news-crawler-py python -m bigkinds_crawler.cli details",
+    "crawl:pipeline": "uv run --project packages/news-crawler-py python -m bigkinds_crawler.cli pipeline",
+    
+    "news:process": "export $(cat .env | grep -v '^#' | xargs) && pnpm --filter @ai-newscast/news-processor process",
+    "script:generate": "pnpm --filter @ai-newscast/script-generator generate-script",
+    "audio:generate": "pnpm --filter @ai-newscast/audio-generator generate-audio",
+    "audio:merge": "pnpm --filter @ai-newscast/audio-processor merge",
+    
+    "api:deploy": "pnpm --filter @ai-newscast/api-server deploy",
+    "api:dev": "pnpm --filter @ai-newscast/api-server dev",
+    "api:test": "curl https://ai-newscast-latest-id.r-s-account.workers.dev/latest",
+    
+    "env:check": "node -e \"console.log('GOOGLE_AI_API_KEY:', process.env.GOOGLE_AI_API_KEY ? 'SET' : 'NOT SET')\"",
+    "env:setup": "node scripts/setup-env.js",
+    "env:load": "export $(cat .env | grep -v '^#' | xargs) && echo 'Environment loaded from .env'",
+    
+    "pipeline:full": "./scripts/run-full-pipeline.sh",
+    "pipeline:fast": "./scripts/run-full-pipeline.sh -t 1 -s",
+    "pipeline:audio": "./scripts/run-full-pipeline.sh -t 1",
+    "pipeline:dev": "./scripts/run-full-pipeline.sh -t 1 -n -s -v",
+    
+    "demo:quick": "echo 'Quick demo using latest data...' && pnpm news:process output/$(ls output/ | tail -1)/topic-01",
+    "demo:audio": "echo 'Audio generation demo...' && pnpm audio:generate ./demo-script.json ./demo-output --verbose",
+    
+    "steps:crawl": "pnpm crawl:topics && pnpm crawl:news output/$(ls output/ | tail -1) --topics 1,2,3",
+    "steps:process": "pnpm crawl:details output/$(ls output/ | tail -1) --topics 1,2,3 && pnpm news:process output/$(ls output/ | tail -1)/topic-01",
+    "steps:generate": "pnpm script:generate output/$(ls output/ | tail -1)/topic-01",
+    "steps:audio": "pnpm audio:generate output/$(ls output/ | tail -1)/topic-01 && pnpm audio:merge output/$(ls output/ | tail -1)/topic-01"
+  },
+  "keywords": ["ai", "news", "cast", "tts", "automation"],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.11.1",
   "devDependencies": {
     "@types/node": "^24.0.3",
     "eslint": "^9.29.0",
-    "prettier": "^3.5.3",
+    "prettier": "^3.6.0",
     "turbo": "^2.5.4",
     "typescript": "^5.8.3"
   }

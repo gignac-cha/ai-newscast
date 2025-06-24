@@ -426,3 +426,29 @@ pyrightconfig.json
 
 !.vscode/scripts/
 .vscode/scripts/.*
+
+# AI News Cast output directories
+output/
+data/
+
+# AI News Cast - Security (API keys, credentials)
+*.key
+*.pem
+*.p12
+service-account*.json
+credentials*.json
+*-key.json
+.env
+.env.*
+!.env.example
+
+# Claude Code 워크스페이스 설정은 포함
+!.claude-code/
+
+# AI News Cast - Demo/Test outputs
+demo-output/
+**/audio/
+**/newscast-*.mp3
+**/topic-*/
+
+.wrangler

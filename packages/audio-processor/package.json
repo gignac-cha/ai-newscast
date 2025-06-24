@@ -1,0 +1,29 @@
+{
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "pnpm@10.12.2",
+  "name": "@ai-newscast/audio-processor",
+  "version": "2.1.1",
+  "type": "module",
+  "description": "FFmpeg-based audio processing and merging for newscast",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "esbuild src/index.ts src/cli.ts --outdir=dist --bundle --platform=node --format=esm --target=node18 --external:@ai-newscast/core --external:child_process --external:fs --external:path --external:util && esbuild src/cli.ts --outfile=dist/cli.js --bundle --platform=node --format=esm --target=node18 --external:@ai-newscast/core --external:child_process --external:fs --external:path --external:util",
+    "dev": "npm run build -- --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "process-audio": "node dist/cli.js",
+    "merge": "node dist/cli.js"
+  },
+  "dependencies": {
+    "@ai-newscast/core": "workspace:*",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.3",
+    "typescript": "^5.8.3",
+    "esbuild": "^0.25.5"
+  }
+}

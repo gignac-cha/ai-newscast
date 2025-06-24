@@ -1,0 +1,32 @@
+{
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "pnpm@10.12.2",
+  "name": "@ai-newscast/news-crawler",
+  "version": "1.0.0",
+  "description": "News crawling and data collection from BigKinds API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "pnpm run clean && esbuild src/index.ts --bundle --platform=node --target=esnext --format=esm --outfile=dist/index.js --sourcemap --external:@ai-newscast/core --external:playwright --external:jsdom --external:commander && pnpm run build:cli",
+    "build:cli": "esbuild src/cli.ts --bundle --platform=node --target=esnext --format=esm --outfile=dist/cli.js --sourcemap --external:@ai-newscast/core --external:playwright --external:jsdom --external:commander --banner:js=\"#!/usr/bin/env node\"",
+    "dev": "tsc --emitDeclarationOnly --watch & esbuild src/index.ts --bundle --platform=node --target=esnext --format=esm --outfile=dist/index.js --sourcemap --watch --external:@ai-newscast/core --external:playwright --external:jsdom --external:commander",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "crawl": "node dist/cli.js"
+  },
+  "dependencies": {
+    "@ai-newscast/core": "workspace:*",
+    "commander": "^14.0.0",
+    "jsdom": "^26.1.0",
+    "playwright": "^1.53.1"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^24.0.3",
+    "esbuild": "^0.25.5",
+    "typescript": "^5.8.3"
+  }
+}

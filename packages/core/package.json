@@ -1,0 +1,32 @@
+{
+  "name": "@ai-newscast/core",
+  "version": "1.0.0",
+  "description": "Core types, utilities and configurations for AI News Cast",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "pnpm@10.12.2",
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --platform=node --target=esnext --format=esm --outfile=dist/index.js --sourcemap --external:zod",
+    "dev": "tsc --emitDeclarationOnly --watch & esbuild src/index.ts --bundle --platform=node --target=esnext --format=esm --outfile=dist/index.js --sourcemap --watch --external:zod",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.3",
+    "esbuild": "^0.25.5",
+    "typescript": "^5.8.3"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  }
+}

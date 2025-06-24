@@ -1,0 +1,89 @@
+{
+  "voices": {
+    "ko-KR-Chirp3-HD-Aoede": {
+      "name": "이서연",
+      "gender": "female",
+      "description": "부드럽고 따뜻한 목소리의 여성 아나운서",
+      "role": "메인 앵커",
+      "voice_type": "premium_chirp"
+    },
+    "ko-KR-Chirp3-HD-Charon": {
+      "name": "김민준",
+      "gender": "male", 
+      "description": "신뢰감 있고 안정적인 목소리의 남성 아나운서",
+      "role": "메인 앵커",
+      "voice_type": "premium_chirp"
+    },
+    "ko-KR-Chirp3-HD-Fenrir": {
+      "name": "박지훈",
+      "gender": "male",
+      "description": "명확하고 힘있는 목소리의 남성 아나운서",
+      "role": "서브 앵커",
+      "voice_type": "premium_chirp"
+    },
+    "ko-KR-Chirp3-HD-Kore": {
+      "name": "정유진",
+      "gender": "female",
+      "description": "지적이고 차분한 목소리의 여성 아나운서",
+      "role": "서브 앵커", 
+      "voice_type": "premium_chirp"
+    },
+    "ko-KR-Chirp3-HD-Leda": {
+      "name": "한소영",
+      "gender": "female",
+      "description": "밝고 친근한 목소리의 여성 아나운서",
+      "role": "리포터",
+      "voice_type": "premium_chirp"
+    },
+    "ko-KR-Chirp3-HD-Orus": {
+      "name": "최성호",
+      "gender": "male",
+      "description": "깊이 있고 권위적인 목소리의 남성 아나운서",
+      "role": "시니어 앵커",
+      "voice_type": "premium_chirp"
+    },
+    "ko-KR-Chirp3-HD-Puck": {
+      "name": "윤태현",
+      "gender": "male",
+      "description": "생동감 있고 활기찬 목소리의 남성 아나운서",
+      "role": "스포츠/엔터테인먼트 앵커",
+      "voice_type": "premium_chirp"
+    },
+    "ko-KR-Chirp3-HD-Zephyr": {
+      "name": "강은비",
+      "gender": "female",
+      "description": "선명하고 매력적인 목소리의 여성 아나운서",
+      "role": "날씨/문화 앵커",
+      "voice_type": "premium_chirp"
+    }
+  },
+  "default_newscast_hosts": {
+    "host1": {
+      "voice_model": "ko-KR-Chirp3-HD-Charon",
+      "name": "김민준",
+      "gender": "male"
+    },
+    "host2": {
+      "voice_model": "ko-KR-Chirp3-HD-Aoede", 
+      "name": "이서연",
+      "gender": "female"
+    }
+  },
+  "host_selection_rules": {
+    "required_genders": ["male", "female"],
+    "description": "뉴스캐스트는 반드시 남성 1명, 여성 1명으로 구성",
+    "order_flexibility": "순서는 남자->여자 또는 여자->남자 모두 가능"
+  },
+  "voice_selection_strategy": {
+    "newscast": ["ko-KR-Chirp3-HD-Charon", "ko-KR-Chirp3-HD-Aoede"],
+    "report": ["ko-KR-Chirp3-HD-Leda", "ko-KR-Chirp3-HD-Fenrir"],
+    "analysis": ["ko-KR-Chirp3-HD-Orus", "ko-KR-Chirp3-HD-Kore"],
+    "entertainment": ["ko-KR-Chirp3-HD-Puck", "ko-KR-Chirp3-HD-Zephyr"]
+  },
+  "metadata": {
+    "created": "2025-06-21",
+    "description": "Google Cloud Text-to-Speech Chirp Premium 모델용 한국인 아나운서 캐릭터 관리",
+    "total_voices": 8,
+    "default_program": "오늘의 뉴스 브리핑"
+  }
+}

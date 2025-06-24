@@ -1,0 +1,10 @@
+name = "ai-newscast-latest-id"
+main = "src/worker.ts"
+compatibility_date = "2023-12-01"
+
+[[kv_namespaces]]
+binding = "AI_NEWSCAST_KV"
+id = "1a002997dc124ce9a4ff5080a7e2b5e6"
+
+[vars]
+API_VERSION = "2.1.1"

@@ -1,0 +1,25 @@
+{
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "pnpm@10.12.2",
+  "name": "@ai-newscast/news-crawler-py",
+  "version": "1.0.0",
+  "description": "Python-based BigKinds news crawler",
+  "scripts": {
+    "install-deps": "uv sync",
+    "dev-install": "uv sync --dev",
+    "crawl": "uv run --project . python -m bigkinds_crawler.cli",
+    "crawl:topics": "uv run --project . python -m bigkinds_crawler.cli topics",
+    "crawl:news": "uv run --project . python -m bigkinds_crawler.cli news",
+    "crawl:details": "uv run --project . python -m bigkinds_crawler.cli details",
+    "crawl:pipeline": "uv run --project . python -m bigkinds_crawler.cli pipeline",
+    "test": "uv run --project . pytest",
+    "lint": "uv run --project . ruff check src/",
+    "format": "uv run --project . black src/ && uv run --project . isort src/",
+    "typecheck": "uv run --project . mypy src/"
+  },
+  "keywords": ["news", "crawler", "bigkinds", "python"],
+  "author": "",
+  "license": "ISC"
+}

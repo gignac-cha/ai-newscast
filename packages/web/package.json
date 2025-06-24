@@ -1,0 +1,23 @@
+{
+  "name": "@ai-newscast/web",
+  "version": "1.0.0",
+  "description": "Web interface for AI Newscast player and podcast browser",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "pnpm@10.12.2",
+  "scripts": {
+    "dev": "python3 -m http.server 3000",
+    "build": "echo 'Static HTML - no build needed'",
+    "deploy": "echo 'Ready for Cloudflare Pages deployment'"
+  },
+  "keywords": [
+    "ai-newscast",
+    "player",
+    "podcast",
+    "web",
+    "cloudflare-pages"
+  ],
+  "author": "",
+  "license": "ISC"
+}
