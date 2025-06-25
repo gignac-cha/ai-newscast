@@ -80,11 +80,34 @@ function parseArguments(): CLIOptions {
 }
 
 /**
- * 뉴스 데이터 로드
+ * 뉴스 데이터 로드 (경로 자동 해결)
  */
-async function loadNewsData(filePath: string): Promise<ConsolidatedNews> {
+async function loadNewsData(inputPath: string): Promise<ConsolidatedNews> {
   try {
-    const content = await fs.readFile(filePath, 'utf-8');
+    // 절대경로로 변환
+    const basePath = path.isAbsolute(inputPath) ? inputPath : path.resolve(process.cwd(), inputPath);
+    
+    let newsFilePath: string;
+    
+    // 입력이 디렉토리인지 파일인지 확인
+    const stat = await fs.stat(basePath);
+    
+    if (stat.isDirectory()) {
+      // 디렉토리인 경우 news.json 파일 찾기
+      newsFilePath = path.join(basePath, 'news.json');
+      
+      // news.json이 없으면 에러
+      try {
+        await fs.access(newsFilePath);
+      } catch {
+        throw new Error(`뉴스 파일을 찾을 수 없습니다: ${basePath}/news.json`);
+      }
+    } else {
+      // 파일인 경우 그대로 사용
+      newsFilePath = basePath;
+    }
+    
+    const content = await fs.readFile(newsFilePath, 'utf-8');
     const data = JSON.parse(content);
     
     // 기본 유효성 검증
@@ -95,7 +118,7 @@ async function loadNewsData(filePath: string): Promise<ConsolidatedNews> {
     return data as ConsolidatedNews;
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
-      throw new Error(`뉴스 파일을 찾을 수 없습니다: ${filePath}`);
+      throw new Error(`뉴스 파일을 찾을 수 없습니다: ${inputPath}`);
     }
     throw error;
   }
@@ -157,6 +180,12 @@ async function main(): Promise<void> {
 
     // 뉴스 데이터 로드
     console.log('📖 뉴스 데이터 로딩 중...');
+    
+    if (options.verbose) {
+      console.log(`   입력 경로: ${options.newsPath}`);
+      console.log(`   절대 경로: ${path.resolve(options.newsPath)}`);
+    }
+    
     const newsData = await loadNewsData(options.newsPath);
     
     if (options.verbose) {
