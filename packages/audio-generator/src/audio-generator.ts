@@ -60,44 +60,33 @@ export class AudioGenerator {
         console.warn('⚠️ Google Cloud TTS 인증 검증 실패. 계속 진행하겠습니다...');
       }
 
-      // Generate audio for each dialogue line
-      console.log('\\n🎵 개별 대사 라인 오디오 생성 중...');
+      // Generate audio for each dialogue line (병렬 처리)
+      console.log('\\n🎵 개별 대사 라인 오디오 생성 중... (병렬 처리)');
       const audioGenerationStart = performance.now();
       
       const audioFiles: AudioFileInfo[] = [];
 
-      for (const dialogue of script.dialogue_lines) {
-        const startTime = performance.now();
+      // 대화 라인만 필터링 (음악 구간은 스킵)
+      const dialogueLines = script.dialogue_lines.filter(line => line.type === 'dialogue');
+      const musicLines = script.dialogue_lines.filter(line => line.type !== 'dialogue');
+      
+      // 음악 구간 스킵 처리
+      musicLines.forEach(() => progressTracker.recordSkip());
+      
+      if (dialogueLines.length === 0) {
+        console.log('   ℹ️ 처리할 대화 라인이 없습니다.');
+      } else {
+        // 병렬 처리 (동시 최대 3개, Rate Limiting 고려)
+        const maxConcurrency = 3;
+        const results = await this.processDialoguesInBatches(
+          dialogueLines, 
+          audioFolderPath, 
+          outputDirectory, 
+          maxConcurrency, 
+          progressTracker
+        );
         
-        try {
-          const audioFileName = this.ttsService.generateAudioFilename(dialogue);
-          const audioFilePath = path.join(audioFolderPath, audioFileName);
-          
-          await this.ttsService.generateAudio(dialogue, audioFilePath);
-          
-          if (dialogue.type === 'dialogue') {
-            audioFiles.push({
-              file_path: path.relative(outputDirectory, audioFilePath),
-              sequence: dialogue.sequence,
-              type: dialogue.type,
-              speaker: VoiceMappingService.getDisplayName(dialogue.speaker),
-            });
-            
-            const processingTime = performance.now() - startTime;
-            progressTracker.recordSuccess(processingTime);
-          } else {
-            progressTracker.recordSkip();
-          }
-        } catch (error) {
-          const audioError = ErrorHandler.handleTTSError(error, `대사 라인 ${dialogue.sequence}`);
-          console.error(`   ❌ ${ErrorHandler.getUserFriendlyMessage(audioError)}`);
-          progressTracker.recordFailure(audioError);
-          
-          // Continue processing other lines even if one fails
-          if (!audioError.retryable) {
-            console.warn(`   ⚠️ 복구 불가능한 오류로 인해 해당 라인을 건너뜁니다.`);
-          }
-        }
+        audioFiles.push(...results);
       }
 
       const audioGenerationTime = performance.now() - audioGenerationStart;
@@ -125,6 +114,103 @@ export class AudioGenerator {
       const audioError = ErrorHandler.handleTTSError(error, '오디오 생성');
       console.error(`\\n❌ ${ErrorHandler.getUserFriendlyMessage(audioError)}`);
       throw audioError;
+    }
+  }
+
+  /**
+   * 대화 라인들을 배치로 나누어 병렬 처리
+   */
+  private async processDialoguesInBatches(
+    dialogueLines: DialogueLine[],
+    audioFolderPath: string,
+    outputDirectory: string,
+    maxConcurrency: number,
+    progressTracker: AudioProgressTracker
+  ): Promise<AudioFileInfo[]> {
+    const audioFiles: AudioFileInfo[] = [];
+    
+    console.log(`   📊 총 ${dialogueLines.length}개 대화 라인을 ${maxConcurrency}개씩 병렬 처리`);
+    
+    for (let i = 0; i < dialogueLines.length; i += maxConcurrency) {
+      const batch = dialogueLines.slice(i, i + maxConcurrency);
+      const batchNumber = Math.floor(i / maxConcurrency) + 1;
+      const totalBatches = Math.ceil(dialogueLines.length / maxConcurrency);
+      
+      console.log(`   🔄 배치 ${batchNumber}/${totalBatches} 처리 중... (${batch.length}개 라인)`);
+      
+      // 배치 내 모든 대화 라인을 병렬 처리
+      const batchPromises = batch.map(async (dialogue) => {
+        return await this.processSingleDialogue(
+          dialogue, 
+          audioFolderPath, 
+          outputDirectory, 
+          progressTracker
+        );
+      });
+      
+      // 배치 완료 대기
+      const batchResults = await Promise.allSettled(batchPromises);
+      
+      // 성공한 결과만 수집
+      batchResults.forEach((result, index) => {
+        if (result.status === 'fulfilled' && result.value) {
+          audioFiles.push(result.value);
+        } else if (result.status === 'rejected') {
+          const dialogue = batch[index];
+          console.error(`   ❌ 대사 라인 ${dialogue.sequence} 처리 실패:`, result.reason);
+        }
+      });
+      
+      console.log(`   ✅ 배치 ${batchNumber} 완료`);
+      
+      // Rate limiting: 배치 간 짧은 지연
+      if (i + maxConcurrency < dialogueLines.length) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    
+    return audioFiles.sort((a, b) => a.sequence - b.sequence);
+  }
+
+  /**
+   * 개별 대화 라인 처리
+   */
+  private async processSingleDialogue(
+    dialogue: DialogueLine,
+    audioFolderPath: string,
+    outputDirectory: string,
+    progressTracker: AudioProgressTracker
+  ): Promise<AudioFileInfo | null> {
+    const startTime = performance.now();
+    
+    try {
+      const audioFileName = this.ttsService.generateAudioFilename(dialogue);
+      const audioFilePath = path.join(audioFolderPath, audioFileName);
+      
+      await this.ttsService.generateAudio(dialogue, audioFilePath);
+      
+      const audioFileInfo: AudioFileInfo = {
+        file_path: path.relative(outputDirectory, audioFilePath),
+        sequence: dialogue.sequence,
+        type: dialogue.type,
+        speaker: VoiceMappingService.getDisplayName(dialogue.speaker),
+      };
+      
+      const processingTime = performance.now() - startTime;
+      progressTracker.recordSuccess(processingTime);
+      
+      return audioFileInfo;
+      
+    } catch (error) {
+      const audioError = ErrorHandler.handleTTSError(error, `대사 라인 ${dialogue.sequence}`);
+      console.error(`   ❌ ${ErrorHandler.getUserFriendlyMessage(audioError)}`);
+      progressTracker.recordFailure(audioError);
+      
+      if (!audioError.retryable) {
+        console.warn(`   ⚠️ 대사 라인 ${dialogue.sequence}: 복구 불가능한 오류로 건너뜀`);
+      }
+      
+      return null;
     }
   }
 

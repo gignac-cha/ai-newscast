@@ -1,6 +1,6 @@
 {
   "name": "ai-newscast",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "AI-powered news cast generation system",
   "private": true,
   "engines": {
@@ -34,10 +34,10 @@
     "env:setup": "node scripts/setup-env.js",
     "env:load": "export $(cat .env | grep -v '^#' | xargs) && echo 'Environment loaded from .env'",
     
-    "pipeline:full": "./scripts/run-full-pipeline.sh",
-    "pipeline:fast": "./scripts/run-full-pipeline.sh -t 1 -s",
-    "pipeline:script": "./scripts/run-full-pipeline.sh -t 1",
-    "pipeline:dev": "./scripts/run-full-pipeline.sh -t 1 -n -s -v",
+    "pipeline:full": "./run-complete-pipeline.sh",
+    "pipeline:fast": "./run-complete-pipeline.sh -t 3 -s",
+    "pipeline:test": "./run-complete-pipeline.sh -t 1",
+    "pipeline:audio": "./run-complete-pipeline.sh -t 1 -v",
     
     "demo:quick": "echo 'Quick demo using latest data...' && pnpm news:process -- output/$(ls output/ | tail -1)/topic-01",
     "demo:audio": "echo 'Audio generation demo...' && pnpm audio:generate -- ./demo-script.json ./demo-output --verbose",

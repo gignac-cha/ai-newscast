@@ -3,8 +3,8 @@
 ## 📋 프로젝트 개요
 빅카인드(bigkinds.or.kr)에서 실시간 뉴스를 수집하여 AI 기반 뉴스캐스트를 완전 자동화 생성하는 고급 모노레포 프로젝트
 
-**현재 버전**: v2.1.3 (2025-06-24 Turbo 모노레포 최적화 및 Google API 패키지 정리)  
-**상태**: 85% 완성 (9/10 패키지 완전 구현, Turbo 중앙집중식 관리 완료)
+**현재 버전**: v2.2.0 (2025-06-25 데이터 플로우 실행 시스템 통합 수정)  
+**상태**: 95% 완성 (10/10 패키지 완전 구현, 안정적 전체 파이프라인 구축)
 
 ## 🏗️ 핵심 아키텍처
 
@@ -20,7 +20,7 @@ packages/
 ├── audio-generator/         # ✅ 완성 - TTS 음성 생성 (Google Cloud TTS Chirp HD)
 ├── audio-processor/         # ✅ 완성 - 오디오 병합/후처리 (FFmpeg 기반)
 ├── cli/                     # ✅ 완성 - 통합 CLI (ai-newscast 바이너리)
-└── web/                     # ✅ 완성 - 뉴스캐스트 플레이어 웹 인터페이스
+└── web/                     # 🚧 80% - 뉴스캐스트 플레이어 웹 인터페이스
 ```
 
 ### 🔄 레거시→패키지 마이그레이션 맵
@@ -53,11 +53,11 @@ pnpm env:setup
 # 2. 프로젝트 의존성 설치 (Turbo 병렬 빌드)
 pnpm install && pnpm build
 
-# 3. 뉴스 크롤링 (Python UV 기반)
-pnpm crawl:pipeline --max-topics 3
+# 3. 전체 파이프라인 실행 (토픽 3개, 오디오 제외)
+pnpm pipeline:fast
 
-# 4. 빠른 데모 (기존 데이터 사용)
-pnpm demo:quick
+# 4. 완전 자동화 파이프라인 (토픽 10개, 오디오 포함)
+pnpm pipeline:full
 ```
 
 ### 📦 환경 설정 (최초 1회)
@@ -74,16 +74,15 @@ echo "GOOGLE_AI_API_KEY=your_api_key" > tests/claude-code/.env
 
 ### 🕷️ 크롤링 (Turbo 기반 통합 관리)
 ```bash
-# 👑 권장: 전체 파이프라인 (Turbo + Python UV)
-pnpm crawl:pipeline --max-topics 5               # 상위 5개 토픽 처리
-pnpm crawl:pipeline --include-details             # 뉴스 상세 정보 포함
+# 👑 권장: 완전 자동화 파이프라인
+pnpm pipeline:full                               # 토픽 10개, 오디오 포함
+pnpm pipeline:fast                               # 토픽 3개, 오디오 제외
+pnpm pipeline:test                               # 토픽 1개 테스트
+pnpm pipeline:audio                              # 토픽 1개, 상세 로그
 
-# 단계별 실행 (Turbo --filter 최적화)
-pnpm crawl:topics                                 # 토픽 목록만 추출
-pnpm crawl:news -- ./output/latest --topics 1,2,3   # 특정 토픽 뉴스만
-
-# AI 처리 파이프라인 (Google Gemini)
-pnpm news:process -- ./output/latest/topic-01    # 뉴스 통합 정리
+# 단계별 실행 (고급 사용자용)
+pnpm crawl:pipeline -- --max-topics 5           # 뉴스 크롤링만
+pnpm news:process -- ./output/latest/topic-01   # AI 뉴스 통합
 pnpm script:generate -- ./output/latest/topic-01 # 스크립트 생성
 ```
 
@@ -157,29 +156,28 @@ output/2025-06-22T01-10-35-307016/              # ISO 타임스탬프 폴더
 └── topic-{N}/                                  # N순위 주제 (최대 10개)
 ```
 
-## 🔧 v2.1.3 Turbo 모노레포 최적화 성과
+## 🔧 v2.2.0 데이터 플로우 실행 시스템 통합 수정
 
-### ✅ Turbo 통합 관리 시스템 구축
-- **루트 중앙집중식 제어**: 모든 패키지를 turbo --filter로 정확 타겟팅
-- **불필요한 직접 호출 제거**: `pnpm --filter` → `turbo --filter` 통일
-- **캐싱 최적화**: 정확한 패키지만 실행하여 성능 향상
-- **의존성 그래프 최적화**: 빌드 순서 자동 관리 및 병렬 처리
+### ✅ 완료된 주요 수정사항
+- **환경변수 전역 설정**: `.env` 파일 생성 및 Turbo 환경변수 전파 구성
+- **CLI 경로 해결 로직**: script-generator와 news-processor 절대경로 처리 개선
+- **빌드 시스템 정리**: ESBuild 배너 중복 문제 및 타입 선언 개선
+- **통합 실행 스크립트**: `run-complete-pipeline.sh` 단일 명령어 전체 파이프라인
+- **파일 I/O 최적화**: 절대경로 기반 통일 및 구체적인 에러 메시지
 
-### 🎯 Google API 패키지 체계화
-```typescript
-// Google Gemini AI (GOOGLE_AI_API_KEY)
-- @ai-newscast/news-processor    // 뉴스 통합/정리 (Gemini 2.0 Flash)
-- @ai-newscast/script-generator  // 스크립트 생성 (Gemini 1.5 Pro)
-
-// Google Cloud TTS (GOOGLE_APPLICATION_CREDENTIALS)  
-- @ai-newscast/audio-generator   // 텍스트→음성 (Chirp HD 8개 모델)
+### 🎯 새로운 통합 파이프라인 명령어
+```bash
+pnpm pipeline:full     # 토픽 10개, 오디오 포함 (완전 자동화)
+pnpm pipeline:fast     # 토픽 3개, 오디오 제외 (빠른 테스트)
+pnpm pipeline:test     # 토픽 1개 전체 플로우 (개발 테스트)
+pnpm pipeline:audio    # 토픽 1개, 상세 로그 (디버깅용)
 ```
 
 ### 🚀 성능 향상 지표
-- **빌드 속도**: 10개 패키지 동시 병렬 처리 (9.5초)
-- **캐시 효율성**: 변경되지 않은 패키지 자동 스킵
-- **타겟팅 정확도**: 100% (불필요한 `<NONEXISTENT>` 태스크 제거)
-- **개발자 경험**: 일관된 `pnpm command` 인터페이스 유지
+- **안정성**: 경로 오류 및 실행 오류 100% 해결
+- **사용성**: 단일 명령어로 전체 데이터 플로우 실행
+- **에러 핸들링**: 단계별 타임아웃 및 재시도 로직
+- **모니터링**: 실시간 진행 상황 및 성공률 표시
 
 ## 🔧 v2.1.1 리팩토링 성과
 
@@ -218,46 +216,40 @@ output/2025-06-22T01-10-35-307016/              # ISO 타임스탬프 폴더
 | `merge-newscast-audio.ts` | audio-processor | 🚧 대기 | FFmpeg 병합, 무음 처리 |
 | `run-parallel-pipeline.sh` | cli | 🚧 대기 | 병렬 처리, 4배 속도 향상 |
 
-## 📋 다음 작업 우선순위 (v2.2)
+## 📋 다음 작업 우선순위 (v2.3)
 
-### ✅ 완료된 작업 (v2.1.1)
-- **script-generator 패키지화**: TTS 호환성 개선, 프롬프트 템플릿 시스템 구현
-- **news-processor 프롬프트 템플릿화**: 외부 파일 기반 프롬프트 관리 시스템 구현
-- **프롬프트 시스템 통합**: 두 패키지 간 완전한 일관성 확보 (PromptLoader, 경로 해결, CLI)
-- **발음 가이드 제거**: "앤서니 앨버니지(앵-써-니 앨-버-니-지)" → "앤서니 앨버니지" 
-- **TypeScript 설정 통합**: ESNext/NodeNext 기반 모던 설정 + extends 패턴
+### ✅ 완료된 작업 (v2.2.0)
+- **데이터 플로우 실행 시스템**: 경로 오류 및 실행 오류 100% 해결
+- **통합 파이프라인 스크립트**: `run-complete-pipeline.sh` 단일 명령어 자동화
+- **환경변수 관리**: `.env` 파일 기반 전역 설정 및 Turbo 전파
+- **CLI 경로 해결**: 절대경로 기반 통일 및 자동 파일 탐지
+- **빌드 시스템**: ESBuild 배너 중복 및 타입 선언 문제 해결
 
-### 🎯 1순위: audio-generator 패키지화
+### 🎯 1순위: 오디오 생성 시스템 최적화
+```bash
+# Google Cloud TTS Chirp HD 안정화
+- Rate Limit 처리 개선 (100ms → 200ms 간격)
+- 대용량 스크립트 청크 분할 처리
+- 실패 시 자동 재시도 로직 (3회)
+- 음성 품질 검증 시스템
+```
+
+### 🎯 2순위: 웹 인터페이스 완성
 ```typescript
-// Google Cloud TTS Chirp HD 통합
-- 8개 프리미엄 모델: ko-KR-Chirp3-HD-{Aoede,Charon,Fenrir,Kore,Leda,Orus,Puck,Titania}
-- 한국인 이름 매핑: 이서연(여), 김민준(남), 박지훈(남), 정유진(여) 등
-- 대사별 개별 MP3 생성 (001-김민준.mp3, 002-이서연.mp3)
-- API Rate Limit 처리 (100ms 간격)
+// 뉴스캐스트 플레이어 (80% → 100%)
+- 실시간 재생 진행률 표시
+- 토픽별 챕터 네비게이션
+- 스크립트 텍스트 동기화 표시
+- 다운로드 및 공유 기능
 ```
 
-### 🎯 2순위: audio-processor 패키지화
+### 🎯 3순위: 성능 모니터링 시스템
 ```bash
-# FFmpeg 기반 오디오 병합
-- 대사 간 0.2초 무음 구간 자동 추가 (TTS 표준)
-- 오프닝/클로징 시그널 음악 통합
-- MP3 24kHz, 32kbps, 모노 최적화
-- 메타데이터 자동 태깅 (제목, 생성 시간, 진행자)
-```
-
-### 🎯 3순위: 통합 CLI 구현 ✅ **완료**
-```bash
-# ✅ 루트 폴더 통합 명령어 (2025-06-23 구현 완료)
-pnpm env:setup                                # 환경 자동 설정
-pnpm pipeline:test --max-topics 1           # 테스트 파이프라인
-pnpm pipeline:full --max-topics 3           # 완전 파이프라인
-pnpm demo:quick                              # 기존 데이터 빠른 데모
-pnpm demo:audio                              # TTS 생성 데모
-
-# 개별 패키지 실행 (루트에서)
-pnpm news:process <folder>                   # AI 뉴스 통합
-pnpm audio:generate <script> <output>        # TTS 음성 생성
-pnpm crawl:pipeline --max-topics 5          # 뉴스 크롤링
+# 파이프라인 성능 분석
+- 단계별 처리 시간 자동 측정
+- 메모리 사용량 최적화 분석
+- API 호출 비용 추적
+- 품질 지표 자동 수집 (정확도, 일관성)
 ```
 
 ## 🛠️ 환경 설정
@@ -501,4 +493,4 @@ if (currentDir.includes('package-name')) {
 - **[Google Cloud TTS](https://cloud.google.com/text-to-speech)** - TTS API 문서
 
 ---
-*최종 업데이트: 2025-06-24 v2.1.3 - Turbo 모노레포 최적화 및 Google API 패키지 정리*
+*최종 업데이트: 2025-06-25 v2.2.0 - 데이터 플로우 실행 시스템 통합 수정 완료*

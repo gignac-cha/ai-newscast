@@ -25,7 +25,9 @@ async function main() {
       process.exit(1);
     }
     
-    const topicFolderPath = path.resolve(args[0]);
+    // 루트 프로젝트 기준 상대경로 해결
+    const inputPath = args[0];
+    const topicFolderPath = path.isAbsolute(inputPath) ? inputPath : path.resolve(process.cwd(), inputPath);
     
     try {
       const stat = await fs.stat(topicFolderPath);

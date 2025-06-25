@@ -15,7 +15,7 @@ from .utils import get_latest_output_folder, format_duration
 @click.group()
 @click.option(
     "--output-dir",
-    default="./output",
+    default="../../output",
     help="Output directory for crawled data",
     show_default=True,
 )
