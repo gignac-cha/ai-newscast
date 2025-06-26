@@ -1,0 +1,14 @@
+{
+  "name": "@ai-newscast/news-crawler",
+  "version": "1.0.0",
+  "description": "News crawler for bigkinds.or.kr",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "uv venv && uv pip install -r requirements.txt",
+    "crawl:news-topics": "uv run python news_crawler.py news-topics"
+  },
+  "keywords": ["news", "crawler", "bigkinds"],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.2"
+}

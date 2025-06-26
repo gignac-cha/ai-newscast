@@ -1,13 +1,15 @@
 {
   "name": "ai-newscast",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "AI-powered news cast generation system",
   "private": true,
   "engines": {
     "node": ">=24.0.0"
   },
   "packageManager": "pnpm@10.12.2",
-  "scripts": {},
+  "scripts": {
+    "crawl:news-topics": "turbo crawl:news-topics"
+  },
   "keywords": ["ai", "news", "cast", "tts", "automation"],
   "author": "",
   "license": "ISC",

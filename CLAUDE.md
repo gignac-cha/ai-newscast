@@ -3,35 +3,34 @@
 ## 📋 프로젝트 개요
 빅카인드(bigkinds.or.kr)에서 실시간 뉴스를 수집하여 AI 기반 뉴스캐스트를 완전 자동화 생성하는 고급 모노레포 프로젝트
 
-**현재 버전**: v2.2.0 (2025-06-25 데이터 플로우 실행 시스템 통합 수정)  
-**상태**: 95% 완성 (10/10 패키지 완전 구현, 안정적 전체 파이프라인 구축)
+**현재 버전**: v3.0.0 (2025-06-27 프로젝트 클린업 및 재시작)  
+**상태**: 10% 시작 (1/10 패키지 구현, 기초 news-crawler만 완성)
 
 ## 🏗️ 핵심 아키텍처
 
-### 📦 패키지 구조와 구현 상태
+### 📦 패키지 구조와 구현 상태 (v3.0.0 클린업 후)
 ```
 packages/
-├── core/                    # ✅ 완성 - 공통 타입, 유틸리티 (TypeScript + Zod)
-├── news-crawler-py/         # ✅ 완성 - 메인 프로덕션 크롤러 (Python + UV + Pydantic)
-├── news-crawler/            # ✅ 완성 - 대안 크롤러 (TypeScript + Playwright, Strategy 패턴)
-├── news-processor/          # ✅ 완성 - AI 뉴스 통합 (Pipeline 패턴, 프롬프트 템플릿 시스템)
-├── script-generator/        # ✅ 완성 - 뉴스캐스트 스크립트 생성 (TTS 호환, 일관된 프롬프트 관리)
-├── api-server/              # ✅ 완성 - Cloudflare Workers API (KV 기반 배치 ID 관리)
-├── audio-generator/         # ✅ 완성 - TTS 음성 생성 (Google Cloud TTS Chirp HD)
-├── audio-processor/         # ✅ 완성 - 오디오 병합/후처리 (FFmpeg 기반)
-├── cli/                     # ✅ 완성 - 통합 CLI (ai-newscast 바이너리)
-└── web/                     # 🚧 80% - 뉴스캐스트 플레이어 웹 인터페이스
+├── news-crawler/            # ✅ 완성 - Python + UV 기반 뉴스 크롤러 (news-topics만 구현)
+├── core/                    # 🚧 계획 - 공통 타입, 유틸리티 (TypeScript + Zod)
+├── news-processor/          # 🚧 계획 - AI 뉴스 통합 (Pipeline 패턴, 프롬프트 템플릿 시스템)
+├── script-generator/        # 🚧 계획 - 뉴스캐스트 스크립트 생성 (TTS 호환)
+├── audio-generator/         # 🚧 계획 - TTS 음성 생성 (Google Cloud TTS Chirp HD)
+├── audio-processor/         # 🚧 계획 - 오디오 병합/후처리 (FFmpeg 기반)
+├── api-server/              # 🚧 계획 - Cloudflare Workers API (KV 기반 배치 ID 관리)
+├── cli/                     # 🚧 계획 - 통합 CLI (ai-newscast 바이너리)
+├── newscast-generator/      # 🚧 계획 - 스크립트/오디오/병합 통합 제너레이터
+└── web/                     # 🚧 계획 - 뉴스캐스트 플레이어 웹 인터페이스
 ```
 
-### 🔄 레거시→패키지 마이그레이션 맵
+### 🔄 v3.0.0 프로젝트 클린업 상태
 ```
-tests/claude-code/ (레거시)           →  packages/ (신규)
-├── consolidate-news.ts               →  ✅ news-processor/ (완료, 프롬프트 템플릿화)
-├── generate-newscast-script.ts       →  ✅ script-generator/ (완료, 일관된 프롬프트 시스템)
-├── generate-newscast-audio.ts        →  ✅ audio-generator/ (완료, Google TTS Chirp HD)
-├── merge-newscast-audio.ts           →  ✅ audio-processor/ (완료, FFmpeg 병합)
-├── run-parallel-pipeline.sh          →  ✅ cli/ (완료, ai-newscast 바이너리)
-└── tts-voices.json                   →  🚧 core/config/ (8개 Chirp HD 음성 모델)
+이전 상태 (v2.2.0)                    →  현재 상태 (v3.0.0)
+├── 복잡한 레거시 코드 구조              →  🧹 완전 제거됨 (클린업 완료)
+├── 문서-코드 불일치 문제               →  🧹 완전 해결됨 (단순한 시작점)
+├── 10개 패키지 "완성" 주장            →  🧹 정직하게 1개만 구현 상태로 리셋
+├── tests/claude-code/ 레거시         →  🧹 완전 제거됨
+└── 혼란스러운 아키텍처                →  ✅ 명확한 PIPELINE_PLAN.md 기반 재시작
 ```
 
 ### 🛠️ 기술 스택
@@ -45,19 +44,18 @@ tests/claude-code/ (레거시)           →  packages/ (신규)
 
 ## 🚀 핵심 명령어 (루트 폴더 통합 실행)
 
-### ⚡ 빠른 시작 (권장)
+### ⚡ 빠른 시작 (v3.0.0 현재 가능한 기능)
 ```bash
-# 1. 환경 자동 설정 (도구 확인 + API 키 검증)
-pnpm env:setup
+# 1. 프로젝트 의존성 설치
+pnpm install
 
-# 2. 프로젝트 의존성 설치 (Turbo 병렬 빌드)
-pnpm install && pnpm build
+# 2. 뉴스 토픽 크롤링 테스트 (현재 유일한 구현 기능)
+pnpm crawl:news-topics -- --output-file "output/test/topic-list.json" --print-format json
 
-# 3. 전체 파이프라인 실행 (토픽 3개, 오디오 제외)
-pnpm pipeline:fast
+# 3. 전체 파이프라인 실행 (기본 1단계만 - 토픽 크롤링)
+./scripts/run-all.sh
 
-# 4. 완전 자동화 파이프라인 (토픽 10개, 오디오 포함)
-pnpm pipeline:full
+# 주의: 나머지 기능들(news-list, news-details, AI 처리 등)은 아직 미구현
 ```
 
 ### 📦 환경 설정 (최초 1회)
@@ -124,12 +122,12 @@ node --experimental-transform-types merge-newscast-audio.ts bigkinds/folder/topi
 
 ## 📊 데이터 플로우
 
-### 🔄 7단계 완전 파이프라인
-1. **토픽 추출** ✅ - bigkinds.or.kr 메인페이지 → 10개 트렌딩 주제 (XPath 파싱)
-2. **뉴스 목록** ✅ - POST `/news/getNetworkDataAnalysis.do` → 주제별 뉴스 목록 (최대 100개)  
-3. **뉴스 상세** ✅ - GET `/news/detailView.do` → 개별 뉴스 상세 정보 (병렬 처리)
-4. **AI 통합** ✅ - Google Gemini 2.0 Flash → 뉴스 통합 정리 (중복 제거, 품질 평가)
-5. **스크립트 생성** ✅ - Google Gemini 1.5 Pro → 대화형 뉴스캐스트 스크립트 (TTS 호환성 개선)
+### 🔄 7단계 완전 파이프라인 (PIPELINE_PLAN.md 기반 로드맵)
+1. **토픽 추출** ✅ - bigkinds.or.kr 메인페이지 → 30개 트렌딩 주제 (data-* 속성 파싱)
+2. **뉴스 목록** 🚧 - POST `/news/getNetworkDataAnalysis.do` → 주제별 뉴스 목록 (최대 100개)  
+3. **뉴스 상세** 🚧 - GET `/news/detailView.do` → 개별 뉴스 상세 정보 (병렬 처리)
+4. **AI 통합** 🚧 - Google Gemini API → 뉴스 통합 정리 (중복 제거, 품질 평가)
+5. **스크립트 생성** 🚧 - Google Gemini API → 대화형 뉴스캐스트 스크립트 생성
 6. **TTS 생성** 🚧 - Google Cloud TTS Chirp HD → 고품질 음성 생성 (8개 모델, 성별 균형)
 7. **오디오 병합** 🚧 - FFmpeg → 완성된 뉴스캐스트 MP3 (무음 구간 처리)
 
@@ -156,101 +154,62 @@ output/2025-06-22T01-10-35-307016/              # ISO 타임스탬프 폴더
 └── topic-{N}/                                  # N순위 주제 (최대 10개)
 ```
 
-## 🔧 v2.2.0 데이터 플로우 실행 시스템 통합 수정
+## 🔧 v3.0.0 프로젝트 클린업 및 재시작
 
-### ✅ 완료된 주요 수정사항
-- **환경변수 전역 설정**: `.env` 파일 생성 및 Turbo 환경변수 전파 구성
-- **CLI 경로 해결 로직**: script-generator와 news-processor 절대경로 처리 개선
-- **빌드 시스템 정리**: ESBuild 배너 중복 문제 및 타입 선언 개선
-- **통합 실행 스크립트**: `run-complete-pipeline.sh` 단일 명령어 전체 파이프라인
-- **파일 I/O 최적화**: 절대경로 기반 통일 및 구체적인 에러 메시지
+### ✅ 완료된 주요 클린업
+- **레거시 코드 완전 제거**: tests/claude-code/ 및 혼란스러운 구조 삭제
+- **문서-코드 일치**: 과장된 "완성" 주장 제거, 정직한 현재 상태 반영
+- **단순한 시작점**: news-crawler 하나만 구현된 깔끔한 상태로 리셋
+- **명확한 로드맵**: PIPELINE_PLAN.md 기반 단계별 구현 계획 수립
+- **Turbo 모노레포**: pnpm workspace + Turbo 빌드 시스템 기초 구축
 
-### 🎯 새로운 통합 파이프라인 명령어
+### 🔄 v3.0.0 문서 업데이트 과정 (2025-06-27)
+**문제**: 기존 프로젝트 문서들이 실제 구현 상태와 심각하게 불일치
+- CLAUDE.md: "95% 완성 (10/10 패키지)" → 실제로는 1개 패키지만 부분 구현
+- README.md: 복잡한 기능들 "완성" 주장 → 대부분 미구현 상태
+- TODO.md: 혼란스러운 우선순위 → PIPELINE_PLAN.md와 일치하지 않음
+- CHANGELOG.md: 과장된 성과 주장 → 실제 개발 내역과 다름
+
+**해결 과정**:
+1. **전체 문서 감사**: 모든 .md 파일의 실제 구현 상태 검증
+2. **정직한 리라이팅**: 과장된 완성도 주장 완전 제거
+3. **일관성 확보**: PIPELINE_PLAN.md 기반으로 모든 문서 통일
+4. **현실 반영**: v3.0.0 "10% 시작" 상태로 솔직하게 문서화
+5. **커밋 스타일 정립**: COMMIT_STYLE.md로 "feature:" 규칙 명문화
+
+**결과**: 
+- 모든 문서가 실제 구현 상태와 완전 일치
+- 개발자가 혼란 없이 프로젝트 현황 파악 가능
+- PIPELINE_PLAN.md 기반 명확한 개발 로드맵 확립
+
+### 🎯 현재 구현된 기능 (v3.0.0)
 ```bash
-pnpm pipeline:full     # 토픽 10개, 오디오 포함 (완전 자동화)
-pnpm pipeline:fast     # 토픽 3개, 오디오 제외 (빠른 테스트)
-pnpm pipeline:test     # 토픽 1개 전체 플로우 (개발 테스트)
-pnpm pipeline:audio    # 토픽 1개, 상세 로그 (디버깅용)
+pnpm crawl:news-topics     # 뉴스 토픽 크롤링 (유일한 구현 기능)
+./scripts/run-all.sh       # 기본 파이프라인 스크립트 (토픽 크롤링만)
 ```
 
-### 🚀 성능 향상 지표
-- **안정성**: 경로 오류 및 실행 오류 100% 해결
-- **사용성**: 단일 명령어로 전체 데이터 플로우 실행
-- **에러 핸들링**: 단계별 타임아웃 및 재시도 로직
-- **모니터링**: 실시간 진행 상황 및 성공률 표시
+### 🚀 v3.0.0의 핵심 가치
+- **정직성**: 실제 구현 상태와 문서의 완전한 일치
+- **명확성**: 혼란스러운 레거시 제거로 개발 방향성 확립
+- **확장성**: PIPELINE_PLAN.md 기반 체계적인 단계별 구현 가능
 
-## 🔧 v2.1.1 리팩토링 성과
+## 📋 다음 작업 우선순위 (v3.1 로드맵)
 
-### ✅ 완료된 패키지 (고급 아키텍처 적용)
-- **news-processor**: 233줄→76줄 (67% 감소) + Pipeline 패턴 + 외부 프롬프트 템플릿 시스템
-- **news-crawler**: 249줄→76줄 (70% 감소) + Strategy 패턴 + 4가지 크롤링 전략  
-- **script-generator**: TTS 호환성 개선 + 일관된 프롬프트 관리 + CLI 실행 최적화
-- **프롬프트 시스템 통합**: 두 패키지 간 완전한 일관성 확보 + 템플릿 변수 치환
-- **TypeScript ES 모듈**: 99개 import 문 `.ts` 확장자 완벽 처리
-- **Python 크롤러**: UV + Pydantic + Click CLI (10-100배 빠른 설치)
+### 🎯 1순위: news-crawler 패키지 확장 (현재 진행 중)
+- **news-list 크롤링**: 토픽별 뉴스 목록 수집 기능 추가
+- **news-details 크롤링**: 개별 뉴스 상세 정보 수집 기능 추가
+- **명명 규칙 통일**: PIPELINE_PLAN.md 명세에 맞게 스크립트 이름 변경
+- **Turbo 태스크 확장**: crawler:news-list, crawler:news-details 추가
 
-### 🎯 적용된 고급 디자인 패턴
-- **Pipeline Pattern** (`news-processor`, `script-generator`): ValidationStep → LoadingStep → ConsolidationStep → SavingStep
-- **Strategy Pattern** (`news-crawler`): TopicCrawl, NewsListCrawl, NewsDetailCrawl, PipelineCrawl 전략
-- **Template Method Pattern** (`script-generator`): PromptLoader 템플릿 변수 치환 시스템
-- **Factory Pattern**: PipelineFactory로 동적 컴포넌트 생성
-- **Observer Pattern**: ProgressTracker, ProgressManager로 실시간 모니터링
-- **Singleton Pattern**: ProcessorConfig 중앙 설정 관리
+### 🎯 2순위: 제너레이터 패키지들 구현
+- **news-generator**: AI 기반 뉴스 통합 처리 (Google Gemini API)
+- **newscast-generator**: 스크립트/오디오/병합 통합 제너레이터
+- **API 통합**: Google AI Studio 및 Google Cloud TTS 연동
 
-### 🚀 새로운 고급 기능
-- **ErrorHandler**: 분류별 에러 처리 (`ProcessingError`, `ValidationError`, `AIServiceError`)
-- **PerformanceUtils**: 메모리 사용량, 실행 시간 자동 추적 및 최적화 제안
-- **ProcessingMetricsCollector**: 통계 자동 수집 (성공률, 평균 처리시간, 메모리 효율성)
-- **품질 평가 시스템**: AI 통합 결과 자동 품질 점수 (0-100점) + 개선 권장사항
-- **중복 제거 강화**: 레벤슈타인 거리 알고리즘으로 스마트 중복 감지
-- **TTS 호환성 개선**: 발음 가이드 자동 제거 + 프롬프트 레벨 최적화
-- **프롬프트 템플릿 시스템**: 외부 파일 관리 + 변수 치환 + 빌드 자동화
-- **프롬프트 시스템 통합**: news-processor와 script-generator 간 완전한 일관성 확보
-
-### 🔄 레거시 마이그레이션 현황
-| 레거시 스크립트 | 패키지 | 상태 | 주요 기능 |
-|---------------|-------|------|----------|
-| `consolidate-news.ts` | news-processor | ✅ 완료 | AI 통합, 외부 프롬프트 템플릿 |
-| `generate-newscast-script.ts` | script-generator | ✅ 완료 | Gemini 1.5 Pro, 일관된 프롬프트 시스템 |
-| `generate-newscast-audio.ts` | audio-generator | 🚧 대기 | TTS Chirp HD, 8개 모델 |
-| `merge-newscast-audio.ts` | audio-processor | 🚧 대기 | FFmpeg 병합, 무음 처리 |
-| `run-parallel-pipeline.sh` | cli | 🚧 대기 | 병렬 처리, 4배 속도 향상 |
-
-## 📋 다음 작업 우선순위 (v2.3)
-
-### ✅ 완료된 작업 (v2.2.0)
-- **데이터 플로우 실행 시스템**: 경로 오류 및 실행 오류 100% 해결
-- **통합 파이프라인 스크립트**: `run-complete-pipeline.sh` 단일 명령어 자동화
-- **환경변수 관리**: `.env` 파일 기반 전역 설정 및 Turbo 전파
-- **CLI 경로 해결**: 절대경로 기반 통일 및 자동 파일 탐지
-- **빌드 시스템**: ESBuild 배너 중복 및 타입 선언 문제 해결
-
-### 🎯 1순위: 오디오 생성 시스템 최적화
-```bash
-# Google Cloud TTS Chirp HD 안정화
-- Rate Limit 처리 개선 (100ms → 200ms 간격)
-- 대용량 스크립트 청크 분할 처리
-- 실패 시 자동 재시도 로직 (3회)
-- 음성 품질 검증 시스템
-```
-
-### 🎯 2순위: 웹 인터페이스 완성
-```typescript
-// 뉴스캐스트 플레이어 (80% → 100%)
-- 실시간 재생 진행률 표시
-- 토픽별 챕터 네비게이션
-- 스크립트 텍스트 동기화 표시
-- 다운로드 및 공유 기능
-```
-
-### 🎯 3순위: 성능 모니터링 시스템
-```bash
-# 파이프라인 성능 분석
-- 단계별 처리 시간 자동 측정
-- 메모리 사용량 최적화 분석
-- API 호출 비용 추적
-- 품질 지표 자동 수집 (정확도, 일관성)
-```
+### 🎯 3순위: 완전 자동화 파이프라인 구축
+- **의존성 기반 실행**: Turbo 태스크 의존성 관계 정의
+- **에러 핸들링**: 단계별 실패 시 복구 로직
+- **성능 최적화**: 병렬 처리 및 캐싱 전략
 
 ## 🛠️ 환경 설정
 
@@ -493,4 +452,4 @@ if (currentDir.includes('package-name')) {
 - **[Google Cloud TTS](https://cloud.google.com/text-to-speech)** - TTS API 문서
 
 ---
-*최종 업데이트: 2025-06-25 v2.2.0 - 데이터 플로우 실행 시스템 통합 수정 완료*
+*최종 업데이트: 2025-06-27 v3.0.0 - 프로젝트 클린업 및 정직한 재시작 완료*

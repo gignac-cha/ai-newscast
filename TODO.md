@@ -1,155 +1,119 @@
-# TODO - AI 뉴스캐스트 프로젝트 v2.1.3
+# TODO - AI 뉴스캐스트 프로젝트 v3.0.0
 
-## ✅ 현재 상태 (v2.1.3 완성 - 2025-06-24)
-- ✅ **프로젝트명 일관성 확보** - "ai-news-cast" → "ai-newscast" 전체 통일
-- ✅ **보안 강화 완료** - 모든 하드코딩된 API 키 제거 및 환경변수화
-- ✅ **패키지 스코프 통일** - `@ai-news-cast/*` → `@ai-newscast/*` (28개 파일)
-- ✅ **CLI 바이너리명 변경** - `ai-news-cast` → `ai-newscast`
-- ✅ **Python 패키지명 변경** - `ai-news-cast-crawler` → `ai-newscast-crawler`
-- ✅ **락 파일 재생성** - pnpm-lock.yaml, uv.lock 업데이트
-- ✅ **모노레포 아키텍처 완성** - 9개 전문 패키지로 재구성
-- ✅ **UV 기반 Python 크롤러** - 10-100배 빠른 의존성 관리
-- ✅ **ESBuild 통합** - 거의 즉시 TypeScript 컴파일
-- ✅ **Turbo 파이프라인** - 태스크 의존성 관리
-- ✅ **100% 호환성** - 기존 JSON 출력 형식 완전 동일
-- ✅ **pnpm@10.12.2 워크스페이스** - 최신 패키지 관리 (Node.js 24+ 요구사항)
-- ✅ **대규모 리팩토링 완료** - news-processor, news-crawler, script-generator 완전 재설계
-- ✅ **디자인 패턴 적용** - Pipeline, Strategy, Factory 패턴 구현
-- ✅ **TypeScript ES 모듈 최적화** - 99개 import 문 확장자 문제 해결
-- ✅ **9/10 패키지 완성** - 핵심 패키지 구현 완료 + API 서버 배포
-- ✅ **7단계 완전 파이프라인** - 토픽 추출부터 완성된 뉴스캐스트 MP3까지
-- ✅ **통합 파이프라인 스크립트** - scripts/run-full-pipeline.sh 구현
-- ✅ **오류 처리 및 복구** - 단계별 실패 시 자동 건너뛰기
-- ✅ **실시간 진행 추적** - 컬러 로그 및 진행률 시각화
-- ✅ **API 서버 배포** - Cloudflare Workers + KV 스토리지 (배치 ID 관리)
+## ✅ 현재 상태 (v3.0.0 클린 스타트 - 2025-06-27)
+- ✅ **프로젝트 클린업 완료** - 레거시 코드 및 혼란스러운 문서 완전 제거
+- ✅ **정직한 문서화** - 실제 구현 상태와 문서 완전 일치
+- ✅ **기초 인프라 구축** - pnpm workspace + Turbo monorepo 설정
+- ✅ **첫 번째 패키지 구현** - @ai-newscast/news-crawler (news-topics만)
+- ✅ **UV + Python 통합** - 현대적 Python 패키지 관리
+- ✅ **명확한 로드맵** - PIPELINE_PLAN.md 기반 7단계 계획
+- ✅ **기본 자동화** - scripts/run-all.sh 파이프라인 스크립트
+- ✅ **타임스탬프 출력** - output/{timestamp}/ 구조
+- ✅ **Turbo 태스크** - crawl:news-topics 작동 확인
 
-## 📋 우선순위별 작업 목록
+## 📋 우선순위별 작업 목록 (PIPELINE_PLAN.md 기반)
 
-### 🔥 높은 우선순위 (v2.2 목표)
+### 🔥 높은 우선순위 (v3.1 목표)
 
-#### 1. 웹 인터페이스 완성
-- 🚧 **`@ai-newscast/web`** 
-  - 🚧 뉴스캐스트 플레이어 개발 (80% 완성)
-  - 🚧 HTML5 오디오 플레이어 구현
-  - 🚧 스크립트 텍스트 동기화 표시
-  - 🚧 진행 바 및 재생 컨트롤
-  - 🚧 배치 ID 기반 최신 뉴스캐스트 로드
-  - 🚧 Cloudflare Workers API 연동
-  - 🚧 KV 스토어에서 최신 배치 ID 조회
-  - 🚧 뉴스캐스트 메타데이터 표시
+#### 1. news-crawler 패키지 확장
+- 🚧 **news-list 크롤링** - POST `/news/getNetworkDataAnalysis.do` API 호출
+- 🚧 **news-details 크롤링** - GET `/news/detailView.do` 개별 뉴스 상세 정보
+- 🚧 **명명 규칙 통일** - PIPELINE_PLAN.md 명세에 맞게 스크립트 이름 변경
+- 🚧 **Turbo 태스크 확장** - crawler:news-list, crawler:news-details 추가
 
-#### 2. 통합 CLI 최적화
-- ✅ **`@ai-newscast/cli`** 
-  - ✅ 기본 CLI 인터페이스 구현
-  - 🚧 `ai-newscast` 바이너리 명령어 통합
-  - 🚧 전체 파이프라인 원클릭 실행
-  - 🚧 진행상황 실시간 모니터링
-  - 🚧 에러 처리 및 복구 시스템
+#### 2. 제너레이터 패키지들 구현
+- 📋 **@ai-newscast/news-generator** - AI 기반 뉴스 통합 처리 (Google Gemini API)
+- 📋 **@ai-newscast/newscast-generator** - 스크립트/오디오/병합 통합 제너레이터
+- 📋 **API 통합** - Google AI Studio 및 Google Cloud TTS 연동
 
-### 📝 중간 우선순위 (v2.3 목표)
+### 📝 중간 우선순위 (v3.2 목표)
 
-#### 3. 성능 최적화
-- 🚧 **병렬 처리 개선** - 현재 3배 → 5배 목표
-- 🚧 **메모리 사용량 최적화** - 대용량 처리 시 효율성 개선
-- 🚧 **TTS 캐싱 시스템** - 중복 생성 방지
-- 🚧 **빌드 시간 단축** - 현재 5.7초 → 3초 목표
+#### 3. 완전 자동화 파이프라인 구축
+- 📋 **의존성 기반 실행** - Turbo 태스크 의존성 관계 정의
+- 📋 **에러 핸들링** - 단계별 실패 시 복구 로직
+- 📋 **성능 최적화** - 병렬 처리 및 캐싱 전략
 
-#### 4. 사용자 경험 개선
-- 📋 **모바일 최적화** - 반응형 웹 인터페이스
-- 📋 **PWA 구현** - 오프라인 재생 지원
-- 📋 **다국어 지원** - 영어/일본어 뉴스캐스트
+#### 4. 웹 인터페이스 구현
+- 📋 **@ai-newscast/web** - 뉴스캐스트 플레이어 웹 인터페이스
+- 📋 **HTML5 오디오 플레이어** - 재생 컨트롤 및 진행률 표시
+- 📋 **스크립트 동기화** - 텍스트와 오디오 동기화
 
-### 🔮 낮은 우선순위 (v3.0 목표)
+### 🔮 낮은 우선순위 (v3.3+ 목표)
 
-#### 5. AI 기능 확장
-- 📋 **음성 개선** - ElevenLabs API 통합
-- 📋 **감정 분석** - 뉴스 톤 기반 음성 조절
-- 📋 **요약 품질** - RAG 기반 컨텍스트 확장
+#### 5. 고급 기능 확장
+- 📋 **다중 AI 모델** - Claude, GPT 등 추가 지원
+- 📋 **음성 품질 향상** - 더 자연스러운 TTS 모델
+- 📋 **실시간 뉴스** - 웹소켓 기반 실시간 업데이트
 
 #### 6. 인프라 고도화
 - 📋 **Docker 컨테이너화** - 배포 표준화
 - 📋 **CI/CD 파이프라인** - GitHub Actions 자동 배포
-- 📋 **모니터링** - Grafana + Prometheus 대시보드
+- 📋 **클라우드 배포** - AWS/GCP 클라우드 인프라
 
 ## ✅ 완료된 주요 작업들
 
-### 🎯 v2.1.3 완료 사항 (2025-06-24)
-- ✅ **프로젝트명 통일**: "ai-news-cast" → "ai-newscast" 전체 적용
-- ✅ **보안 강화**: 모든 하드코딩된 API 키 제거
-- ✅ **패키지 스코프 변경**: `@ai-news-cast/*` → `@ai-newscast/*`
-- ✅ **CLI 바이너리명**: `ai-news-cast` → `ai-newscast`
-- ✅ **Python 패키지명**: `ai-news-cast-crawler` → `ai-newscast-crawler`
-- ✅ **환경변수 템플릿**: `.env.example` 가이드 제공
-- ✅ **문서 업데이트**: README.md, CLAUDE.md, TODO.md 업데이트
-- ✅ **락 파일 재생성**: 의존성 정리 및 재설치
+### 🎯 v3.0.0 완료 사항 (2025-06-27)
+- ✅ **프로젝트 완전 클린업**: 레거시 코드 및 혼란스러운 문서 제거
+- ✅ **정직한 문서화**: 실제 구현 상태와 문서 완전 일치
+- ✅ **기초 패키지 구현**: @ai-newscast/news-crawler (news-topics 크롤링)
+- ✅ **모노레포 설정**: pnpm workspace + Turbo 빌드 시스템
+- ✅ **Python UV 통합**: 현대적 Python 패키지 관리
+- ✅ **명확한 로드맵**: PIPELINE_PLAN.md 기반 7단계 계획 수립
+- ✅ **기본 자동화**: scripts/run-all.sh 파이프라인 스크립트
+- ✅ **문서 업데이트**: 모든 문서 현실 반영 (CLAUDE.md, README.md, etc.)
 
-### 🎯 v2.1.2 완료 사항 (2025-06-23)
-- ✅ **Node.js 24+ 적용** - 모든 패키지 engines 설정
-- ✅ **pnpm@10.12.2** - 최신 패키지 매니저 적용
-- ✅ **의존성 업데이트** - TypeScript 5.8.3, React 19, Next.js 15
-- ✅ **API 서버 배포** - Cloudflare Workers + KV 스토리지
-
-### 🎯 v2.1.1 완료 사항 (2025-06-23)
-- ✅ **프롬프트 시스템 통합** - news-processor와 script-generator 일관성
-- ✅ **외부 프롬프트 템플릿** - Markdown 파일 기반 관리
-- ✅ **TTS 호환성 개선** - 발음 가이드 자동 제거
-- ✅ **TypeScript 설정 현대화** - ESNext/NodeNext 기반
-
-### 🎯 패키지별 완성 현황
+### 🎯 현재 패키지 구현 현황 (v3.0.0)
 ```
-✅ @ai-newscast/core           (100%) - 공통 타입, 유틸리티
-✅ @ai-newscast/news-crawler-py (100%) - Python 메인 크롤러  
-✅ @ai-newscast/news-crawler   (100%) - TypeScript 대안 크롤러
-✅ @ai-newscast/news-processor (100%) - AI 뉴스 통합
-✅ @ai-newscast/script-generator (100%) - 뉴스캐스트 스크립트 생성
-✅ @ai-newscast/api-server     (100%) - Cloudflare Workers API
-✅ @ai-newscast/audio-generator (100%) - TTS 음성 생성
-✅ @ai-newscast/audio-processor (100%) - 오디오 병합/후처리
-✅ @ai-newscast/cli            (100%) - 통합 CLI
-🚧 @ai-newscast/web            (80%) - 뉴스캐스트 플레이어
+✅ @ai-newscast/news-crawler   (20%) - news-topics만 구현
+📋 @ai-newscast/core           (0%) - 계획 단계
+📋 @ai-newscast/news-processor (0%) - 계획 단계
+📋 @ai-newscast/script-generator (0%) - 계획 단계
+📋 @ai-newscast/audio-generator (0%) - 계획 단계
+📋 @ai-newscast/audio-processor (0%) - 계획 단계
+📋 @ai-newscast/newscast-generator (0%) - 계획 단계
+📋 @ai-newscast/api-server     (0%) - 계획 단계
+📋 @ai-newscast/cli            (0%) - 계획 단계
+📋 @ai-newscast/web            (0%) - 계획 단계
 ```
 
-### 🎯 기능별 완성 현황
+### 🎯 기능별 구현 현황 (v3.0.0)
 ```
-✅ 뉴스 크롤링        (100%) - 빅카인드 실시간 수집
-✅ AI 처리           (100%) - Gemini 기반 통합/스크립트
-✅ TTS 생성          (100%) - Google Cloud TTS Chirp HD
-✅ 오디오 후처리      (100%) - FFmpeg 병합 최적화
-✅ API 서버          (100%) - 배치 관리 시스템
-🚧 웹 인터페이스      (80%) - 플레이어 구현 필요
-✅ CLI 도구          (100%) - ai-newscast 바이너리
-✅ 개발자 도구        (100%) - 문서, 빌드 시스템
+✅ 뉴스 토픽 크롤링   (100%) - 빅카인드 30개 주제 수집
+📋 뉴스 목록 크롤링   (0%) - 주제별 뉴스 목록 API 호출
+📋 뉴스 상세 크롤링   (0%) - 개별 뉴스 상세 정보
+📋 AI 뉴스 통합      (0%) - Gemini 기반 뉴스 정리
+📋 스크립트 생성     (0%) - 뉴스캐스트 스크립트 작성
+📋 TTS 음성 생성     (0%) - Google Cloud TTS
+📋 오디오 병합       (0%) - FFmpeg 기반 후처리
 ```
 
-## 🐛 알려진 이슈
+## 🐛 현재 상태
 
-### 해결된 문제
-- ✅ ~~TypeScript import 확장자 문제~~ (v2.1.1에서 해결)
-- ✅ ~~프롬프트 템플릿 일관성 문제~~ (v2.1.1에서 해결)
-- ✅ ~~TTS 발음 가이드 문제~~ (v2.1.1에서 해결)
-- ✅ ~~프로젝트명 혼용 문제~~ (v2.1.3에서 해결)
-- ✅ ~~API 키 보안 문제~~ (v2.1.3에서 해결)
+### 완전히 해결된 문제
+- ✅ **문서-코드 불일치 문제** (v3.0.0에서 완전 해결)
+- ✅ **과장된 완성도 주장** (v3.0.0에서 정직하게 수정)
+- ✅ **혼란스러운 레거시 코드** (v3.0.0에서 완전 제거)
 
-### 진행 중인 문제
-- 🚧 **웹 인터페이스 미완성**: HTML 플레이어 구현 필요
-- 🚧 **메모리 최적화**: 대용량 처리 시 메모리 사용량 증가
+### 현재 제한사항
+- 🚧 **단일 기능만 구현**: news-topics 크롤링만 작동
+- 🚧 **나머지 6단계 미구현**: news-list부터 오디오 병합까지
+- 🚧 **AI 기능 없음**: Google Gemini API 통합 아직 안됨
 
-## 📊 성능 목표
+## 📊 성능 현황
 
-### 현재 성능 (v2.1.3)
-- **빌드 시간**: 5.7초 (Turbo 병렬)
-- **크롤링 속도**: 토픽당 평균 2분
-- **AI 처리**: 뉴스 10개당 평균 30초
-- **TTS 생성**: 1분 스크립트당 평균 45초
-- **전체 파이프라인**: 토픽 1개당 평균 5분
+### 현재 성능 (v3.0.0)
+- **news-topics 크롤링**: 30개 주제, 0.38초 (매우 빠름)
+- **출력 구조**: 타임스탬프 기반 깔끔한 구조
+- **빌드 시간**: Turbo 사용으로 빠른 빌드
+- **메모리 사용**: 가벼운 Python + UV 구조
 
-### 목표 성능 (v2.2)
-- **빌드 시간**: 3초 이하
-- **크롤링 속도**: 토픽당 평균 1분
-- **전체 파이프라인**: 토픽 1개당 평균 3분
+### 목표 성능 (v3.1+)
+- **news-list 크롤링**: 주제당 100개 뉴스 목록 수집
+- **news-details 크롤링**: 병렬 처리로 빠른 상세 정보 수집
+- **전체 파이프라인**: 토픽 1개당 완전 뉴스캐스트 생성
 
 ---
 
-**마지막 업데이트**: 2025-06-24  
-**다음 리뷰**: 2025-06-30  
-**전체 진행률**: 90% (9/10 패키지 완성)
+**마지막 업데이트**: 2025-06-27  
+**다음 리뷰**: 2025-07-01  
+**전체 진행률**: 10% (1/10 패키지 부분 구현, 정직한 상태)

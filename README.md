@@ -1,50 +1,50 @@
 # AI Newscast
 
-> 🤖 AI-powered automated news casting system with modern TypeScript/Python architecture
+> 🤖 AI-powered automated news casting system - **v3.0.0 Clean Start** 
 
-[![Version](https://img.shields.io/badge/version-2.2.0-blue.svg)](https://github.com/your-repo/ai-newscast)
-[![Pipeline](https://img.shields.io/badge/pipeline-100%25%20complete-brightgreen.svg)](docs/2025-06-23-full-pipeline-implementation.md)
-[![Refactored](https://img.shields.io/badge/refactored-67%E2%80%9370%25%20smaller-green.svg)](docs/refactoring-issues-and-solutions.md)
+[![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/your-repo/ai-newscast)
+[![Pipeline](https://img.shields.io/badge/pipeline-1/7%20steps-yellow.svg)](PIPELINE_PLAN.md)
+[![Clean Start](https://img.shields.io/badge/status-clean%20restart-green.svg)](CLAUDE.md)
 [![License](https://img.shields.io/badge/license-ISC-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![TypeScript](https://img.shields.io/badge/typescript-5.0+-blue.svg)](https://typescriptlang.org)
 [![Node.js](https://img.shields.io/badge/node.js-24+-green.svg)](https://nodejs.org)
 [![pnpm](https://img.shields.io/badge/pnpm-10.12.2-yellow.svg)](https://pnpm.io)
 
-## 🚀 Features
+## 🚀 Features (v3.0.0 - Current Implementation)
 
-- **🕷️ Intelligent News Crawling**: BigKinds JSON/HTML auto-detection parsing
-- **🤖 AI Script Generation**: Google Gemini-powered newscast script creation
-- **🎵 Multi-voice TTS**: Google Cloud TTS Chirp HD (8 premium models)
-- **🎛️ Audio Processing**: FFmpeg-based professional audio mixing (optimized 0.2s gaps)
-- **⚡ High Performance**: UV + ESBuild for 10-100x faster development
-- **🏗️ Modular Architecture**: 90% complete monorepo (9/10 packages implemented + API deployed)
-- **🚀 Complete Automation**: 65 news → 3min 20sec complete newscast in 2min 31sec
+- **🕷️ News Topic Crawling**: ✅ BigKinds.or.kr trending topics extraction (30 topics)
+- **🤖 AI Script Generation**: 🚧 Planned - Google Gemini-powered newscast script creation
+- **🎵 Multi-voice TTS**: 🚧 Planned - Google Cloud TTS Chirp HD (8 premium models)
+- **🎛️ Audio Processing**: 🚧 Planned - FFmpeg-based professional audio mixing
+- **⚡ High Performance**: ✅ UV + Turbo monorepo for fast development
+- **🏗️ Clean Architecture**: ✅ 1/10 packages implemented, clear roadmap ahead
+- **📋 Systematic Development**: ✅ PIPELINE_PLAN.md-based step-by-step implementation
 
 ## 📦 Architecture
 
-### Package Structure
+### Package Structure (v3.0.0 Clean Start)
 ```
 packages/
-├── core/                 # ✅ Common types, utilities, configurations
-├── news-crawler/         # ✅ TypeScript crawler (Playwright-based)
-├── news-crawler-py/      # ✅ Production Python crawler (UV + requests)
-├── news-processor/       # ✅ News data processing and consolidation
-├── script-generator/     # ✅ AI-powered newscast script generation
-├── api-server/           # ✅ Cloudflare Workers API (deployed)
-├── audio-generator/      # ✅ TTS and audio generation
-├── audio-processor/      # ✅ Audio mixing and post-processing
-├── cli/                  # ✅ Unified CLI interface
-└── web/                  # 🚧 Newscast player web interface
+├── news-crawler/         # ✅ Python + UV crawler (news-topics only)
+├── core/                 # 🚧 Planned - Common types, utilities, configurations
+├── news-processor/       # 🚧 Planned - News data processing and consolidation  
+├── script-generator/     # 🚧 Planned - AI-powered newscast script generation
+├── audio-generator/      # 🚧 Planned - TTS and audio generation
+├── audio-processor/      # 🚧 Planned - Audio mixing and post-processing
+├── newscast-generator/   # 🚧 Planned - Script/audio/merge integration
+├── api-server/           # 🚧 Planned - Cloudflare Workers API
+├── cli/                  # 🚧 Planned - Unified CLI interface
+└── web/                  # 🚧 Planned - Newscast player web interface
 ```
 
 ### Technology Stack
-- **🐍 Python**: UV package manager, Pydantic, requests, Click CLI
-- **📘 TypeScript**: Node.js 24+, ESNext/NodeNext, ESBuild, Playwright
+- **🐍 Python**: UV package manager, requests, lxml (currently implemented)
+- **📘 TypeScript**: Node.js 24+, ESNext/NodeNext (planned)
 - **🏗️ Build Tools**: Turbo monorepo, pnpm@10.12.2 workspaces
-- **🤖 AI Services**: Google Gemini API, Google Cloud TTS Chirp HD
-- **☁️ Deployment**: Cloudflare Workers (API server), KV storage
-- **📊 Data**: Structured JSON output, type-safe validation
+- **🤖 AI Services**: Google Gemini API (planned), Google Cloud TTS (planned)
+- **☁️ Deployment**: Cloudflare Workers (planned)
+- **📊 Data**: JSON output with timestamp-based organization
 
 ## 🚀 Quick Start
 
