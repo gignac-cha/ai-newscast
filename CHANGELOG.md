@@ -4,6 +4,70 @@
 
 ---
 
+## [3.2.1] - 2025-06-28 🎯 CLI 개발자 경험 대폭 개선
+
+### 🚀 Added
+- **Typer CLI 프레임워크**: argparse → Typer 완전 마이그레이션으로 현대적 CLI 경험 제공
+- **타입 안전한 CLI**: 타입 힌트 기반 자동 인수 검증 및 에러 방지
+- **Rich 기반 Help**: 컬러풀하고 구조화된 help 메시지로 사용성 대폭 향상
+- **Enum 기반 선택지**: `LogFormat.text|json` 타입 안전한 옵션 선택
+- **자동 완성 지원**: 셸 자동완성 기능으로 개발자 생산성 향상
+
+### 🔧 Changed
+- **코드 품질 향상**: 100줄 복잡한 argparse 로직 → 간결한 데코레이터 기반 명령어 정의
+- **타입 힌트 전면 적용**: `Optional[str]`, `LogFormat` 등 명시적 타입 지정
+- **함수 단위 모듈화**: 각 명령어를 독립적인 함수로 분리하여 테스트 가능성 향상
+- **호환성 100% 유지**: 기존 파이프라인 (`pnpm run:crawler:*`) 완전 동일하게 작동
+
+### 📊 개발자 경험 개선
+```bash
+# Before: 기본적인 help 출력
+python news_crawler.py --help
+
+# After: Rich 기반 아름다운 help
+╭─ Commands ───────────────────────────────────────────────────────────────────╮
+│ news-topics    Crawl trending news topics from BigKinds                      │
+│ news-list      Crawl news list for a specific topic                          │
+│ news-details   Crawl detailed news content                                   │
+╰──────────────────────────────────────────────────────────────────────────────╯
+```
+
+### 🧪 검증 완료
+- ✅ **직접 실행**: `uv run python news_crawler.py --help` 완벽 작동
+- ✅ **파이프라인 통합**: `pnpm run:crawler:news-topics` 기존 스크립트 정상 작동  
+- ✅ **실제 크롤링**: JSON/text 로그 형식 모두 정상 출력
+- ✅ **타입 검증**: 잘못된 인수 입력 시 자동 에러 감지
+
+### 📦 의존성 업데이트
+- **typer**: 현대적 CLI 프레임워크 추가 (rich 자동 포함)
+- **type hints**: Python 3.8+ typing 모듈 완전 활용
+- **enum**: LogFormat 타입 안전한 선택지 구현
+
+---
+
+## [3.2.0] - 2025-06-27 🤖 AI 뉴스 생성기 완성
+
+### 🎯 Added
+- **Google Gemini 1.5 Flash 통합**: 다중 뉴스 기사를 하나의 통합된 뉴스로 자동 생성
+- **듀얼 출력 포맷**: JSON 메타데이터 + 인간 친화적 TXT 포맷  
+- **파일 기반 프롬프트 관리**: prompts/news-consolidation.txt로 AI 프롬프트 템플릿 분리
+- **4단계 AI 파이프라인**: news-topics → news-list → news-details → **news-generation** 완전 자동화
+- **고급 파이프라인 제어**: --skip-topics, --skip-generation 등 단계별 건너뛰기 기능
+- **재개 기능**: --output-dir로 기존 출력 디렉터리에서 작업 재개
+
+### 🔧 Changed
+- **파이프라인 확장**: 3단계 → 4단계로 AI 뉴스 생성 추가
+- **환경변수 관리**: .env 파일 자동 로딩 및 Turbo 환경변수 전파
+- **출력 구조 확장**: 각 토픽에 news.json, news.txt 파일 추가
+- **TypeScript 최적화**: 실험적 타입 제거로 빠른 실행
+
+### 📊 Performance
+- **AI 뉴스 생성**: 평균 2-5초 (Google Gemini 1.5 Flash)
+- **입력 처리**: 최대 43개 뉴스 기사 동시 처리 가능
+- **출력 품질**: 객관적이고 중립적인 뉴스 통합
+
+---
+
 ## [3.1.0] - 2025-06-27 🚀 크롤링 파이프라인 완성
 
 ### 🎯 Added
