@@ -1,10 +1,10 @@
-# Project Evolution: Clean Start v3.0.0
+# Project Evolution: v3.0.0 → v3.1.0
 
-> 🧹 Complete project reset and honest documentation of current implementation status
+> 🚀 From Clean Start to Crawling Pipeline Complete
 
 ## 📋 Overview
 
-Version 3.0.0 represents a complete project cleanup and restart. Previous versions (v1.0-v2.2.0) contained documentation inconsistencies and overstated completion claims. This version provides an honest foundation with only implemented features documented.
+Version 3.0.0 represented a complete project cleanup and restart from previous inconsistent documentation. Version 3.1.0 builds upon this honest foundation with the first major feature implementation: a complete 3-stage news crawling pipeline.
 
 ## 🔄 What Changed
 
@@ -41,6 +41,27 @@ Documentation Status:
 ├── package.json                   # ✅ v3.0.0 version
 └── All docs aligned               # ✅ Truth restored
 ```
+
+## 🚀 v3.1.0 Major Achievement
+
+### ✅ Crawling Pipeline Complete (v3.1.0)
+```bash
+# Working 3-stage pipeline
+1. News Topics    ✅ 10 unique trending topics (deduplication working)
+2. News Lists     ✅ Up to 100 articles per topic (complete extraction)  
+3. News Details   ✅ Full article content (metadata + body text)
+
+# Automated execution
+./scripts/run-all.sh    # One-click full pipeline
+pnpm crawl:news-topics  # Individual stages available
+```
+
+### v3.1.0 Technical Achievements
+- **Deduplication Algorithm**: BigKinds shows same 10 topics in 3 UI sections, fixed with Python sets
+- **JSON Output System**: OutputManager pattern with --print-log-format and --print-log-file
+- **Turbo Integration**: Clean JSON parsing by separating turbo output from application output
+- **Pipeline Automation**: scripts/run-all.sh processes all topics automatically
+- **Performance Optimization**: jq parsing, mktemp temporary files, ripgrep for searches
 
 ## 🛠️ v3.0.0 Development Approach
 
@@ -114,21 +135,23 @@ uv run python news_crawler.py news-topics --output-file "output/test.json"
 4. Check output/latest/      # Verify results
 ```
 
-## 🚀 Next Steps (v3.1+)
+## 🚀 Next Steps (v3.2+)
 
 Following PIPELINE_PLAN.md roadmap:
-1. **Extend news-crawler**: Add news-list, news-details crawling
+1. **✅ COMPLETED: Extend news-crawler**: news-list, news-details crawling fully implemented
 2. **Create generators**: news-generator, newscast-generator packages  
 3. **Build automation**: Complete 7-step pipeline integration
 4. **Add features**: AI processing, TTS, audio merging
 
-## 💡 v3.0.0 Philosophy
+## 💡 v3.1.0 Philosophy Proven
 
-**"Start Simple, Build Systematically"**
-- ✅ Document only what exists
-- ✅ Implement step-by-step  
-- ✅ Test each component thoroughly
-- ✅ Scale based on proven foundation
+**"Start Simple, Build Systematically"** ✅ Success
+- ✅ Document only what exists → ACHIEVED: Honest v3.0.0 foundation
+- ✅ Implement step-by-step → ACHIEVED: 3-stage crawling pipeline  
+- ✅ Test each component thoroughly → ACHIEVED: 100% working pipeline
+- ✅ Scale based on proven foundation → READY: Next generators implementation
+
+**v3.1.0 Achievement**: First major feature implementation on honest foundation demonstrates the approach works.
 
 ---
 

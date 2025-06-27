@@ -1,6 +1,6 @@
 {
   "name": "ai-newscast",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "AI-powered news cast generation system",
   "private": true,
   "engines": {
@@ -8,13 +8,26 @@
   },
   "packageManager": "pnpm@10.12.2",
   "scripts": {
-    "crawl:news-topics": "turbo crawl:news-topics"
+    "run:crawler:news-topics": "turbo crawl:news-topics",
+    "run:crawler:news-list": "turbo crawl:news-list",
+    "run:crawler:news-details": "turbo crawl:news-details",
+    "run:generator:news": "turbo generate:news",
+    "run:generator:newscast-script": "turbo generate:newscast-script",
+    "run:generator:newscast-audio": "turbo generate:newscast-audio",
+    "run:generator:newscast": "turbo generate:newscast"
   },
-  "keywords": ["ai", "news", "cast", "tts", "automation"],
+  "keywords": [
+    "ai",
+    "news",
+    "cast",
+    "tts",
+    "automation"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^24.0.3",
+    "turbo": "^2.5.4",
     "typescript": "^5.8.3"
   }
 }
