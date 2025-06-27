@@ -3,6 +3,24 @@
   "tasks": {
     "crawl:news-topics": {
       "outputs": ["output/**"]
+    },
+    "crawl:news-list": {
+      "outputs": ["output/**"]
+    },
+    "crawl:news-details": {
+      "outputs": ["output/**"]
+    },
+    "generate:news": {
+      "outputs": ["output/**"]
+    },
+    "generate:newscast-script": {
+      "outputs": ["output/**"]
+    },
+    "generate:newscast-audio": {
+      "outputs": ["output/**"]
+    },
+    "generate:newscast": {
+      "outputs": ["output/**"]
     }
   }
 }

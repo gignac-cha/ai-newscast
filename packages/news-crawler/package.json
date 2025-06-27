@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "postinstall": "uv venv && uv pip install -r requirements.txt",
-    "crawl:news-topics": "uv run python news_crawler.py news-topics"
+    "crawl:news-topics": "uv run python news_crawler.py news-topics",
+    "crawl:news-list": "uv run python news_crawler.py news-list",
+    "crawl:news-details": "uv run python news_crawler.py news-details"
   },
   "keywords": ["news", "crawler", "bigkinds"],
   "author": "",
