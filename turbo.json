@@ -11,7 +11,8 @@
       "outputs": ["output/**"]
     },
     "generate:news": {
-      "outputs": ["output/**"]
+      "outputs": ["output/**"],
+      "env": ["GOOGLE_GENAI_API_KEY"]
     },
     "generate:newscast-script": {
       "outputs": ["output/**"]

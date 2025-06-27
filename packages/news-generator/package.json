@@ -1,0 +1,30 @@
+{
+  "name": "@ai-newscast/news-generator",
+  "version": "1.0.0",
+  "description": "AI-powered news content generator using Google Gemini",
+  "type": "module",
+  "main": "news-generator.js",
+  "scripts": {
+    "generate": "node --experimental-strip-types news-generator.ts",
+    "generate:news": "node --experimental-strip-types news-generator.ts",
+    "dev": "node --experimental-strip-types --watch news-generator.ts",
+    "test": "node --experimental-strip-types --test **/*.test.ts"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1"
+  },
+  "keywords": [
+    "ai",
+    "news",
+    "generator",
+    "gemini",
+    "nlp"
+  ],
+  "authors": [
+    "AI Newscast Team"
+  ],
+  "license": "MIT"
+}
