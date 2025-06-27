@@ -1,6 +1,6 @@
 # API 문서
 
-> v3.1.0 크롤링 파이프라인 완성 버전 기준 API 사용 가이드
+> v3.2.0 AI 뉴스 생성기 완성 버전 기준 API 사용 가이드
 
 ## 📋 개요
 
@@ -237,41 +237,72 @@ pnpm crawl:news-details -- --input-file "output/topic-01/news-list.json" --outpu
 }
 ```
 
-## 🤖 Google Gemini API (계획됨)
+## 🤖 Google Gemini API (현재 구현됨)
 
 ### 기본 정보
 - **베이스 URL**: `https://generativelanguage.googleapis.com`
-- **인증**: API 키 필요 (`GOOGLE_AI_API_KEY`)
-- **모델**: Gemini 2.0 Flash, Gemini 1.5 Pro
+- **인증**: API 키 필요 (`GOOGLE_GENAI_API_KEY`)
+- **모델**: Gemini 1.5 Flash (현재 사용), Gemini 1.5 Pro (계획됨)
 - **요청 제한**: 분당 60회, 일일 1500회 (무료 tier)
+- **라이브러리**: `@google/generative-ai` (v0.21.0)
 
-### 사용 예정 기능
+### 구현된 기능
 
-#### 1. 뉴스 통합 및 요약 (packages/news-processor)
+#### 1. 뉴스 통합 및 요약 (packages/news-generator) ✅
 ```typescript
-const response = await fetch(`${GEMINI_BASE_URL}/v1/models/gemini-2.0-flash:generateContent`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'x-goog-api-key': process.env.GOOGLE_AI_API_KEY
-  },
-  body: JSON.stringify({
-    contents: [{
-      parts: [{
-        text: `다음 뉴스들을 통합하여 요약해주세요: ${newsContent}`
-      }]
-    }]
-  })
-});
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const apiKey = process.env.GOOGLE_GENAI_API_KEY;
+const genAI = new GoogleGenerativeAI(apiKey);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+const result = await model.generateContent(prompt);
+const response = await result.response;
+const text = response.text();
+
+// JSON 응답 파싱
+const jsonMatch = text.match(/\{[\s\S]*\}/);
+const parsed = JSON.parse(jsonMatch[0]);
 ```
 
-#### 2. 뉴스캐스트 스크립트 생성 (packages/script-generator)
+#### 실제 사용 예시
+```bash
+# 뉴스 생성 실행
+pnpm run:generator:news -- --input-folder ./output/topic-01/news --output-file ./output/topic-01/news.json
+
+# JSON 로그 포맷으로 실행
+pnpm run:generator:news -- --input-folder ./output/topic-01/news --output-file ./output/topic-01/news.json --print-format json --print-log-file ./output/generator-log.json
+```
+
+#### 프롬프트 템플릿 시스템
+```
+packages/news-generator/prompts/news-consolidation.txt
+```
+- 파일 기반 프롬프트 관리
+- 객관성, 중립성 유지 지침
+- JSON 응답 형식 명시
+- 중복 제거 및 관점 통합 지시
+
+#### 생성된 뉴스 출력 구조
+```json
+{
+  "title": "통합 뉴스 제목",
+  "summary": "전체 상황에 대한 간단한 요약 (2-3문장)",
+  "content": "모든 기사를 종합한 상세한 내용 (문어체 뉴스 기사 형식)",
+  "sources_count": 43,
+  "sources": ["경향신문", "중앙일보", "매일경제", ...],
+  "generation_timestamp": "2025-06-27T20:03:01.721Z",
+  "input_articles_count": 43
+}
+```
+
+#### 2. 뉴스캐스트 스크립트 생성 (packages/script-generator) 🚧 계획됨
 ```typescript
 const response = await fetch(`${GEMINI_BASE_URL}/v1/models/gemini-1.5-pro:generateContent`, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'x-goog-api-key': process.env.GOOGLE_AI_API_KEY
+    'x-goog-api-key': process.env.GOOGLE_GENAI_API_KEY
   },
   body: JSON.stringify({
     contents: [{
@@ -286,11 +317,21 @@ const response = await fetch(`${GEMINI_BASE_URL}/v1/models/gemini-1.5-pro:genera
 ### 설정 방법
 ```bash
 # 환경변수 설정
-export GOOGLE_AI_API_KEY="your_google_ai_api_key"
+export GOOGLE_GENAI_API_KEY="your_google_genai_api_key"
 
 # .env 파일에 추가
-echo "GOOGLE_AI_API_KEY=your_google_ai_api_key" >> .env
+echo "GOOGLE_GENAI_API_KEY=your_google_genai_api_key" >> .env
+
+# Turbo 환경변수 전파 (turbo.json에 설정됨)
+# generate:news 태스크에서 GOOGLE_GENAI_API_KEY 자동 전달
 ```
+
+### 성능 및 특징
+- **응답 시간**: 평균 2-5초 (Gemini 1.5 Flash)
+- **입력 토큰**: 다중 뉴스 기사 (최대 43개 기사 처리 확인)
+- **출력 형식**: JSON + TXT 듀얼 출력
+- **에러 처리**: JSON 파싱 실패 시 예외 처리
+- **TypeScript**: 실험적 타입 제거로 빠른 실행
 
 ## 🎵 Google Cloud TTS API (계획됨)
 
@@ -368,4 +409,4 @@ curl -X POST https://bigkinds.or.kr/news/getNetworkDataAnalysis.do \
 
 ---
 
-**최종 업데이트**: v3.1.0 (2025-06-27) - BigKinds API 실제 응답 구조 문서화 완료
+**최종 업데이트**: v3.2.0 (2025-06-27) - Google Gemini API 뉴스 통합 기능 구현 완료

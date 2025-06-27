@@ -1,39 +1,40 @@
 # AI Newscast
 
-> 🤖 AI-powered automated news casting system - **v3.1.0 Crawling Pipeline Complete** 
+> 🤖 AI-powered automated news casting system - **v3.2.0 AI News Generator Complete** 
 
-[![Version](https://img.shields.io/badge/version-3.1.0-blue.svg)](https://github.com/your-repo/ai-newscast)
-[![Pipeline](https://img.shields.io/badge/pipeline-3/7%20steps-orange.svg)](PIPELINE_PLAN.md)
-[![Crawling](https://img.shields.io/badge/status-crawling%20complete-brightgreen.svg)](CLAUDE.md)
+[![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)](https://github.com/your-repo/ai-newscast)
+[![Pipeline](https://img.shields.io/badge/pipeline-4/7%20steps-orange.svg)](PIPELINE_PLAN.md)
+[![AI](https://img.shields.io/badge/status-ai%20generator%20complete-brightgreen.svg)](CLAUDE.md)
 [![License](https://img.shields.io/badge/license-ISC-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![TypeScript](https://img.shields.io/badge/typescript-5.0+-blue.svg)](https://typescriptlang.org)
 [![Node.js](https://img.shields.io/badge/node.js-24+-green.svg)](https://nodejs.org)
 [![pnpm](https://img.shields.io/badge/pnpm-10.12.2-yellow.svg)](https://pnpm.io)
 
-## 🚀 Features (v3.1.0 - Current Implementation)
+## 🚀 Features (v3.2.0 - Current Implementation)
 
 - **🕷️ Complete News Crawling**: ✅ 3-stage pipeline (topics → lists → details) with deduplication
+- **🤖 AI News Generation**: ✅ Google Gemini 1.5 Flash integration for intelligent news consolidation
 - **📊 Smart Data Processing**: ✅ 10 trending topics, up to 100 news per topic, full article extraction
-- **🔧 JSON Logging System**: ✅ Clean metadata extraction with jq parsing
-- **🤖 AI Script Generation**: 🚧 Planned - Google Gemini-powered newscast script creation
+- **🔧 JSON Logging System**: ✅ Clean metadata extraction with jq parsing + dual output formats
+- **⚙️ Advanced Pipeline Control**: ✅ Skip functionality (--skip-topics, --skip-details) + resume capability
 - **🎵 Multi-voice TTS**: 🚧 Planned - Google Cloud TTS Chirp HD (8 premium models)
 - **🎛️ Audio Processing**: 🚧 Planned - FFmpeg-based professional audio mixing
-- **⚡ High Performance**: ✅ UV + Turbo monorepo for fast development
-- **🏗️ Clean Architecture**: ✅ 1/10 packages fully implemented, 3/7 pipeline steps complete
+- **⚡ High Performance**: ✅ UV + Turbo monorepo + TypeScript experimental stripping
+- **🏗️ Clean Architecture**: ✅ 2/10 packages fully implemented, 4/7 pipeline steps complete
 - **📋 Systematic Development**: ✅ PIPELINE_PLAN.md-based step-by-step implementation
 
 ## 📦 Architecture
 
-### Package Structure (v3.1.0 Crawling Complete)
+### Package Structure (v3.2.0 AI News Generator Complete)
 ```
 packages/
 ├── news-crawler/         # ✅ Complete 3-stage pipeline (Python + UV)
 │   ├── news-topics       # ✅ Trending topics extraction (10 unique topics)
 │   ├── news-list         # ✅ News lists per topic (up to 100 articles each)
 │   └── news-details      # ✅ Full article content extraction
+├── news-generator/       # ✅ Complete AI news consolidation (TypeScript + Google Gemini)
 ├── core/                 # 🚧 Planned - Common types, utilities, configurations
-├── news-processor/       # 🚧 Planned - News data processing and consolidation  
 ├── script-generator/     # 🚧 Planned - AI-powered newscast script generation
 ├── audio-generator/      # 🚧 Planned - TTS and audio generation
 ├── audio-processor/      # 🚧 Planned - Audio mixing and post-processing
@@ -44,12 +45,12 @@ packages/
 ```
 
 ### Technology Stack
-- **🐍 Python**: UV package manager, requests, lxml (currently implemented)
-- **📘 TypeScript**: Node.js 24+, ESNext/NodeNext (planned)
+- **🐍 Python**: UV package manager, requests, lxml (crawling pipeline)
+- **📘 TypeScript**: Node.js 24+, experimental type stripping (AI generation)
 - **🏗️ Build Tools**: Turbo monorepo, pnpm@10.12.2 workspaces
-- **🤖 AI Services**: Google Gemini API (planned), Google Cloud TTS (planned)
+- **🤖 AI Services**: Google Gemini 1.5 Flash (implemented), Google Cloud TTS (planned)
 - **☁️ Deployment**: Cloudflare Workers (planned)
-- **📊 Data**: JSON output with timestamp-based organization
+- **📊 Data**: JSON/TXT dual output with timestamp-based organization
 
 ## 🚀 Quick Start
 
@@ -77,39 +78,47 @@ pnpm install && pnpm build
 
 # Set up environment variables
 cp .env.example .env
-# Edit .env with your Google AI API key
+# Edit .env with your Google Gemini API key
+echo "GOOGLE_GENAI_API_KEY=your_api_key_here" >> .env
 ```
 
 ### Usage
 
 #### 🚀 Complete Pipeline (All-in-One)
 ```bash
-# Full newscast generation (10 topics, with audio)
-pnpm pipeline:full
+# Full 4-stage pipeline: crawl → generate news (10 topics)
+./scripts/run-all.sh
 
-# Fast test (3 topics, skip audio)
-pnpm pipeline:fast
+# Skip specific stages for debugging
+./scripts/run-all.sh --skip-topics --skip-lists   # Only details + generation
+./scripts/run-all.sh --skip-generation            # Only crawling pipeline
 
-# Single topic test
-pnpm pipeline:test
+# Resume from existing output directory
+./scripts/run-all.sh --output-dir output/2025-06-27T15-52-44-934067
 ```
 
 #### 📊 Step-by-Step Pipeline
 ```bash
-# 1. Crawl news topics and articles
-pnpm crawl:pipeline --max-topics 5
+# 1. Crawl news topics (10 unique topics from BigKinds)
+pnpm run:crawler:news-topics --output-file ./output/topic-list.json
 
-# 2. Process with AI
-pnpm news:process ./output/latest/topic-01
+# 2. Crawl news lists for each topic (up to 100 articles per topic)
+pnpm run:crawler:news-list --input-file ./output/topic-list.json --topic-index 0 --output-file ./output/topic-01/news-list.json
 
-# 3. Generate newscast script
-pnpm script:generate ./output/latest/topic-01
+# 3. Extract detailed news content
+pnpm run:crawler:news-details --input-file ./output/topic-01/news-list.json --output-folder ./output/topic-01/news
 
-# 4. Generate TTS audio
-pnpm audio:generate ./output/latest/topic-01
+# 4. Generate AI-consolidated news (NEW in v3.2.0)
+pnpm run:generator:news --input-folder ./output/topic-01/news --output-file ./output/topic-01/news.json
 
-# 5. Mix final audio
-pnpm audio:process ./output/latest/topic-01
+# 5. Generate newscast script (Planned)
+pnpm script:generate ./output/topic-01/news.json
+
+# 6. Generate TTS audio (Planned)
+pnpm audio:generate ./output/topic-01/newscast-script.json
+
+# 7. Mix final audio (Planned)
+pnpm audio:process ./output/topic-01/
 ```
 
 #### 🛠️ Development Commands
@@ -127,27 +136,28 @@ pnpm typecheck
 pnpm env:setup
 ```
 
-## 📊 Current Status (v3.1.0)
+## 📊 Current Status (v3.2.0)
 
 ### ✅ Completed Features
 - **News Crawling**: 100% - 3-stage pipeline with deduplication (topics → lists → details)
+- **AI News Generation**: 100% - Google Gemini 1.5 Flash consolidation (details → unified news)
 - **Data Processing**: 100% - BigKinds real-time trending topics extraction
-- **JSON Output**: 100% - Clean metadata with jq-compatible parsing
-- **Pipeline Automation**: 100% - Full workflow automation with scripts/run-all.sh
+- **JSON Output**: 100% - Clean metadata with jq-compatible parsing + TXT format
+- **Pipeline Automation**: 100% - 4-stage workflow with skip/resume functionality
 - **Monorepo Setup**: 100% - Turbo + pnpm workspace integration
 
 ### 🚧 Next Implementation Priority
-- **AI Processing**: Planned - Google Gemini-based news consolidation
-- **Script Generation**: Planned - Newscast script creation
+- **Script Generation**: Planned - AI-powered newscast script creation
 - **TTS Generation**: Planned - Google Cloud TTS integration
 - **Audio Processing**: Planned - FFmpeg mixing optimization
 - **Web Interface**: Planned - Newscast player implementation
+- **API Server**: Planned - Cloudflare Workers deployment
 
 ### Package Implementation
 ```
 ✅ @ai-newscast/news-crawler   (100%) - 3-stage crawling pipeline
+✅ @ai-newscast/news-generator (100%) - AI news consolidation with Google Gemini
 🚧 @ai-newscast/core           (Planned) - Types, utilities
-🚧 @ai-newscast/news-processor (Planned) - AI news consolidation
 🚧 @ai-newscast/script-generator (Planned) - Newscast script generation
 🚧 @ai-newscast/audio-generator (Planned) - TTS voice generation
 🚧 @ai-newscast/audio-processor (Planned) - Audio mixing/processing
@@ -159,15 +169,15 @@ pnpm env:setup
 ## 📁 Output Structure
 
 ```
-output/2025-06-24T12-30-45-123456/
-├── topic-list.json                 # Trending topics list
+output/2025-06-27T18-41-56-330937/
+├── topic-list.json                 # Trending topics list (10 unique topics)
 ├── topic-01/                       # Rank #1 topic
-│   ├── news-list.json             # News articles list
+│   ├── news-list.json             # News articles list (up to 100 articles)
 │   ├── news/                      # Individual article details
 │   │   ├── 01100101-*.json        # Article ID-based files
 │   │   └── ...
-│   ├── news.json                  # AI-consolidated news
-│   ├── news.txt                   # Human-readable text
+│   ├── news.json                  # 🆕 AI-consolidated news (v3.2.0)
+│   ├── news.txt                   # 🆕 Human-readable consolidated text
 │   ├── newscast-script.json       # Structured newscast script
 │   ├── newscast-script.txt        # Human-readable script
 │   ├── audio/                     # TTS-generated audio files
@@ -180,14 +190,15 @@ output/2025-06-24T12-30-45-123456/
 └── ...                             # Additional topics
 ```
 
-## 🎯 Performance Metrics (v3.1.0)
+## 🎯 Performance Metrics (v3.2.0)
 
 - **News Topics**: 0.38s (10 unique topics extracted)
 - **News Lists**: ~15s per topic (up to 100 articles)
 - **News Details**: ~2-3min per topic (full article extraction)
+- **AI News Generation**: ~2-5s per topic (Google Gemini 1.5 Flash)
 - **Deduplication**: 100% accuracy (30 → 10 unique topics)
-- **Pipeline Automation**: Single command execution
-- **JSON Output**: Clean jq-compatible format
+- **Pipeline Automation**: Single command execution with skip/resume
+- **JSON Output**: Clean jq-compatible format + human-readable TXT
 
 ## 🔧 Troubleshooting
 
@@ -200,7 +211,7 @@ which uv  # Should show /home/user/.local/bin/uv
 import { something } from './file.ts';  # ✅ Correct
 
 # API key verification
-echo $GOOGLE_AI_API_KEY  # Should show your key
+echo $GOOGLE_GENAI_API_KEY  # Should show your key
 
 # FFmpeg for audio processing
 sudo apt install ffmpeg  # Ubuntu
@@ -234,5 +245,5 @@ This project is licensed under the ISC License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Version**: v3.1.0 (2025-06-27)  
+**Version**: v3.2.0 (2025-06-27)  
 **Development Team**: AI Newscast Team
