@@ -4,6 +4,28 @@
 
 ---
 
+## [3.3.0] - 2025-06-28 🎙️ 뉴스캐스트 스크립트 생성기 완성
+
+### 🚀 Added
+- **newscast-generator 패키지**: AI 기반 뉴스캐스트 스크립트 생성 완전 구현
+- **5단계 AI 파이프라인**: topics → lists → details → news → **newscast-script** 완전 자동화
+- **랜덤 TTS 호스트 선택**: 8명 아나운서 풀에서 남녀 페어 조합 랜덤 선택으로 다양성 확보
+- **Google Cloud TTS 연동**: Chirp HD Premium 모델 8개 음성 with 한국인 아나운서 캐릭터
+- **Markdown 프롬프트 관리**: 구조화된 .md 파일로 프롬프트 관리 및 가독성 향상
+- **Commander.js CLI**: script/audio/newscast 서브명령어로 확장 가능한 구조
+- **듀얼 출력 시스템**: newscast-script.json (TTS API용) + newscast-script.txt (인간 친화적)
+
+### 🔧 Changed
+- **프롬프트 파일 형식**: .txt → .md로 마이그레이션하여 구조화된 문서 관리
+- **TTS 호스트 이름**: 새로운 한국인 아나운서 캐릭터로 업데이트 (신동혁, 차미래 등)
+- **turbo.json 환경변수**: newscast-generator에 GOOGLE_GENAI_API_KEY 전파 설정
+
+### 📊 Performance
+- **완성도 향상**: 50% → 60% (3/10 패키지 완전 구현)
+- **파이프라인 진전**: 4단계 → 5단계 완성으로 실제 뉴스캐스트 스크립트 생성 가능
+
+---
+
 ## [3.2.5] - 2025-06-28 🎯 Commander.js CLI 프레임워크 적용
 
 ### 🚀 Added

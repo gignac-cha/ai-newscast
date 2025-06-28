@@ -3,12 +3,12 @@
 ## 📋 프로젝트 개요
 빅카인드(bigkinds.or.kr)에서 실시간 뉴스를 수집하여 AI 기반 뉴스캐스트를 완전 자동화 생성하는 고급 모노레포 프로젝트
 
-**현재 버전**: v3.2.5 (2025-06-28 Commander.js CLI 프레임워크 적용 완성)  
-**상태**: 50% 완성 (2/10 패키지 완전 구현, 4단계 AI 뉴스 파이프라인 + 현대적 CLI 경험 완성)
+**현재 버전**: v3.3.0 (2025-06-28 뉴스캐스트 스크립트 생성기 완성)  
+**상태**: 60% 완성 (3/10 패키지 완전 구현, 5단계 AI 뉴스캐스트 파이프라인 완성)
 
 ## 🏗️ 핵심 아키텍처
 
-### 📦 패키지 구조와 구현 상태 (v3.2.5 Commander.js CLI 적용 완성)
+### 📦 패키지 구조와 구현 상태 (v3.3.0 뉴스캐스트 스크립트 생성기 완성)
 ```
 packages/
 ├── news-crawler/            # ✅ 완성 - 3단계 크롤링 + Typer CLI (Python + UV)
@@ -16,17 +16,25 @@ packages/
 │   ├── news-list            # ✅ 완성 - 토픽별 뉴스 목록 수집 (최대 100개)
 │   └── news-details         # ✅ 완성 - 개별 뉴스 상세 정보 추출
 ├── news-generator/          # ✅ 완성 - AI 뉴스 통합 + Commander.js CLI (Google Gemini 2.5 Pro)
+├── newscast-generator/      # ✅ 완성 - AI 뉴스캐스트 스크립트 생성 + TTS 호스트 관리
 ├── core/                    # 🚧 계획 - 공통 타입, 유틸리티 (TypeScript + Zod)
-├── script-generator/        # 🚧 계획 - 뉴스캐스트 스크립트 생성 (TTS 호환)
 ├── audio-generator/         # 🚧 계획 - TTS 음성 생성 (Google Cloud TTS Chirp HD)
 ├── audio-processor/         # 🚧 계획 - 오디오 병합/후처리 (FFmpeg 기반)
 ├── api-server/              # 🚧 계획 - Cloudflare Workers API (KV 기반 배치 ID 관리)
 ├── cli/                     # 🚧 계획 - 통합 CLI (ai-newscast 바이너리)
-├── newscast-generator/      # 🚧 계획 - 스크립트/오디오/병합 통합 제너레이터
 └── web/                     # 🚧 계획 - 뉴스캐스트 플레이어 웹 인터페이스
 ```
 
 ## 🔄 개발 변경 이력
+
+### ✅ v3.3.0 완성된 주요 기능 (2025-06-28)
+- **5단계 AI 파이프라인 완성**: topics → lists → details → news → **newscast-script** 완전 자동화
+- **뉴스캐스트 스크립트 생성**: Google Gemini 2.5 Pro로 두 명의 진행자 대화 형식 스크립트 자동 생성
+- **랜덤 TTS 호스트 선택**: 남녀 페어 조합을 매번 랜덤 선택으로 다양성 확보 (8명 아나운서 풀)
+- **Google Cloud TTS 연동**: Chirp HD Premium 모델 8개 음성 with 한국인 아나운서 캐릭터
+- **Markdown 기반 프롬프트**: 구조화된 .md 파일로 프롬프트 관리 및 가독성 향상
+- **듀얼 출력 시스템**: newscast-script.json (TTS API용) + newscast-script.txt (인간 친화적)
+- **Commander.js CLI**: script/audio/newscast 서브명령어로 확장 가능한 구조
 
 ### ✅ v3.2.5 완성된 주요 기능 (2025-06-28)
 - **Commander.js CLI 통합**: TypeScript news-generator에 현대적 CLI 프레임워크 적용
@@ -96,19 +104,21 @@ packages/
 ```bash
 # 실행 가능한 스크립트들
 scripts/
-├── run-all.sh              # 🚀 전체 4단계 AI 파이프라인 실행 (스킵/재개 기능)
+├── run-all.sh              # 🚀 전체 5단계 AI 파이프라인 실행 (스킵/재개 기능)
 ├── setup-env.sh            # 환경 설정 자동화
 └── sync-to-r2.sh           # Cloudflare R2 동기화 (계획)
 
 # 출력 데이터 구조  
 output/
-└── {ISO_TIMESTAMP}/        # 2025-06-27T15-52-44-934067
+└── {ISO_TIMESTAMP}/        # 2025-06-28T21-27-19-631Z
     ├── topic-list.json     # 10개 고유 토픽
     ├── topic-01/           # 1순위 토픽
     │   ├── news-list.json  # 최대 100개 뉴스
     │   ├── news/           # 개별 뉴스 상세 폴더
-    │   ├── news.json       # 🆕 AI 통합 뉴스 (JSON 메타데이터)
-    │   └── news.txt        # 🆕 AI 통합 뉴스 (인간 친화적 텍스트)
+    │   ├── news.json       # AI 통합 뉴스 (JSON 메타데이터)
+    │   ├── news.txt        # AI 통합 뉴스 (인간 친화적 텍스트)
+    │   ├── newscast-script.json # 🆕 AI 뉴스캐스트 스크립트 (TTS API용)
+    │   └── newscast-script.txt  # 🆕 AI 뉴스캐스트 스크립트 (인간 친화적)
     └── topic-{N}/          # N순위 토픽 (최대 10개)
 ```
 
@@ -146,4 +156,4 @@ docs/
 - **도구 우선순위**: Task > Grep/Glob > Read (효율적 검색 패턴)
 
 ---
-*최종 업데이트: 2025-06-28 v3.2.1 - Typer CLI 개발자 경험 대폭 개선*
+*최종 업데이트: 2025-06-28 v3.3.0 - 뉴스캐스트 스크립트 생성기 완성*

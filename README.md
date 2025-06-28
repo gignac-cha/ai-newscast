@@ -1,9 +1,9 @@
 # AI Newscast
 
-> 🤖 AI-powered automated news casting system - **v3.2.5 Modern CLI Complete** 
+> 🤖 AI-powered automated news casting system - **v3.3.0 Newscast Script Generator Complete** 
 
-[![Version](https://img.shields.io/badge/version-3.2.5-blue.svg)](https://github.com/your-repo/ai-newscast)
-[![Pipeline](https://img.shields.io/badge/pipeline-4/7%20steps-orange.svg)](PIPELINE_PLAN.md)
+[![Version](https://img.shields.io/badge/version-3.3.0-blue.svg)](https://github.com/your-repo/ai-newscast)
+[![Pipeline](https://img.shields.io/badge/pipeline-5/7%20steps-orange.svg)](PIPELINE_PLAN.md)
 [![AI](https://img.shields.io/badge/status-ai%20generator%20complete-brightgreen.svg)](CLAUDE.md)
 [![License](https://img.shields.io/badge/license-ISC-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
@@ -11,20 +11,21 @@
 [![Node.js](https://img.shields.io/badge/node.js-24+-green.svg)](https://nodejs.org)
 [![pnpm](https://img.shields.io/badge/pnpm-10.12.2-yellow.svg)](https://pnpm.io)
 
-## 🚀 Features (v3.2.5 - Current Implementation)
+## 🚀 Features (v3.3.0 - Current Implementation)
 
 - **🕷️ Complete News Crawling**: ✅ 3-stage pipeline (topics → lists → details) with deduplication
 - **🤖 AI News Generation**: ✅ Google Gemini 2.5 Pro integration for intelligent news consolidation
+- **🎙️ AI Newscast Script Generation**: ✅ Two-host dialogue format with random TTS voice selection
 - **⚡ Parallel Processing**: ✅ GNU Parallel integration with auto-concurrency and rate limiting
 - **🎯 Modern CLI Experience**: ✅ Typer (Python) + Commander.js (TypeScript) with consistent UX
 - **🔧 Turbo + UV Integration**: ✅ Complete virtual environment automation with Turbo build system
 - **📊 Smart Data Processing**: ✅ 10 trending topics, up to 100 news per topic, full article extraction
 - **🔧 JSON Logging System**: ✅ Clean metadata extraction with jq parsing + dual output formats
 - **⚙️ Advanced Pipeline Control**: ✅ Skip functionality (--skip-topics, --skip-details) + resume capability
-- **🎵 Multi-voice TTS**: 🚧 Planned - Google Cloud TTS Chirp HD (8 premium models)
+- **🎵 Multi-voice TTS**: ✅ Google Cloud TTS Chirp HD integration (8 premium Korean voices)
 - **🎛️ Audio Processing**: 🚧 Planned - FFmpeg-based professional audio mixing
 - **⚡ High Performance**: ✅ UV + Turbo monorepo + TypeScript experimental stripping
-- **🏗️ Clean Architecture**: ✅ 2/10 packages fully implemented, 4/7 pipeline steps complete
+- **🏗️ Clean Architecture**: ✅ 3/10 packages fully implemented, 5/7 pipeline steps complete
 - **📋 Systematic Development**: ✅ PIPELINE_PLAN.md-based step-by-step implementation
 
 ## 📦 Architecture
