@@ -38,9 +38,14 @@ async function loadPrompt(): Promise<string> {
   return await readFile(promptPath, 'utf-8');
 }
 
-async function generateNews(inputFolder: string, outputFile: string, printFormat: string = 'text', printLogFile?: string): Promise<void> {
+async function generateNews(
+  inputFolder: string,
+  outputFile: string,
+  printFormat: string = 'text',
+  printLogFile?: string
+): Promise<void> {
   const startTime = Date.now();
-  
+
   // Check API key
   const apiKey = process.env.GOOGLE_GENAI_API_KEY;
   if (!apiKey) {
@@ -56,8 +61,8 @@ async function generateNews(inputFolder: string, outputFile: string, printFormat
 
   // Read all JSON files from input folder
   const files = await readdir(inputFolder);
-  const jsonFiles = files.filter(f => f.endsWith('.json'));
-  
+  const jsonFiles = files.filter((f) => f.endsWith('.json'));
+
   if (jsonFiles.length === 0) {
     console.error(`Error: No JSON files found in ${inputFolder}`);
     process.exit(1);
@@ -73,9 +78,10 @@ async function generateNews(inputFolder: string, outputFile: string, printFormat
   }
 
   // Format news articles for prompt
-  const newsArticles = newsDetails.map((news, index) => {
-    const metadata = news.metadata;
-    return `[기사 ${index + 1}]
+  const newsArticles = newsDetails
+    .map((news, index) => {
+      const metadata = news.metadata;
+      return `[기사 ${index + 1}]
 제목: ${metadata.title}
 언론사: ${metadata.provider}
 발행일: ${metadata.published_date}
@@ -83,7 +89,8 @@ async function generateNews(inputFolder: string, outputFile: string, printFormat
 요약: ${metadata.summary}
 내용: ${news.content}
 URL: ${metadata.url}`;
-  }).join('\n\n---\n\n');
+    })
+    .join('\n\n---\n\n');
 
   // Load prompt template
   const promptTemplate = await loadPrompt();
@@ -95,8 +102,8 @@ URL: ${metadata.url}`;
   try {
     // Generate content
     const response = await genAI.models.generateContent({
-      model: "gemini-2.5-pro",
-      contents: prompt
+      model: 'gemini-2.5-pro',
+      contents: prompt,
     });
     const text = response.text;
 
@@ -107,24 +114,24 @@ URL: ${metadata.url}`;
     }
 
     const parsed = JSON.parse(jsonMatch[0]);
-    
+
     // Create output data
     const generatedNews: GeneratedNews = {
-      title: parsed.title || "통합 뉴스",
-      summary: parsed.summary || "",
-      content: parsed.content || "",
+      title: parsed.title || '통합 뉴스',
+      summary: parsed.summary || '',
+      content: parsed.content || '',
       sources_count: parsed.sources_count || newsDetails.length,
-      sources: parsed.sources || [...new Set(newsDetails.map(n => n.metadata.provider))],
+      sources: parsed.sources || [...new Set(newsDetails.map((n) => n.metadata.provider))],
       generation_timestamp: new Date().toISOString(),
-      input_articles_count: newsDetails.length
+      input_articles_count: newsDetails.length,
     };
 
     // Ensure output directory exists
     await mkdir(dirname(outputFile), { recursive: true });
-    
+
     // Write JSON output
     await writeFile(outputFile, JSON.stringify(generatedNews, null, 2));
-    
+
     // Write text output
     const textFile = outputFile.replace('.json', '.txt');
     const textContent = formatAsText(generatedNews);
@@ -132,16 +139,16 @@ URL: ${metadata.url}`;
 
     const endTime = Date.now();
     const elapsedSeconds = ((endTime - startTime) / 1000).toFixed(2);
-    
+
     // Create log output
     const logOutput = {
       timestamp: new Date().toISOString(),
-      "elapsed-time": `${elapsedSeconds}s`,
-      "total-news-input": newsDetails.length,
-      "total-news-generated": 1,
-      "output-file": outputFile
+      'elapsed-time': `${elapsedSeconds}s`,
+      'total-news-input': newsDetails.length,
+      'total-news-generated': 1,
+      'output-file': outputFile,
     };
-    
+
     // Output log
     if (printFormat === 'json') {
       console.log(JSON.stringify(logOutput, null, 2));
@@ -155,7 +162,6 @@ URL: ${metadata.url}`;
       await mkdir(dirname(printLogFile), { recursive: true });
       await writeFile(printLogFile, JSON.stringify(logOutput, null, 2));
     }
-
   } catch (error) {
     console.error('Error generating news:', error);
     process.exit(1);
@@ -183,12 +189,12 @@ AI 뉴스 통합 시스템으로 생성된 콘텐츠입니다.
 
 async function main() {
   const args = process.argv.slice(2);
-  
+
   let inputFolder = '';
   let outputFile = '';
   let printFormat = 'text';
   let printLogFile = '';
-  
+
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
       case '--input-folder':
