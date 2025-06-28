@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { readFile, writeFile, readdir, mkdir } from 'fs/promises';
 import { dirname, join } from 'path';
 import { existsSync } from 'fs';
@@ -90,14 +90,15 @@ URL: ${metadata.url}`;
   const prompt = promptTemplate.replace('{news_articles}', newsArticles);
 
   // Initialize Google AI
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const genAI = new GoogleGenAI({ apiKey });
 
   try {
     // Generate content
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const response = await genAI.models.generateContent({
+      model: "gemini-2.5-pro",
+      contents: prompt
+    });
+    const text = response.text;
 
     // Parse JSON response
     const jsonMatch = text.match(/\{[\s\S]*\}/);

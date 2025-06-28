@@ -1,18 +1,22 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["PATH", "VIRTUAL_ENV"],
   "tasks": {
     "crawl:news-topics": {
-      "outputs": ["output/**"]
+      "outputs": ["output/**"],
+      "env": ["PATH", "VIRTUAL_ENV"]
     },
     "crawl:news-list": {
-      "outputs": ["output/**"]
+      "outputs": ["output/**"],
+      "env": ["PATH", "VIRTUAL_ENV"]
     },
     "crawl:news-details": {
-      "outputs": ["output/**"]
+      "outputs": ["output/**"],
+      "env": ["PATH", "VIRTUAL_ENV"]
     },
     "generate:news": {
       "outputs": ["output/**"],
-      "env": ["GOOGLE_GENAI_API_KEY"]
+      "env": ["GOOGLE_GENAI_API_KEY", "PATH", "VIRTUAL_ENV"]
     },
     "generate:newscast-script": {
       "outputs": ["output/**"]
