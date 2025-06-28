@@ -35,7 +35,7 @@ interface GeneratedNews {
 }
 
 async function loadPrompt(): Promise<string> {
-  const promptPath = join(import.meta.dirname, 'prompts', 'news-consolidation.txt');
+  const promptPath = join(import.meta.dirname, 'prompts', 'news-consolidation.md');
   return await readFile(promptPath, 'utf-8');
 }
 

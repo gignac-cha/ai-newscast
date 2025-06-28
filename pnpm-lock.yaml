@@ -33,6 +33,19 @@ importers:
         specifier: ^22.10.1
         version: 22.15.33
 
+  packages/newscast-generator:
+    dependencies:
+      '@google/genai':
+        specifier: ^1.7.0
+        version: 1.7.0
+      commander:
+        specifier: ^14.0.0
+        version: 14.0.0
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.1
+        version: 22.15.33
+
 packages:
 
   '@google/genai@1.7.0':

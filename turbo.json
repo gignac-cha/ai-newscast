@@ -19,7 +19,8 @@
       "env": ["GOOGLE_GENAI_API_KEY", "PATH", "VIRTUAL_ENV"]
     },
     "generate:newscast-script": {
-      "outputs": ["output/**"]
+      "outputs": ["output/**"],
+      "env": ["GOOGLE_GENAI_API_KEY"]
     },
     "generate:newscast-audio": {
       "outputs": ["output/**"]

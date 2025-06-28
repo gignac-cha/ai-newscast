@@ -1,0 +1,52 @@
+{
+  "voices": {
+    "ko-KR-Chirp3-HD-Aoede": {
+      "name": "차미래",
+      "gender": "female",
+      "description": "부드럽고 따뜻한 목소리의 여성 아나운서",
+      "voice_type": "premium_chirp"
+    },
+    "ko-KR-Chirp3-HD-Charon": {
+      "name": "신동혁",
+      "gender": "male", 
+      "description": "신뢰감 있고 안정적인 목소리의 남성 아나운서",
+      "voice_type": "premium_chirp"
+    },
+    "ko-KR-Chirp3-HD-Fenrir": {
+      "name": "오준석",
+      "gender": "male",
+      "description": "명확하고 힘있는 목소리의 남성 아나운서",
+      "voice_type": "premium_chirp"
+    },
+    "ko-KR-Chirp3-HD-Kore": {
+      "name": "배소현",
+      "gender": "female",
+      "description": "지적이고 차분한 목소리의 여성 아나운서",
+      "voice_type": "premium_chirp"
+    },
+    "ko-KR-Chirp3-HD-Leda": {
+      "name": "임채영",
+      "gender": "female",
+      "description": "밝고 친근한 목소리의 여성 아나운서",
+      "voice_type": "premium_chirp"
+    },
+    "ko-KR-Chirp3-HD-Orus": {
+      "name": "전상우",
+      "gender": "male",
+      "description": "깊이 있고 권위적인 목소리의 남성 아나운서",
+      "voice_type": "premium_chirp"
+    },
+    "ko-KR-Chirp3-HD-Puck": {
+      "name": "홍진우",
+      "gender": "male",
+      "description": "생동감 있고 활기찬 목소리의 남성 아나운서",
+      "voice_type": "premium_chirp"
+    },
+    "ko-KR-Chirp3-HD-Zephyr": {
+      "name": "류하은",
+      "gender": "female",
+      "description": "선명하고 매력적인 목소리의 여성 아나운서",
+      "voice_type": "premium_chirp"
+    }
+  }
+}

@@ -1,0 +1,77 @@
+# 뉴스캐스트 스크립트 생성 프롬프트
+
+당신은 전문 뉴스캐스트 스크립트 작가입니다. 다음 뉴스 정보를 바탕으로 두 명의 진행자가 대화하는 형식의 3-4분 분량 뉴스캐스트 스크립트를 작성해주세요.
+
+## 기본 정보
+
+- **프로그램명**: {program_name}
+- **진행자**: {host1_name}({host1_gender}), {host2_name}({host2_gender})
+- **주제**: {topic}
+- **참고 언론사**: {main_sources} 등 {sources_count}개 언론사
+- **총 기사 수**: {total_articles}개
+
+## 뉴스 내용
+
+{consolidated_content}
+
+## 스크립트 구성 요구사항
+
+### 오프닝
+- {host1_name}과 {host2_name}이 자연스럽게 인사하고 프로그램 소개
+- 오늘의 주요 뉴스 주제 소개
+- 참고한 언론사 수 언급으로 신뢰도 확보
+
+### 본문
+- 두 진행자가 번갈아가며 뉴스 내용 전달
+- 중요한 부분에서는 서로 질문하고 답변하는 대화 형식
+- 핵심 인물과 기관명은 정확한 발음 표기 (예: 김민재(김-민-재))
+- 자연스러운 대화체로 친근하면서도 전문적인 톤 유지
+
+### 클로징
+- 두 진행자가 함께 뉴스 요약
+- 시청자들에게 감사 인사 및 다음 방송 예고
+
+전체적으로 두 진행자의 케미가 느껴지도록 자연스럽고 유쾌한 대화로 구성해주세요.
+
+## 출력 형식
+
+**중요: 응답은 다음 JSON 형식으로만 작성해주세요:**
+
+```json
+{
+  "title": "뉴스 제목",
+  "program_name": "{program_name}",
+  "estimated_duration": "약 3분",
+  "script": [
+    {
+      "type": "music",
+      "role": "opening",
+      "name": "오프닝 음악",
+      "content": "뉴스 프로그램 시작 음악"
+    },
+    {
+      "type": "dialogue",
+      "role": "host1",
+      "name": "{host1_name}",
+      "content": "안녕하세요, {program_name}의 {host1_name}입니다."
+    },
+    {
+      "type": "dialogue", 
+      "role": "host2",
+      "name": "{host2_name}",
+      "content": "네, 안녕하세요. {host2_name}입니다."
+    },
+    {
+      "type": "music",
+      "role": "closing",
+      "name": "클로징 음악", 
+      "content": "뉴스 프로그램 마무리 음악"
+    }
+  ]
+}
+```
+
+### 스크립트 구조 규칙
+
+- **대화**: `type: "dialogue"`, `role: "host1" 또는 "host2"`, `name: 진행자명`, `content: 대사 내용`
+- **음악**: `type: "music"`, `role: "opening" 또는 "closing"`, `name: 음악명`, `content: 설명`

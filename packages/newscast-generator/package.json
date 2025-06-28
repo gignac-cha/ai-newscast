@@ -1,0 +1,34 @@
+{
+  "name": "@ai-newscast/newscast-generator",
+  "version": "1.0.0",
+  "description": "AI-powered newscast script and audio generator with Google TTS integration",
+  "type": "module",
+  "main": "newscast-generator.js",
+  "scripts": {
+    "generate": "node --experimental-strip-types newscast-generator.ts",
+    "generate:script": "node --experimental-strip-types newscast-generator.ts script",
+    "generate:audio": "node --experimental-strip-types newscast-generator.ts audio", 
+    "generate:newscast": "node --experimental-strip-types newscast-generator.ts newscast",
+    "dev": "node --experimental-strip-types --watch newscast-generator.ts",
+    "test": "node --experimental-strip-types --test **/*.test.ts"
+  },
+  "dependencies": {
+    "@google/genai": "^1.7.0",
+    "commander": "^14.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1"
+  },
+  "keywords": [
+    "ai",
+    "newscast",
+    "script",
+    "tts",
+    "google-cloud",
+    "audio-generation"
+  ],
+  "authors": [
+    "AI Newscast Team"
+  ],
+  "license": "MIT"
+}
