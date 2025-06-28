@@ -4,6 +4,7 @@ import { GoogleGenAI } from '@google/genai';
 import { readFile, writeFile, readdir, mkdir } from 'fs/promises';
 import { dirname, join } from 'path';
 import { existsSync } from 'fs';
+import { Command } from 'commander';
 
 interface NewsDetail {
   extraction_timestamp: string;
@@ -105,7 +106,7 @@ URL: ${metadata.url}`;
       model: 'gemini-2.5-pro',
       contents: prompt,
     });
-    const text = response.text;
+    const text = response.text ?? '';
 
     // Parse JSON response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -188,55 +189,22 @@ AI 뉴스 통합 시스템으로 생성된 콘텐츠입니다.
 }
 
 async function main() {
-  const args = process.argv.slice(2);
+  const program = new Command();
 
-  let inputFolder = '';
-  let outputFile = '';
-  let printFormat = 'text';
-  let printLogFile = '';
+  program
+    .name('news-generator')
+    .description('AI-powered news content generator using Google Gemini')
+    .version('1.0.0')
+    .requiredOption('-i, --input-folder <path>', 'Folder containing news detail JSON files')
+    .requiredOption('-o, --output-file <path>', 'Output file path for generated news')
+    .option('-f, --print-format <format>', 'Output format (json|text)', 'text')
+    .option('-l, --print-log-file <path>', 'File to write JSON log output')
+    .action(async (options) => {
+      const { inputFolder, outputFile, printFormat, printLogFile } = options;
+      await generateNews(inputFolder, outputFile, printFormat, printLogFile);
+    });
 
-  for (let i = 0; i < args.length; i++) {
-    switch (args[i]) {
-      case '--input-folder':
-        inputFolder = args[i + 1];
-        i++;
-        break;
-      case '--output-file':
-        outputFile = args[i + 1];
-        i++;
-        break;
-      case '--print-format':
-        printFormat = args[i + 1];
-        i++;
-        break;
-      case '--print-log-file':
-        printLogFile = args[i + 1];
-        i++;
-        break;
-      case '--help':
-        console.log(`
-Usage: news-generator.ts [options]
-
-Options:
-  --input-folder <path>   Folder containing news detail JSON files
-  --output-file <path>    Output file path for generated news
-  --print-format <format> Output format (json|text) [default: text]
-  --print-log-file <path> File to write JSON log output
-  --help                  Show this help message
-
-Example:
-  node news-generator.ts --input-folder ./output/topic-01/news --output-file ./output/topic-01/news.json --print-format json --print-log-file /tmp/generator.log
-        `);
-        process.exit(0);
-    }
-  }
-
-  if (!inputFolder || !outputFile) {
-    console.error('Error: --input-folder and --output-file are required');
-    process.exit(1);
-  }
-
-  await generateNews(inputFolder, outputFile, printFormat, printLogFile || undefined);
+  program.parse();
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

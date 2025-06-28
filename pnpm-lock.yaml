@@ -25,6 +25,9 @@ importers:
       '@google/genai':
         specifier: ^1.7.0
         version: 1.7.0
+      commander:
+        specifier: ^14.0.0
+        version: 14.0.0
     devDependencies:
       '@types/node':
         specifier: ^22.10.1
@@ -59,6 +62,10 @@ packages:
 
   buffer-equal-constant-time@1.0.1:
     resolution: {integrity: sha512-zRpUiDwd/xk6ADqPMATG8vc9VPrkck7T07OIx0gnjmJAnHnTVXNQG3vfvWNuiZIkwu9KrKdA1iJKfsfTVxE6NA==}
+
+  commander@14.0.0:
+    resolution: {integrity: sha512-2uM9rYjPvyq39NwLRqaiLtWHyDC1FvryJDa2ATTVims5YAS4PupsEQsDvP14FqhFr0P49CYDugi59xaxJlTXRA==}
+    engines: {node: '>=20'}
 
   debug@4.4.1:
     resolution: {integrity: sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==}
@@ -234,6 +241,8 @@ snapshots:
   bignumber.js@9.3.0: {}
 
   buffer-equal-constant-time@1.0.1: {}
+
+  commander@14.0.0: {}
 
   debug@4.4.1:
     dependencies:

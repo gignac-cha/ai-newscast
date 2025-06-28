@@ -4,6 +4,53 @@
 
 ---
 
+## [3.2.5] - 2025-06-28 🎯 Commander.js CLI 프레임워크 적용
+
+### 🚀 Added
+- **Commander.js 통합**: TypeScript news-generator에 현대적 CLI 프레임워크 적용
+- **단축 옵션**: `-i`, `-o`, `-f`, `-l` 단축 명령어로 개발자 편의성 향상
+- **자동 Help 생성**: `--help`, `-h`로 아름다운 사용법 안내 자동 생성
+- **버전 관리**: `--version`, `-V`로 패키지 버전 정보 표시
+- **필수 옵션 검증**: `requiredOption`으로 필수 인수 누락 시 자동 에러 처리
+- **타입 안전성**: Commander.js TypeScript 완전 지원으로 개발 시 타입 검증
+
+### 🔧 Changed
+- **Manual Argument Parsing → Commander.js**: 100줄 복잡한 switch-case 로직을 간결한 선언적 API로 교체
+- **Nullish Coalescing 적용**: `||` 대신 `??` 연산자로 더 정확한 타입 처리
+- **에러 처리 개선**: 잘못된 인수 입력 시 자동 도움말 표시
+- **CLI 일관성**: Python Typer와 동일한 수준의 개발자 경험 제공
+
+### 📊 개발자 경험 개선
+```bash
+# Before: 기본적인 에러 메시지
+Error: --input-folder and --output-file are required
+
+# After: 상세한 도움말과 함께
+Usage: news-generator [options]
+
+AI-powered news content generator using Google Gemini
+
+Options:
+  -i, --input-folder <path>    Folder containing news detail JSON files
+  -o, --output-file <path>     Output file path for generated news
+  -f, --print-format <format>  Output format (json|text) (default: "text")
+  -l, --print-log-file <path>  File to write JSON log output
+  -h, --help                   display help for command
+```
+
+### 🧪 검증 완료
+- ✅ **기존 파이프라인 호환**: Turbo, pnpm, GNU Parallel 모두 정상 작동
+- ✅ **단축 옵션**: `-i`, `-o` 등 모든 단축 명령어 정상 동작
+- ✅ **Help 시스템**: `--help` 플래그로 완전한 사용법 안내 제공
+- ✅ **에러 처리**: 필수 옵션 누락 시 명확한 에러 메시지 표시
+
+### 🔄 호환성
+- ✅ **100% 하위 호환**: 기존 스크립트 수정 없이 완전 호환
+- ✅ **Turbo 통합**: `turbo generate:news --` 구문 정상 작동
+- ✅ **병렬 처리**: GNU Parallel과 완벽한 연동 유지
+
+---
+
 ## [3.2.4] - 2025-06-28 ⚡ GNU Parallel 병렬 처리 구현 완성
 
 ### 🚀 Added

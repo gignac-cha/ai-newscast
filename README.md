@@ -1,8 +1,8 @@
 # AI Newscast
 
-> 🤖 AI-powered automated news casting system - **v3.2.4 Parallel Processing Complete** 
+> 🤖 AI-powered automated news casting system - **v3.2.5 Modern CLI Complete** 
 
-[![Version](https://img.shields.io/badge/version-3.2.4-blue.svg)](https://github.com/your-repo/ai-newscast)
+[![Version](https://img.shields.io/badge/version-3.2.5-blue.svg)](https://github.com/your-repo/ai-newscast)
 [![Pipeline](https://img.shields.io/badge/pipeline-4/7%20steps-orange.svg)](PIPELINE_PLAN.md)
 [![AI](https://img.shields.io/badge/status-ai%20generator%20complete-brightgreen.svg)](CLAUDE.md)
 [![License](https://img.shields.io/badge/license-ISC-green.svg)](LICENSE)
@@ -11,12 +11,12 @@
 [![Node.js](https://img.shields.io/badge/node.js-24+-green.svg)](https://nodejs.org)
 [![pnpm](https://img.shields.io/badge/pnpm-10.12.2-yellow.svg)](https://pnpm.io)
 
-## 🚀 Features (v3.2.4 - Current Implementation)
+## 🚀 Features (v3.2.5 - Current Implementation)
 
 - **🕷️ Complete News Crawling**: ✅ 3-stage pipeline (topics → lists → details) with deduplication
 - **🤖 AI News Generation**: ✅ Google Gemini 2.5 Pro integration for intelligent news consolidation
 - **⚡ Parallel Processing**: ✅ GNU Parallel integration with auto-concurrency and rate limiting
-- **🎯 Modern CLI Experience**: ✅ Typer framework with Rich help, type safety, and auto-completion
+- **🎯 Modern CLI Experience**: ✅ Typer (Python) + Commander.js (TypeScript) with consistent UX
 - **🔧 Turbo + UV Integration**: ✅ Complete virtual environment automation with Turbo build system
 - **📊 Smart Data Processing**: ✅ 10 trending topics, up to 100 news per topic, full article extraction
 - **🔧 JSON Logging System**: ✅ Clean metadata extraction with jq parsing + dual output formats
@@ -48,8 +48,8 @@ packages/
 ```
 
 ### Technology Stack
-- **🐍 Python**: UV package manager, requests, lxml (crawling pipeline)
-- **📘 TypeScript**: Node.js 24+, experimental type stripping (AI generation)
+- **🐍 Python**: UV package manager, Typer CLI, requests, lxml (crawling pipeline)
+- **📘 TypeScript**: Node.js 24+, Commander.js CLI, experimental type stripping (AI generation)
 - **🏗️ Build Tools**: Turbo monorepo, pnpm@10.12.2 workspaces
 - **🤖 AI Services**: Google Gemini 2.5 Pro (implemented), Google Cloud TTS (planned)
 - **☁️ Deployment**: Cloudflare Workers (planned)
@@ -120,8 +120,10 @@ pnpm run:crawler:news-list --input-file ./output/topic-list.json --topic-index 0
 # 3. Extract detailed news content
 pnpm run:crawler:news-details --input-file ./output/topic-01/news-list.json --output-folder ./output/topic-01/news
 
-# 4. Generate AI-consolidated news (NEW in v3.2.0)
+# 4. Generate AI-consolidated news (Commander.js CLI)
 pnpm run:generator:news --input-folder ./output/topic-01/news --output-file ./output/topic-01/news.json
+# Or with short options
+pnpm run:generator:news -i ./output/topic-01/news -o ./output/topic-01/news.json
 
 # 5. Generate newscast script (Planned)
 pnpm script:generate ./output/topic-01/news.json

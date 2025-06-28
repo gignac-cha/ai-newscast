@@ -3,19 +3,19 @@
 ## 📋 프로젝트 개요
 빅카인드(bigkinds.or.kr)에서 실시간 뉴스를 수집하여 AI 기반 뉴스캐스트를 완전 자동화 생성하는 고급 모노레포 프로젝트
 
-**현재 버전**: v3.2.4 (2025-06-28 GNU Parallel 병렬 처리 완성)  
-**상태**: 45% 완성 (2/10 패키지 완전 구현, 4단계 AI 뉴스 파이프라인 + 병렬 처리 완성)
+**현재 버전**: v3.2.5 (2025-06-28 Commander.js CLI 프레임워크 적용 완성)  
+**상태**: 50% 완성 (2/10 패키지 완전 구현, 4단계 AI 뉴스 파이프라인 + 현대적 CLI 경험 완성)
 
 ## 🏗️ 핵심 아키텍처
 
-### 📦 패키지 구조와 구현 상태 (v3.2.4 GNU Parallel 병렬 처리 완성)
+### 📦 패키지 구조와 구현 상태 (v3.2.5 Commander.js CLI 적용 완성)
 ```
 packages/
 ├── news-crawler/            # ✅ 완성 - 3단계 크롤링 + Typer CLI (Python + UV)
 │   ├── news-topics          # ✅ 완성 - 트렌딩 토픽 추출 (10개 토픽, 중복 제거)
 │   ├── news-list            # ✅ 완성 - 토픽별 뉴스 목록 수집 (최대 100개)
 │   └── news-details         # ✅ 완성 - 개별 뉴스 상세 정보 추출
-├── news-generator/          # ✅ 완성 - AI 뉴스 통합 (Google Gemini 2.5 Pro, 프롬프트 템플릿)
+├── news-generator/          # ✅ 완성 - AI 뉴스 통합 + Commander.js CLI (Google Gemini 2.5 Pro)
 ├── core/                    # 🚧 계획 - 공통 타입, 유틸리티 (TypeScript + Zod)
 ├── script-generator/        # 🚧 계획 - 뉴스캐스트 스크립트 생성 (TTS 호환)
 ├── audio-generator/         # 🚧 계획 - TTS 음성 생성 (Google Cloud TTS Chirp HD)
@@ -27,6 +27,14 @@ packages/
 ```
 
 ## 🔄 개발 변경 이력
+
+### ✅ v3.2.5 완성된 주요 기능 (2025-06-28)
+- **Commander.js CLI 통합**: TypeScript news-generator에 현대적 CLI 프레임워크 적용
+- **단축 옵션 지원**: `-i`, `-o`, `-f`, `-l` 단축 명령어로 개발자 편의성 대폭 향상
+- **자동 Help 생성**: `--help`, `-h`로 아름다운 사용법 안내 자동 생성 (Python Typer와 동일)
+- **CLI 일관성 확보**: Python Typer ↔ TypeScript Commander.js 동일한 개발자 경험 제공
+- **타입 안전성**: Commander.js TypeScript 완전 지원으로 개발 시 타입 검증
+- **Nullish Coalescing**: `??` 연산자로 더 정확한 undefined/null 처리
 
 ### ✅ v3.2.4 완성된 주요 기능 (2025-06-28)
 - **GNU Parallel 통합**: 병렬 뉴스 생성으로 처리 시간 대폭 단축 (최대 CPU 코어 수만큼 동시 처리)
