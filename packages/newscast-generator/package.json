@@ -7,14 +7,15 @@
   "scripts": {
     "generate": "node --experimental-strip-types newscast-generator.ts",
     "generate:newscast-script": "node --experimental-strip-types newscast-generator.ts script",
-    "generate:newscast-audio": "node --experimental-strip-types newscast-generator.ts audio", 
+    "generate:newscast-audio": "node --experimental-strip-types newscast-generator.ts audio",
     "generate:newscast": "node --experimental-strip-types newscast-generator.ts newscast",
     "dev": "node --experimental-strip-types --watch newscast-generator.ts",
     "test": "node --experimental-strip-types --test **/*.test.ts"
   },
   "dependencies": {
-    "@google/genai": "^1.7.0",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@google-cloud/text-to-speech": "^6.1.0",
+    "@google/genai": "^1.7.0",
     "commander": "^14.0.0",
     "dotenv": "^17.0.0"
   },

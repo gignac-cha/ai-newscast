@@ -3,6 +3,7 @@
 import { Command } from 'commander';
 import { generateScript } from './generate-newscast-script.ts';
 import { generateAudio } from './generate-newscast-audio.ts';
+import { generateNewscast } from './generate-newscast.ts';
 
 async function main() {
   const program = new Command();
@@ -38,13 +39,11 @@ async function main() {
 
   program
     .command('newscast')
-    .description('Compile full newscast (script + audio + effects)')
-    .requiredOption('-i, --input-file <path>', 'Input newscast script JSON file')
-    .requiredOption('-o, --output-file <path>', 'Output newscast audio file')
+    .description('Merge audio files into final newscast')
+    .requiredOption('-i, --input-dir <path>', 'Input topic directory containing audio files')
     .action(async (options) => {
-      console.log('🚧 Newscast compilation not yet implemented');
-      console.log(`Input: ${options.inputFile}`);
-      console.log(`Output: ${options.outputFile}`);
+      const { inputDir } = options;
+      await generateNewscast(inputDir);
     });
 
   program.parse();

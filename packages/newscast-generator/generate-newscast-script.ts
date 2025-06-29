@@ -39,7 +39,7 @@ export async function generateScript(
   const mainSources = newsData.sources.slice(0, 5);
   
   const prompt = promptTemplate
-    .replace('{program_name}', '오늘의 뉴스 브리핑')
+    .replace('{program_name}', 'AI 뉴스캐스트')
     .replace(/{host1_name}/g, selectedHosts.host1.name)
     .replace(/{host1_gender}/g, selectedHosts.host1.gender === 'male' ? '남성' : '여성')
     .replace(/{host2_name}/g, selectedHosts.host2.name)
