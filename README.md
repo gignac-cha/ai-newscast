@@ -1,9 +1,9 @@
 # AI Newscast
 
-> 🤖 AI-powered automated news casting system - **v3.3.0 Newscast Script Generator Complete** 
+> 🤖 AI-powered automated news casting system - **v3.4.0 Audio Generation Complete** 
 
-[![Version](https://img.shields.io/badge/version-3.3.0-blue.svg)](https://github.com/your-repo/ai-newscast)
-[![Pipeline](https://img.shields.io/badge/pipeline-5/7%20steps-orange.svg)](PIPELINE_PLAN.md)
+[![Version](https://img.shields.io/badge/version-3.4.0-blue.svg)](https://github.com/your-repo/ai-newscast)
+[![Pipeline](https://img.shields.io/badge/pipeline-6/7%20steps-green.svg)](PIPELINE_PLAN.md)
 [![AI](https://img.shields.io/badge/status-ai%20generator%20complete-brightgreen.svg)](CLAUDE.md)
 [![License](https://img.shields.io/badge/license-ISC-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
@@ -11,26 +11,27 @@
 [![Node.js](https://img.shields.io/badge/node.js-24+-green.svg)](https://nodejs.org)
 [![pnpm](https://img.shields.io/badge/pnpm-10.12.2-yellow.svg)](https://pnpm.io)
 
-## 🚀 Features (v3.3.0 - Current Implementation)
+## 🚀 Features (v3.4.0 - Current Implementation)
 
 - **🕷️ Complete News Crawling**: ✅ 3-stage pipeline (topics → lists → details) with deduplication
 - **🤖 AI News Generation**: ✅ Google Gemini 2.5 Pro integration for intelligent news consolidation
 - **🎙️ AI Newscast Script Generation**: ✅ Two-host dialogue format with random TTS voice selection
+- **🎵 AI Audio Generation**: ✅ Google Cloud TTS Chirp HD with MP3 file generation (193 files tested)
 - **⚡ Parallel Processing**: ✅ GNU Parallel integration with auto-concurrency and rate limiting
 - **🎯 Modern CLI Experience**: ✅ Typer (Python) + Commander.js (TypeScript) with consistent UX
 - **🔧 Turbo + UV Integration**: ✅ Complete virtual environment automation with Turbo build system
 - **📊 Smart Data Processing**: ✅ 10 trending topics, up to 100 news per topic, full article extraction
 - **🔧 JSON Logging System**: ✅ Clean metadata extraction with jq parsing + dual output formats
-- **⚙️ Advanced Pipeline Control**: ✅ Skip functionality (--skip-topics, --skip-details) + resume capability
+- **⚙️ Advanced Pipeline Control**: ✅ Skip functionality + resume capability for all 6 steps
 - **🎵 Multi-voice TTS**: ✅ Google Cloud TTS Chirp HD integration (8 premium Korean voices)
 - **🎛️ Audio Processing**: 🚧 Planned - FFmpeg-based professional audio mixing
 - **⚡ High Performance**: ✅ UV + Turbo monorepo + TypeScript experimental stripping
-- **🏗️ Clean Architecture**: ✅ 3/10 packages fully implemented, 5/7 pipeline steps complete
+- **🏗️ Clean Architecture**: ✅ 3/10 packages fully implemented, 6/7 pipeline steps complete
 - **📋 Systematic Development**: ✅ PIPELINE_PLAN.md-based step-by-step implementation
 
 ## 📦 Architecture
 
-### Package Structure (v3.2.0 AI News Generator Complete)
+### Package Structure (v3.4.0 Audio Generation Complete)
 ```
 packages/
 ├── news-crawler/         # ✅ Complete 3-stage pipeline (Python + UV)
@@ -38,11 +39,9 @@ packages/
 │   ├── news-list         # ✅ News lists per topic (up to 100 articles each)
 │   └── news-details      # ✅ Full article content extraction
 ├── news-generator/       # ✅ Complete AI news consolidation (TypeScript + Google Gemini)
+├── newscast-generator/   # ✅ Complete AI script + TTS audio generation (modularized)
 ├── core/                 # 🚧 Planned - Common types, utilities, configurations
-├── script-generator/     # 🚧 Planned - AI-powered newscast script generation
-├── audio-generator/      # 🚧 Planned - TTS and audio generation
 ├── audio-processor/      # 🚧 Planned - Audio mixing and post-processing
-├── newscast-generator/   # 🚧 Planned - Script/audio/merge integration
 ├── api-server/           # 🚧 Planned - Cloudflare Workers API
 ├── cli/                  # 🚧 Planned - Unified CLI interface
 └── web/                  # 🚧 Planned - Newscast player web interface
@@ -83,7 +82,7 @@ pnpm install && pnpm build
 # Set up environment variables
 cp .env.example .env
 # Edit .env with your Google Gemini API key
-echo "GOOGLE_GENAI_API_KEY=your_api_key_here" >> .env
+echo "GOOGLE_GEN_AI_API_KEY=your_api_key_here" >> .env
 ```
 
 ### Usage
@@ -227,7 +226,7 @@ which uv  # Should show /home/user/.local/bin/uv
 import { something } from './file.ts';  # ✅ Correct
 
 # API key verification
-echo $GOOGLE_GENAI_API_KEY  # Should show your key
+echo $GOOGLE_GEN_AI_API_KEY  # Should show your key
 
 # FFmpeg for audio processing
 sudo apt install ffmpeg  # Ubuntu

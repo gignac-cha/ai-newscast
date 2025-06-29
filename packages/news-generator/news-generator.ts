@@ -48,9 +48,9 @@ async function generateNews(
   const startTime = Date.now();
 
   // Check API key
-  const apiKey = process.env.GOOGLE_GENAI_API_KEY;
+  const apiKey = process.env.GOOGLE_GEN_AI_API_KEY;
   if (!apiKey) {
-    console.error('Error: GOOGLE_GENAI_API_KEY environment variable is required');
+    console.error('Error: GOOGLE_GEN_AI_API_KEY environment variable is required');
     process.exit(1);
   }
 

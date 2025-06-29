@@ -6,18 +6,20 @@
   "main": "newscast-generator.js",
   "scripts": {
     "generate": "node --experimental-strip-types newscast-generator.ts",
-    "generate:script": "node --experimental-strip-types newscast-generator.ts script",
-    "generate:audio": "node --experimental-strip-types newscast-generator.ts audio", 
+    "generate:newscast-script": "node --experimental-strip-types newscast-generator.ts script",
+    "generate:newscast-audio": "node --experimental-strip-types newscast-generator.ts audio", 
     "generate:newscast": "node --experimental-strip-types newscast-generator.ts newscast",
     "dev": "node --experimental-strip-types --watch newscast-generator.ts",
     "test": "node --experimental-strip-types --test **/*.test.ts"
   },
   "dependencies": {
     "@google/genai": "^1.7.0",
-    "commander": "^14.0.0"
+    "@google-cloud/text-to-speech": "^6.1.0",
+    "commander": "^14.0.0",
+    "dotenv": "^17.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.10.1"
+    "@types/node": "^24.0.7"
   },
   "keywords": [
     "ai",

@@ -282,7 +282,7 @@
       ]
     }
 
-[Command] OUTPUT_FOLDER=$(realpath output/{ISO_TIMESTAMP}) GOOGLE_GENAI_API_KEY=$(cat .env | grep GOOGLE_GENAI_API_KEY | cut -d '=' -f 2) pnpm run:generator:news -- $(printf '--input-folder %s\n' $OUTPUT_FOLDER/topic-*/news) --output-folder $OUTPUT_FOLDER --print-format json
+[Command] OUTPUT_FOLDER=$(realpath output/{ISO_TIMESTAMP}) GOOGLE_GEN_AI_API_KEY=$(cat .env | grep GOOGLE_GEN_AI_API_KEY | cut -d '=' -f 2) pnpm run:generator:news -- $(printf '--input-folder %s\n' $OUTPUT_FOLDER/topic-*/news) --output-folder $OUTPUT_FOLDER --print-format json
 - [Sub Process] turbo generator:news $(printf '--input-folder %s\n' $OUTPUT_FOLDER/topic-*/news) --output-folder $OUTPUT_FOLDER --print-format json
   - [Sub Process] pnpm -F @ai-newscast/news-generator generate $(printf '--input-file %s\n' $OUTPUT_FOLDER/topic-01/news/*.json) --output-file $OUTPUT_FOLDER/topic-01/news.json --print-format json
     - [Sub Process] node --experimental-strip-types news-generator.ts --input-file $OUTPUT_FOLDER/topic-01/news/{NEWS_ID[0]}.json --input-file $OUTPUT_FOLDER/topic-01/news/{NEWS_ID[1]}.json --input-file $OUTPUT_FOLDER/topic-01/news/{NEWS_ID[2]}.json ... --input-file $OUTPUT_FOLDER/topic-01/news/{NEWS_ID[n]}.json --output-file $OUTPUT_FOLDER/topic-01/news.json --print-format json
@@ -334,7 +334,7 @@
       ]
     }
 
-[Command] OUTPUT_FOLDER=$(realpath output/{ISO_TIMESTAMP}) GOOGLE_GENAI_API_KEY=$(cat .env | grep GOOGLE_GENAI_API_KEY | cut -d '=' -f 2) pnpm run:generator:newscast-script -- $(printf '--input-file %s\n' $OUTPUT_FOLDER/topic-*/news.json) --output-folder $OUTPUT_FOLDER --print-format json
+[Command] OUTPUT_FOLDER=$(realpath output/{ISO_TIMESTAMP}) GOOGLE_GEN_AI_API_KEY=$(cat .env | grep GOOGLE_GEN_AI_API_KEY | cut -d '=' -f 2) pnpm run:generator:newscast-script -- $(printf '--input-file %s\n' $OUTPUT_FOLDER/topic-*/news.json) --output-folder $OUTPUT_FOLDER --print-format json
 - [Sub Process] turbo generator:newscast-script $(printf '--input-file %s\n' $OUTPUT_FOLDER/topic-*/news.json) --output-folder $OUTPUT_FOLDER --print-format json
   - [Sub Process] pnpm -F @ai-newscast/newscast-generator generate:script $(printf '--input-file %s\n' $OUTPUT_FOLDER/topic-*/news.json) --output-folder $OUTPUT_FOLDER --print-format json
     - [Sub Process] pnpm -F @ai-newscast/newscast-generator generate:script --input-file $OUTPUT_FOLDER/topic-01/news.json --output-file $OUTPUT_FOLDER/topic-01/newscast-script.json --print-format json
@@ -387,7 +387,7 @@
       ]
     }
 
-[Command] OUTPUT_FOLDER=$(realpath output/{ISO_TIMESTAMP}) GOOGLE_GENAI_API_KEY=$(cat .env | grep GOOGLE_GENAI_API_KEY | cut -d '=' -f 2) pnpm run:generator:newscast-audio -- $(printf '--input-file %s\n' $OUTPUT_FOLDER/topic-*/newscast-script.json) --output-folder $OUTPUT_FOLDER --print-format json
+[Command] OUTPUT_FOLDER=$(realpath output/{ISO_TIMESTAMP}) GOOGLE_CLOUD_AI_API_KEY=$(cat .env | grep GOOGLE_CLOUD_AI_API_KEY | cut -d '=' -f 2) pnpm run:generator:newscast-audio -- $(printf '--input-file %s\n' $OUTPUT_FOLDER/topic-*/newscast-script.json) --output-folder $OUTPUT_FOLDER --print-format json
 - [Sub Process] turbo generator:newscast-audio $(printf '--input-file %s\n' $OUTPUT_FOLDER/topic-*/newscast-script.json) --output-folder $OUTPUT_FOLDER --print-format json
   - [Sub Process] pnpm -F @ai-newscast/newscast-generator generate:audio $(printf '--input-file %s\n' $OUTPUT_FOLDER/topic-*/newscast-script.json) --output-folder $OUTPUT_FOLDER --print-format json
     - [Sub Process] pnpm -F @ai-newscast/newscast-generator generate:audio --input-file $OUTPUT_FOLDER/topic-01/newscast-script.json --output-folder $OUTPUT_FOLDER/topic-01/audio --print-format json

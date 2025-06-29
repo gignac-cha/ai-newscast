@@ -4,6 +4,29 @@
 
 ---
 
+## [3.4.0] - 2025-06-29 🎵 6단계 AI 뉴스캐스트 오디오 생성 완성
+
+### 🚀 Added
+- **Google Cloud TTS 완전 통합**: 실제 MP3 오디오 파일 생성 (193개 파일 성공적 생성 확인)
+- **6단계 AI 파이프라인**: topics → lists → details → news → newscast-script → **newscast-audio** 완전 자동화
+- **모듈화 아키텍처 완성**: `types.ts`, `utils.ts` 공통 모듈로 코드 중복 제거 및 유지보수성 향상
+- **완전한 오디오 파이프라인**: 스크립트 → TTS → MP3 파일 자동 생성 (host1/host2 구분)
+- **파일명 표준화**: `{sequence}-{host1|host2}.mp3` 규칙으로 일관된 네이밍
+- **Step 6 병렬 처리**: 10개 토픽 동시 오디오 생성으로 시간 단축 (3초 지연으로 API 제한 준수)
+- **오디오 메타데이터**: audio-files.json으로 생성 통계 및 파일 정보 관리
+
+### 🔧 Changed
+- **환경변수 분리**: `GOOGLE_GEN_AI_API_KEY` (Gemini) / `GOOGLE_CLOUD_API_KEY` (TTS) 구분 관리
+- **패키지 스크립트 통합**: `generate:newscast-script`, `generate:newscast-audio` 네이밍 일관성
+- **코드 구조 개선**: 358줄 → 141줄 + 225줄로 기능별 분리, 공통 모듈 추출
+
+### 📊 Performance
+- **완성도 향상**: 70% → 80% (3/10 패키지 완전 구현, 6단계 파이프라인 완성)
+- **음성 품질**: Google Cloud TTS Chirp HD로 자연스러운 한국어 음성 생성
+- **병렬 최적화**: 8개 코어 활용으로 오디오 생성 시간 대폭 단축
+
+---
+
 ## [3.3.0] - 2025-06-29 🎙️ 5단계 AI 뉴스캐스트 파이프라인 완성
 
 ### 🚀 Added
@@ -84,7 +107,7 @@ Options:
 ### 🚀 Added
 - **GNU Parallel 통합**: 병렬 뉴스 생성으로 처리 시간 대폭 단축 (최대 CPU 코어 수만큼 동시 처리)
 - **자동 동시성 감지**: `--max-concurrency -1`으로 CPU 코어 수 자동 감지 및 최적화
-- **환경 변수 전파**: GNU Parallel에서 GOOGLE_GENAI_API_KEY 자동 전달
+- **환경 변수 전파**: GNU Parallel에서 GOOGLE_GEN_AI_API_KEY 자동 전달
 - **Dry-run 모드**: `--dry-run` 옵션으로 API 비용 없이 파이프라인 테스트
 - **진행률 모니터링**: 실시간 병렬 작업 진행 상황 표시
 - **속도 제한**: API 서버 부하 방지를 위한 2초 간격 작업 시작

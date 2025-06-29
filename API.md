@@ -241,7 +241,7 @@ pnpm crawl:news-details -- --input-file "output/topic-01/news-list.json" --outpu
 
 ### 기본 정보
 - **베이스 URL**: `https://generativelanguage.googleapis.com`
-- **인증**: API 키 필요 (`GOOGLE_GENAI_API_KEY`)
+- **인증**: API 키 필요 (`GOOGLE_GEN_AI_API_KEY`)
 - **모델**: Gemini 1.5 Flash (현재 사용), Gemini 1.5 Pro (계획됨)
 - **요청 제한**: 분당 60회, 일일 1500회 (무료 tier)
 - **라이브러리**: `@google/generative-ai` (v0.21.0)
@@ -252,7 +252,7 @@ pnpm crawl:news-details -- --input-file "output/topic-01/news-list.json" --outpu
 ```typescript
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const apiKey = process.env.GOOGLE_GENAI_API_KEY;
+const apiKey = process.env.GOOGLE_GEN_AI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -302,7 +302,7 @@ const response = await fetch(`${GEMINI_BASE_URL}/v1/models/gemini-1.5-pro:genera
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'x-goog-api-key': process.env.GOOGLE_GENAI_API_KEY
+    'x-goog-api-key': process.env.GOOGLE_GEN_AI_API_KEY
   },
   body: JSON.stringify({
     contents: [{
@@ -317,13 +317,13 @@ const response = await fetch(`${GEMINI_BASE_URL}/v1/models/gemini-1.5-pro:genera
 ### 설정 방법
 ```bash
 # 환경변수 설정
-export GOOGLE_GENAI_API_KEY="your_google_genai_api_key"
+export GOOGLE_GEN_AI_API_KEY="your_google_genai_api_key"
 
 # .env 파일에 추가
-echo "GOOGLE_GENAI_API_KEY=your_google_genai_api_key" >> .env
+echo "GOOGLE_GEN_AI_API_KEY=your_google_genai_api_key" >> .env
 
 # Turbo 환경변수 전파 (turbo.json에 설정됨)
-# generate:news 태스크에서 GOOGLE_GENAI_API_KEY 자동 전달
+# generate:news 태스크에서 GOOGLE_GEN_AI_API_KEY 자동 전달
 ```
 
 ### 성능 및 특징

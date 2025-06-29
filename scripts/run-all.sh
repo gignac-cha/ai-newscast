@@ -97,7 +97,7 @@ while [[ $# -gt 0 ]]; do
       echo "  3. news-details      Extract detailed content for each news"
       echo "  4. news              Generate AI-consolidated news articles"
       echo "  5. newscast-script   Generate newscast dialogue scripts"
-      echo "  6. newscast-audio    Generate TTS audio files (planned)"
+      echo "  6. newscast-audio    Generate TTS audio files"
       echo "  7. newscast          Compile final newscast files (planned)"
       echo ""
       echo "Options:"
@@ -443,7 +443,7 @@ else
             # --tagstring: prefix output with topic directory
             # --jobs: limit concurrent jobs
             # --env: pass environment variables to child processes
-            parallel --jobs "$MAX_CONCURRENCY" --delay 2 --progress --tagstring '{//}' --env GOOGLE_GENAI_API_KEY \
+            parallel --jobs "$MAX_CONCURRENCY" --delay 2 --progress --tagstring '{//}' --env GOOGLE_GEN_AI_API_KEY \
                 'pnpm run:generator:news -- --input-folder {} --output-file {//}/news.json --print-format json 2>/dev/null || echo "[ERROR] Failed to generate news for {//}"' \
                 :::: "$JOB_LIST"
             
@@ -463,7 +463,7 @@ else
             if [ -d "$TOPIC_DIR/news" ] && [ "$(find "$TOPIC_DIR/news" -name "*.json" -type f | wc -l)" -gt 0 ]; then
                 echo "  🤖 Generating news for topic $TOPIC_NUM..."
                 GENERATOR_LOG_FILE=$(mktemp)
-                GOOGLE_GENAI_API_KEY="$GOOGLE_GENAI_API_KEY" pnpm run:generator:news -- --input-folder "$TOPIC_DIR/news" --output-file "$TOPIC_DIR/news.json" --print-format json --print-log-file "$GENERATOR_LOG_FILE"
+                GOOGLE_GEN_AI_API_KEY="$GOOGLE_GEN_AI_API_KEY" pnpm run:generator:news -- --input-folder "$TOPIC_DIR/news" --output-file "$TOPIC_DIR/news.json" --print-format json --print-log-file "$GENERATOR_LOG_FILE"
                 
                 if [ -f "$TOPIC_DIR/news.json" ] && [ -f "$GENERATOR_LOG_FILE" ]; then
                     GENERATED_COUNT=$(jq -r '."total-news-generated"' "$GENERATOR_LOG_FILE")
@@ -561,7 +561,7 @@ else
             # --tagstring: prefix output with topic directory
             # --jobs: limit concurrent jobs
             # --env: pass environment variables to child processes
-            parallel --jobs "$MAX_CONCURRENCY" --delay 2 --progress --tagstring '{//}' --env GOOGLE_GENAI_API_KEY \
+            parallel --jobs "$MAX_CONCURRENCY" --delay 2 --progress --tagstring '{//}' --env GOOGLE_GEN_AI_API_KEY \
                 'pnpm run:generator:newscast-script -- --input-file {} --output-file {//}/newscast-script.json --print-format json 2>/dev/null || echo "[ERROR] Failed to generate script for {//}"' \
                 :::: "$JOB_LIST"
             
@@ -581,7 +581,7 @@ else
             if [ -f "$TOPIC_DIR/news.json" ]; then
                 echo "  🎙️ Generating script for topic $TOPIC_NUM..."
                 SCRIPT_LOG_FILE=$(mktemp)
-                GOOGLE_GENAI_API_KEY="$GOOGLE_GENAI_API_KEY" pnpm run:generator:newscast-script -- --input-file "$TOPIC_DIR/news.json" --output-file "$TOPIC_DIR/newscast-script.json" --print-format json --print-log-file "$SCRIPT_LOG_FILE"
+                GOOGLE_GEN_AI_API_KEY="$GOOGLE_GEN_AI_API_KEY" pnpm run:generator:newscast-script -- --input-file "$TOPIC_DIR/news.json" --output-file "$TOPIC_DIR/newscast-script.json" --print-format json --print-log-file "$SCRIPT_LOG_FILE"
                 
                 if [ -f "$TOPIC_DIR/newscast-script.json" ] && [ -f "$SCRIPT_LOG_FILE" ]; then
                     SCRIPT_LINES=$(jq -r '.\"script-lines\"' "$SCRIPT_LOG_FILE" 2>/dev/null || echo "unknown")
@@ -612,6 +612,133 @@ else
     fi
 fi
 
+# Step 6: Generate newscast audio for all topics
+echo ""
+if [ "$SKIP_NEWSCAST_AUDIO" = true ]; then
+    echo "⏭️  Step 6: Skipping newscast audio generation..."
+    # Count existing audio folders
+    TOTAL_AUDIO=0
+    for ((i=0; i<$TOPIC_COUNT; i++)); do
+        TOPIC_NUM=$(printf "%02d" $((i + 1)))
+        TOPIC_DIR="$OUTPUT_DIR/topic-$TOPIC_NUM"
+        if [ -d "$TOPIC_DIR/audio" ] && [ "$(find "$TOPIC_DIR/audio" -name "*.mp3" -type f | wc -l)" -gt 0 ]; then
+            TOTAL_AUDIO=$((TOTAL_AUDIO + 1))
+        fi
+    done
+    echo "📊 Found existing audio files for $TOTAL_AUDIO/$TOPIC_COUNT topics"
+else
+    if [ "$DRY_RUN" = true ]; then
+        if [ "$RUN_PARALLEL" = true ]; then
+            echo "🎤 Step 6: [DRY RUN] Simulating newscast audio generation (parallel processing)..."
+            echo "  ⚡ Would process $TOPIC_COUNT topics with $MAX_CONCURRENCY concurrent processes..."
+            
+            # Simulate parallel processing timing
+            SIMULATED_TIME=$((60 / MAX_CONCURRENCY + 5))  # Audio generation takes longer
+            echo "  ⏱️  Simulating $SIMULATED_TIME seconds of parallel TTS generation..."
+            sleep 1  # Brief simulation
+            
+            for ((i=0; i<$TOPIC_COUNT; i++)); do
+                TOPIC_NUM=$(printf "%02d" $((i + 1)))
+                echo "  ✅ [DRY RUN] Topic $TOPIC_NUM: Would generate audio files"
+            done
+            echo "  🎯 [DRY RUN] Parallel audio generation simulation completed!"
+        else
+            echo "🎤 Step 6: [DRY RUN] Simulating newscast audio generation (sequential processing)..."
+            for ((i=0; i<$TOPIC_COUNT; i++)); do
+                TOPIC_NUM=$(printf "%02d" $((i + 1)))
+                echo "  🎤 [DRY RUN] Would generate audio for topic $TOPIC_NUM..."
+                sleep 0.5  # Brief simulation
+                echo "  ✅ [DRY RUN] Topic $TOPIC_NUM: Would generate TTS audio files"
+                echo "  📁 [DRY RUN] Would save MP3 files in audio/ folder"
+            done
+        fi
+        TOTAL_AUDIO=$TOPIC_COUNT
+    elif [ "$RUN_PARALLEL" = true ]; then
+        echo "🎤 Step 6: Generating newscast audio for all topics (parallel processing)..."
+        
+        # Create temporary job list for GNU parallel
+        JOB_LIST=$(mktemp)
+        VALID_SCRIPTS=0
+        
+        for ((i=0; i<$TOPIC_COUNT; i++)); do
+            TOPIC_NUM=$(printf "%02d" $((i + 1)))
+            TOPIC_DIR="$OUTPUT_DIR/topic-$TOPIC_NUM"
+            
+            if [ -f "$TOPIC_DIR/newscast-script.json" ]; then
+                echo "$TOPIC_DIR/newscast-script.json" >> "$JOB_LIST"
+                VALID_SCRIPTS=$((VALID_SCRIPTS + 1))
+            else
+                echo "  ⏭️  No newscast script found for topic $TOPIC_NUM, skipping audio generation"
+            fi
+        done
+        
+        if [ $VALID_SCRIPTS -gt 0 ]; then
+            echo "  ⚡ Processing $VALID_SCRIPTS topics with $MAX_CONCURRENCY concurrent processes..."
+            
+            # Use GNU parallel for concurrent newscast audio generation
+            # --delay 3: 3 second delay between job starts (TTS API rate limiting)
+            # --progress: show progress
+            # --tagstring: prefix output with topic directory
+            # --jobs: limit concurrent jobs
+            # --env: pass environment variables to child processes
+            parallel --jobs "$MAX_CONCURRENCY" --delay 3 --progress --tagstring '{//}' --env GOOGLE_CLOUD_API_KEY \
+                'pnpm run:generator:newscast-audio -- --input-file {} --output-dir {//} --print-format json 2>/dev/null || echo "[ERROR] Failed to generate audio for {//}"' \
+                :::: "$JOB_LIST"
+            
+            echo ""
+            echo "  🎯 Parallel audio generation completed!"
+        fi
+        
+        rm "$JOB_LIST"
+        
+    else
+        echo "🎤 Step 6: Generating newscast audio for all topics (sequential processing)..."
+
+        for ((i=0; i<$TOPIC_COUNT; i++)); do
+            TOPIC_NUM=$(printf "%02d" $((i + 1)))
+            TOPIC_DIR="$OUTPUT_DIR/topic-$TOPIC_NUM"
+            
+            if [ -f "$TOPIC_DIR/newscast-script.json" ]; then
+                echo "  🎤 Generating audio for topic $TOPIC_NUM..."
+                AUDIO_LOG_FILE=$(mktemp)
+                GOOGLE_CLOUD_API_KEY="$GOOGLE_CLOUD_API_KEY" pnpm run:generator:newscast-audio -- --input-file "$TOPIC_DIR/newscast-script.json" --output-dir "$TOPIC_DIR" --print-format json --print-log-file "$AUDIO_LOG_FILE"
+                
+                if [ -f "$AUDIO_LOG_FILE" ]; then
+                    AUDIO_FILES=$(jq -r '."audio-files-generated"' "$AUDIO_LOG_FILE" 2>/dev/null || echo "unknown")
+                    SUCCESS_RATE=$(jq -r '."success-rate"' "$AUDIO_LOG_FILE" 2>/dev/null || echo "unknown")
+                    echo "  ✅ Topic $TOPIC_NUM: Generated $AUDIO_FILES audio files ($SUCCESS_RATE success rate)"
+                else
+                    echo "  ❌ Failed to generate audio for topic $TOPIC_NUM"
+                fi
+                rm "$AUDIO_LOG_FILE"
+                
+                # Check if audio folder was created with MP3 files
+                if [ -d "$TOPIC_DIR/audio" ]; then
+                    MP3_COUNT=$(find "$TOPIC_DIR/audio" -name "*.mp3" -type f | wc -l)
+                    echo "  📁 Saved $MP3_COUNT MP3 files in audio/ folder"
+                fi
+            else
+                echo "  ⏭️  No newscast script found for topic $TOPIC_NUM, skipping audio generation"
+            fi
+        done
+    fi
+    
+    # Count total generated audio folders (works for both parallel and sequential)
+    if [ "$DRY_RUN" = true ]; then
+        # Already set above in dry-run logic
+        :
+    else
+        TOTAL_AUDIO=0
+        for ((i=0; i<$TOPIC_COUNT; i++)); do
+            TOPIC_NUM=$(printf "%02d" $((i + 1)))
+            TOPIC_DIR="$OUTPUT_DIR/topic-$TOPIC_NUM"
+            if [ -d "$TOPIC_DIR/audio" ] && [ "$(find "$TOPIC_DIR/audio" -name "*.mp3" -type f | wc -l)" -gt 0 ]; then
+                TOTAL_AUDIO=$((TOTAL_AUDIO + 1))
+            fi
+        done
+    fi
+fi
+
 echo ""
 echo "🎉 Complete pipeline finished successfully!"
 echo "📂 Results saved in: $OUTPUT_DIR"
@@ -621,3 +748,4 @@ echo "  - News lists: $TOPIC_COUNT topics processed"
 echo "  - News details: $TOTAL_DETAILS total details extracted"
 echo "  - Generated news: $TOTAL_GENERATED consolidated articles"
 echo "  - Newscast scripts: $TOTAL_SCRIPTS scripts generated"
+echo "  - Audio files: $TOTAL_AUDIO topics with audio generated"

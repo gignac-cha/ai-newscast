@@ -16,14 +16,15 @@
     },
     "generate:news": {
       "outputs": ["output/**"],
-      "env": ["GOOGLE_GENAI_API_KEY", "PATH", "VIRTUAL_ENV"]
+      "env": ["GOOGLE_GEN_AI_API_KEY", "PATH", "VIRTUAL_ENV"]
     },
     "generate:newscast-script": {
       "outputs": ["output/**"],
-      "env": ["GOOGLE_GENAI_API_KEY"]
+      "env": ["GOOGLE_GEN_AI_API_KEY"]
     },
     "generate:newscast-audio": {
-      "outputs": ["output/**"]
+      "outputs": ["output/**"],
+      "env": ["GOOGLE_CLOUD_API_KEY"]
     },
     "generate:newscast": {
       "outputs": ["output/**"]

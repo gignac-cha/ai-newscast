@@ -3,12 +3,12 @@
 ## 📋 프로젝트 개요
 빅카인드(bigkinds.or.kr)에서 실시간 뉴스를 수집하여 AI 기반 뉴스캐스트를 완전 자동화 생성하는 고급 모노레포 프로젝트
 
-**현재 버전**: v3.3.0 (2025-06-29 5단계 AI 뉴스캐스트 파이프라인 완성)  
-**상태**: 70% 완성 (3/10 패키지 완전 구현, 5단계 완전 자동화 파이프라인 + 모듈화 완성)
+**현재 버전**: v3.4.0 (2025-06-29 6단계 AI 뉴스캐스트 오디오 생성 완성)  
+**상태**: 80% 완성 (3/10 패키지 완전 구현, 6단계 완전 자동화 파이프라인 + Google TTS 통합)
 
 ## 🏗️ 핵심 아키텍처
 
-### 📦 패키지 구조와 구현 상태 (v3.3.0 뉴스캐스트 스크립트 생성기 완성)
+### 📦 패키지 구조와 구현 상태 (v3.4.0 뉴스캐스트 오디오 생성 완성)
 ```
 packages/
 ├── news-crawler/            # ✅ 완성 - 3단계 크롤링 + Typer CLI (Python + UV)
@@ -16,7 +16,7 @@ packages/
 │   ├── news-list            # ✅ 완성 - 토픽별 뉴스 목록 수집 (최대 100개)
 │   └── news-details         # ✅ 완성 - 개별 뉴스 상세 정보 추출
 ├── news-generator/          # ✅ 완성 - AI 뉴스 통합 + Commander.js CLI (Google Gemini 2.5 Pro)
-├── newscast-generator/      # ✅ 완성 - AI 뉴스캐스트 스크립트 생성 + TTS 호스트 관리
+├── newscast-generator/      # ✅ 완성 - AI 뉴스캐스트 스크립트 + Google Cloud TTS 오디오 생성
 ├── core/                    # 🚧 계획 - 공통 타입, 유틸리티 (TypeScript + Zod)
 ├── audio-generator/         # 🚧 계획 - TTS 음성 생성 (Google Cloud TTS Chirp HD)
 ├── audio-processor/         # 🚧 계획 - 오디오 병합/후처리 (FFmpeg 기반)
@@ -26,6 +26,18 @@ packages/
 ```
 
 ## 🔄 개발 변경 이력
+
+### ✅ v3.4.0 완성된 주요 기능 (2025-06-29)
+- **6단계 AI 파이프라인 완성**: topics → lists → details → news → newscast-script → **newscast-audio** 완전 자동화
+- **Google Cloud TTS 완전 통합**: 실제 MP3 오디오 파일 생성 (193개 파일 성공적 생성 확인)
+- **모듈화 아키텍처 완성**: `types.ts`, `utils.ts` 공통 모듈로 코드 중복 제거 및 유지보수성 향상
+- **완전한 오디오 파이프라인**: 스크립트 → TTS → MP3 파일 자동 생성 (host1/host2 구분)
+- **파일명 표준화**: `{sequence}-{host1|host2}.mp3` 규칙으로 일관된 네이밍
+- **음성 품질 확보**: Google Cloud TTS Chirp HD로 자연스러운 한국어 음성 생성
+- **환경변수 분리**: `GOOGLE_GEN_AI_API_KEY` (Gemini) / `GOOGLE_CLOUD_API_KEY` (TTS) 구분 관리
+- **Step 6 병렬 처리**: 10개 토픽 동시 오디오 생성으로 시간 단축 (3초 지연으로 API 제한 준수)
+- **오디오 메타데이터**: audio-files.json으로 생성 통계 및 파일 정보 관리
+- **완전한 Skip 명령어**: `--skip newscast-audio`로 오디오 생성 단계 건너뛰기 지원
 
 ### ✅ v3.3.0 완성된 주요 기능 (2025-06-29)
 - **5단계 AI 파이프라인 완성**: topics → lists → details → news → **newscast-script** 완전 자동화
@@ -50,7 +62,7 @@ packages/
 ### ✅ v3.2.4 완성된 주요 기능 (2025-06-28)
 - **GNU Parallel 통합**: 병렬 뉴스 생성으로 처리 시간 대폭 단축 (최대 CPU 코어 수만큼 동시 처리)
 - **자동 동시성 감지**: `--max-concurrency -1`으로 CPU 코어 수 자동 감지 및 최적화
-- **환경 변수 전파**: GNU Parallel에서 GOOGLE_GENAI_API_KEY 자동 전달
+- **환경 변수 전파**: GNU Parallel에서 GOOGLE_GEN_AI_API_KEY 자동 전달
 - **Dry-run 모드**: `--dry-run` 옵션으로 API 비용 없이 파이프라인 테스트
 - **진행률 모니터링**: 실시간 병렬 작업 진행 상황 표시
 - **성능 향상**: 10개 토픽 순차 처리 450초 → 병렬 처리 120초 (75% 시간 단축)
@@ -114,16 +126,24 @@ scripts/
 
 # 출력 데이터 구조  
 output/
-└── {ISO_TIMESTAMP}/        # 2025-06-28T21-27-19-631Z
+└── {ISO_TIMESTAMP}/        # 2025-06-29T01-43-09-804026
     ├── topic-list.json     # 10개 고유 토픽
     ├── topic-01/           # 1순위 토픽
     │   ├── news-list.json  # 최대 100개 뉴스
     │   ├── news/           # 개별 뉴스 상세 폴더
     │   ├── news.json       # AI 통합 뉴스 (JSON 메타데이터)
     │   ├── news.md         # AI 통합 뉴스 (Markdown 문서)
-    │   ├── newscast-script.json # 🆕 AI 뉴스캐스트 스크립트 (TTS API용)
-    │   └── newscast-script.md   # 🆕 AI 뉴스캐스트 스크립트 (Markdown 문서)
-    └── topic-{N}/          # N순위 토픽 (최대 10개)
+    │   ├── newscast-script.json # AI 뉴스캐스트 스크립트 (TTS API용)
+    │   ├── newscast-script.md   # AI 뉴스캐스트 스크립트 (Markdown 문서)
+    │   └── audio/          # 🆕 TTS 오디오 파일들
+    │       ├── 001-music.mp3    # 🆕 오프닝 음악 (스킵됨)
+    │       ├── 002-host1.mp3    # 🆕 호스트1 음성 파일 
+    │       ├── 003-host2.mp3    # 🆕 호스트2 음성 파일
+    │       ├── 004-host1.mp3    # 🆕 호스트1 음성 파일
+    │       ├── ...              # 🆕 대화 순서대로 생성
+    │       ├── 019-host2.mp3    # 🆕 마지막 대사
+    │       └── audio-files.json # 🆕 오디오 생성 메타데이터
+    └── topic-{N}/          # N순위 토픽 (최대 10개, 각각 오디오 폴더 포함)
 ```
 
 ### ⚡ 성능 최적화 설정
@@ -160,4 +180,4 @@ docs/
 - **도구 우선순위**: Task > Grep/Glob > Read (효율적 검색 패턴)
 
 ---
-*최종 업데이트: 2025-06-29 v3.3.0 - 5단계 AI 뉴스캐스트 파이프라인 완성*
+*최종 업데이트: 2025-06-29 v3.4.0 - 6단계 AI 뉴스캐스트 오디오 생성 완성*
