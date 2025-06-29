@@ -219,10 +219,10 @@ async function generateScript(
     // JSON 출력 저장
     await writeFile(outputFile, JSON.stringify(newscastOutput, null, 2));
 
-    // 텍스트 출력 저장
-    const textFile = outputFile.replace('.json', '.txt');
-    const textContent = formatAsText(newscastOutput);
-    await writeFile(textFile, textContent);
+    // 마크다운 출력 저장
+    const markdownFile = outputFile.replace('.json', '.md');
+    const markdownContent = formatAsMarkdown(newscastOutput);
+    await writeFile(markdownFile, markdownContent);
 
     const endTime = Date.now();
     const elapsedSeconds = ((endTime - startTime) / 1000).toFixed(2);
@@ -256,38 +256,55 @@ async function generateScript(
   }
 }
 
-function formatAsText(newscast: NewscastOutput): string {
+function formatAsMarkdown(newscast: NewscastOutput): string {
   const scriptText = newscast.script
     .map((line, index) => {
       const seq = (index + 1).toString().padStart(3, '0');
       if (line.type === 'music') {
-        return `${seq}. [${line.role.toUpperCase()}] ${line.name}\n     "${line.content}"`;
+        return `### ${seq}. 🎵 ${line.name}
+> *${line.content}*`;
       } else {
-        const voiceModel = 'voice_model' in line ? ` (${line.voice_model})` : '';
-        return `${seq}. [${line.name}]${voiceModel}\n     "${line.content}"`;
+        const voiceModel = 'voice_model' in line ? ` \`${line.voice_model}\`` : '';
+        const genderIcon = line.name === newscast.hosts.host1.name 
+          ? (newscast.hosts.host1.gender === 'male' ? '👨‍💼' : '👩‍💼')
+          : (newscast.hosts.host2.gender === 'male' ? '👨‍💼' : '👩‍💼');
+        return `### ${seq}. ${genderIcon} ${line.name}${voiceModel}
+> "${line.content}"`;
       }
     })
     .join('\n\n');
 
-  return `# ${newscast.title}
+  return `# 🎙️ ${newscast.title}
 
-## ${newscast.program_name} 뉴스캐스트 스크립트
+> **${newscast.program_name} 뉴스캐스트 스크립트**  
+> 📅 생성일시: ${new Date(newscast.metadata.generation_timestamp).toLocaleString('ko-KR')}  
+> ⏱️ 예상 진행시간: ${newscast.estimated_duration}
 
-**진행자:** ${newscast.hosts.host1.name} (${newscast.hosts.host1.gender}, ${newscast.hosts.host1.voice_model}), ${newscast.hosts.host2.name} (${newscast.hosts.host2.gender}, ${newscast.hosts.host2.voice_model})
-**생성 시간:** ${newscast.metadata.generation_timestamp}
-**예상 진행 시간:** ${newscast.estimated_duration}
-**참고 자료:** ${newscast.metadata.total_articles}개 기사 (${newscast.metadata.sources_count}개 언론사)
-**주요 언론사:** ${newscast.metadata.main_sources.join(', ')}
-**총 스크립트 라인:** ${newscast.metadata.total_script_lines}개
+## 👥 진행자 정보
+
+| 구분 | 이름 | 성별 | 음성 모델 |
+|------|------|------|-----------|
+| **호스트 1** | ${newscast.hosts.host1.name} | ${newscast.hosts.host1.gender === 'male' ? '남성' : '여성'} | \`${newscast.hosts.host1.voice_model}\` |
+| **호스트 2** | ${newscast.hosts.host2.name} | ${newscast.hosts.host2.gender === 'male' ? '남성' : '여성'} | \`${newscast.hosts.host2.voice_model}\` |
+
+## 📊 메타데이터
+
+| 항목 | 내용 |
+|------|------|
+| **참고 기사 수** | ${newscast.metadata.total_articles}개 |
+| **참고 언론사 수** | ${newscast.metadata.sources_count}개사 |
+| **주요 언론사** | ${newscast.metadata.main_sources.join(', ')} |
+| **총 스크립트 라인** | ${newscast.metadata.total_script_lines}개 |
 
 ---
 
-## 스크립트
+## 🎬 뉴스캐스트 스크립트
 
 ${scriptText}
 
 ---
-AI 뉴스캐스트 시스템으로 생성된 스크립트입니다.
+
+*🤖 AI 뉴스캐스트 시스템으로 생성된 스크립트입니다.*
 `;
 }
 

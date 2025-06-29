@@ -133,10 +133,10 @@ URL: ${metadata.url}`;
     // Write JSON output
     await writeFile(outputFile, JSON.stringify(generatedNews, null, 2));
 
-    // Write text output
-    const textFile = outputFile.replace('.json', '.txt');
-    const textContent = formatAsText(generatedNews);
-    await writeFile(textFile, textContent);
+    // Write markdown output
+    const markdownFile = outputFile.replace('.json', '.md');
+    const markdownContent = formatAsMarkdown(generatedNews);
+    await writeFile(markdownFile, markdownContent);
 
     const endTime = Date.now();
     const elapsedSeconds = ((endTime - startTime) / 1000).toFixed(2);
@@ -169,22 +169,34 @@ URL: ${metadata.url}`;
   }
 }
 
-function formatAsText(news: GeneratedNews): string {
+function formatAsMarkdown(news: GeneratedNews): string {
   return `# ${news.title}
 
-## 요약
+> **AI 뉴스 통합 보고서**  
+> 📅 생성일시: ${new Date(news.generation_timestamp).toLocaleString('ko-KR')}  
+> 📰 참고 기사: ${news.input_articles_count}개  
+> 🏢 참고 언론사: ${news.sources_count}개사
+
+## 📝 요약
+
 ${news.summary}
 
-## 본문
+## 📄 본문
+
 ${news.content}
 
-## 메타데이터
-- 생성 시간: ${news.generation_timestamp}
-- 참고 기사 수: ${news.input_articles_count}개
-- 참고 언론사: ${news.sources.join(', ')} (총 ${news.sources_count}개사)
+## 📊 메타데이터
+
+| 항목 | 내용 |
+|------|------|
+| **생성 시간** | ${news.generation_timestamp} |
+| **참고 기사 수** | ${news.input_articles_count}개 |
+| **참고 언론사 수** | ${news.sources_count}개사 |
+| **참고 언론사** | ${news.sources.join(', ')} |
 
 ---
-AI 뉴스 통합 시스템으로 생성된 콘텐츠입니다.
+
+*🤖 AI 뉴스 통합 시스템으로 생성된 콘텐츠입니다.*
 `;
 }
 

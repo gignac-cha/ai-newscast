@@ -9,7 +9,10 @@ set -e
 SKIP_TOPICS=false
 SKIP_LISTS=false
 SKIP_DETAILS=false
-SKIP_GENERATION=false
+SKIP_NEWS=false
+SKIP_NEWSCAST_SCRIPT=false
+SKIP_NEWSCAST_AUDIO=false
+SKIP_NEWSCAST=false
 OUTPUT_DIR_OVERRIDE=""
 RUN_PARALLEL=true
 MAX_CONCURRENCY=-1
@@ -17,6 +20,38 @@ DRY_RUN=false
 
 while [[ $# -gt 0 ]]; do
   case $1 in
+    --skip)
+      case "$2" in
+        news-topics)
+          SKIP_TOPICS=true
+          ;;
+        news-list)
+          SKIP_LISTS=true
+          ;;
+        news-details)
+          SKIP_DETAILS=true
+          ;;
+        news)
+          SKIP_NEWS=true
+          ;;
+        newscast-script)
+          SKIP_NEWSCAST_SCRIPT=true
+          ;;
+        newscast-audio)
+          SKIP_NEWSCAST_AUDIO=true
+          ;;
+        newscast)
+          SKIP_NEWSCAST=true
+          ;;
+        *)
+          echo "Unknown skip option: $2"
+          echo "Valid skip options: news-topics, news-list, news-details, news, newscast-script, newscast-audio, newscast"
+          exit 1
+          ;;
+      esac
+      shift 2
+      ;;
+    # Legacy support for old-style options
     --skip-topics)
       SKIP_TOPICS=true
       shift
@@ -30,7 +65,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --skip-generation)
-      SKIP_GENERATION=true
+      SKIP_NEWS=true
       shift
       ;;
     --output-dir)
@@ -56,24 +91,39 @@ while [[ $# -gt 0 ]]; do
     --help)
       echo "Usage: $0 [options]"
       echo ""
+      echo "Pipeline Steps:"
+      echo "  1. news-topics       Crawl trending topics from BigKinds"
+      echo "  2. news-list         Crawl news lists for each topic" 
+      echo "  3. news-details      Extract detailed content for each news"
+      echo "  4. news              Generate AI-consolidated news articles"
+      echo "  5. newscast-script   Generate newscast dialogue scripts"
+      echo "  6. newscast-audio    Generate TTS audio files (planned)"
+      echo "  7. newscast          Compile final newscast files (planned)"
+      echo ""
       echo "Options:"
-      echo "  --skip-topics        Skip news topics crawling (Step 1)"
-      echo "  --skip-lists         Skip news lists crawling (Step 2)"
-      echo "  --skip-details       Skip news details crawling (Step 3)"
-      echo "  --skip-generation    Skip AI news generation (Step 4)"
+      echo "  --skip STEP          Skip specific pipeline step"
+      echo "                       Valid steps: news-topics, news-list, news-details,"
+      echo "                                   news, newscast-script, newscast-audio, newscast"
       echo "  --output-dir DIR     Use existing output directory"
-      echo "  --run-parallel       Enable parallel news generation (default: true)"
+      echo "  --run-parallel       Enable parallel processing (default: true)"
       echo "  --no-parallel        Disable parallel processing, use sequential"
       echo "  --max-concurrency N  Maximum concurrent processes (default: auto-detect cores)"
       echo "  --dry-run            Simulate pipeline execution without API calls"
       echo "  --help               Show this help message"
       echo ""
+      echo "Legacy Options (deprecated):"
+      echo "  --skip-topics        Use --skip news-topics instead"
+      echo "  --skip-lists         Use --skip news-list instead"
+      echo "  --skip-details       Use --skip news-details instead"
+      echo "  --skip-generation    Use --skip news instead"
+      echo ""
       echo "Examples:"
-      echo "  $0                                      # Run all steps with parallel generation"
-      echo "  $0 --no-parallel                       # Run with sequential generation"
+      echo "  $0                                      # Run all available steps"
+      echo "  $0 --skip news-topics --skip news-list # Only run details and generation"
+      echo "  $0 --skip newscast-script              # Skip script generation"
+      echo "  $0 --no-parallel                       # Run with sequential processing"
       echo "  $0 --max-concurrency 2                 # Limit to 2 concurrent processes"
       echo "  $0 --dry-run                           # Test pipeline logic without API calls"
-      echo "  $0 --skip-topics --skip-lists          # Only run details and generation"
       echo "  $0 --output-dir output/2025-06-27...   # Resume from existing output"
       exit 0
       ;;
@@ -206,23 +256,61 @@ else
     else
         echo "📋 Step 2: Crawling news lists for all $TOPIC_COUNT topics..."
 
-        for ((i=0; i<$TOPIC_COUNT; i++)); do
-            TOPIC_NUM=$(printf "%02d" $((i + 1)))
-            TOPIC_DIR="$OUTPUT_DIR/topic-$TOPIC_NUM"
-            mkdir -p "$TOPIC_DIR"
+        if [ "$RUN_PARALLEL" = true ] && command -v parallel &> /dev/null; then
+            echo "⚡ Using parallel processing for news lists (max $MAX_CONCURRENCY concurrent)"
             
-            echo "  📄 Crawling topic $TOPIC_NUM..."
-            LIST_LOG_FILE=$(mktemp)
-            pnpm run:crawler:news-list -- --input-file "$OUTPUT_DIR/topic-list.json" --topic-index $i --output-file "$TOPIC_DIR/news-list.json" --print-log-format json --print-log-file "$LIST_LOG_FILE"
+            # Create job list for parallel processing
+            JOB_LIST=$(mktemp)
+            for ((i=0; i<$TOPIC_COUNT; i++)); do
+                echo "$i" >> "$JOB_LIST"
+            done
             
-            if [ -f "$TOPIC_DIR/news-list.json" ] && [ -f "$LIST_LOG_FILE" ]; then
-                NEWS_COUNT=$(jq -r '."total-news-list"' "$LIST_LOG_FILE")
-                echo "  ✅ Topic $TOPIC_NUM: Found $NEWS_COUNT news items"
-            else
-                echo "  ❌ Failed to crawl news list for topic $TOPIC_NUM"
-            fi
-            rm "$LIST_LOG_FILE"
-        done
+            # Create directory structure first
+            for ((i=0; i<$TOPIC_COUNT; i++)); do
+                TOPIC_NUM=$(printf "%02d" $((i + 1)))
+                TOPIC_DIR="$OUTPUT_DIR/topic-$TOPIC_NUM"
+                mkdir -p "$TOPIC_DIR"
+            done
+            
+            # Run parallel news list crawling
+            parallel --jobs "$MAX_CONCURRENCY" --delay 1 --progress --tagstring 'topic-{#}' \
+                'TOPIC_NUM=$(printf "%02d" $(({} + 1))); 
+                 TOPIC_DIR="'"$OUTPUT_DIR"'/topic-$TOPIC_NUM";
+                 pnpm run:crawler:news-list -- --input-file "'"$OUTPUT_DIR"'/topic-list.json" --topic-index {} --output-file "$TOPIC_DIR/news-list.json" --print-log-format json 2>/dev/null && echo "[SUCCESS] Topic $TOPIC_NUM completed" || echo "[ERROR] Topic $TOPIC_NUM failed"' \
+                :::: "$JOB_LIST"
+            
+            rm "$JOB_LIST"
+            
+            # Verify results
+            SUCCESS_COUNT=0
+            for ((i=0; i<$TOPIC_COUNT; i++)); do
+                TOPIC_NUM=$(printf "%02d" $((i + 1)))
+                TOPIC_DIR="$OUTPUT_DIR/topic-$TOPIC_NUM"
+                if [ -f "$TOPIC_DIR/news-list.json" ]; then
+                    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+                fi
+            done
+            echo "✅ Parallel news list crawling completed: $SUCCESS_COUNT/$TOPIC_COUNT topics successful"
+        else
+            echo "🔄 Using sequential processing for news lists"
+            for ((i=0; i<$TOPIC_COUNT; i++)); do
+                TOPIC_NUM=$(printf "%02d" $((i + 1)))
+                TOPIC_DIR="$OUTPUT_DIR/topic-$TOPIC_NUM"
+                mkdir -p "$TOPIC_DIR"
+                
+                echo "  📄 Crawling topic $TOPIC_NUM..."
+                LIST_LOG_FILE=$(mktemp)
+                pnpm run:crawler:news-list -- --input-file "$OUTPUT_DIR/topic-list.json" --topic-index $i --output-file "$TOPIC_DIR/news-list.json" --print-log-format json --print-log-file "$LIST_LOG_FILE"
+                
+                if [ -f "$TOPIC_DIR/news-list.json" ] && [ -f "$LIST_LOG_FILE" ]; then
+                    NEWS_COUNT=$(jq -r '."total-news-list"' "$LIST_LOG_FILE")
+                    echo "  ✅ Topic $TOPIC_NUM: Found $NEWS_COUNT news items"
+                else
+                    echo "  ❌ Failed to crawl news list for topic $TOPIC_NUM"
+                fi
+                rm "$LIST_LOG_FILE"
+            done
+        fi
     fi
 fi
 
@@ -288,7 +376,7 @@ fi
 
 # Step 4: Generate consolidated news for all topics
 echo ""
-if [ "$SKIP_GENERATION" = true ]; then
+if [ "$SKIP_NEWS" = true ]; then
     echo "⏭️  Step 4: Skipping AI news generation..."
     # Count existing generated news
     TOTAL_GENERATED=0
@@ -404,6 +492,126 @@ else
     fi
 fi
 
+# Step 5: Generate newscast scripts for all topics
+echo ""
+if [ "$SKIP_NEWSCAST_SCRIPT" = true ]; then
+    echo "⏭️  Step 5: Skipping newscast script generation..."
+    # Count existing newscast scripts
+    TOTAL_SCRIPTS=0
+    for ((i=0; i<$TOPIC_COUNT; i++)); do
+        TOPIC_NUM=$(printf "%02d" $((i + 1)))
+        TOPIC_DIR="$OUTPUT_DIR/topic-$TOPIC_NUM"
+        if [ -f "$TOPIC_DIR/newscast-script.json" ]; then
+            TOTAL_SCRIPTS=$((TOTAL_SCRIPTS + 1))
+        fi
+    done
+    echo "📊 Found existing $TOTAL_SCRIPTS newscast script files"
+else
+    if [ "$DRY_RUN" = true ]; then
+        if [ "$RUN_PARALLEL" = true ]; then
+            echo "🎙️ Step 5: [DRY RUN] Simulating newscast script generation (parallel processing)..."
+            echo "  ⚡ Would process $TOPIC_COUNT topics with $MAX_CONCURRENCY concurrent processes..."
+            
+            # Simulate parallel processing timing
+            SIMULATED_TIME=$((30 / MAX_CONCURRENCY + 2))  # Rough parallel time estimate
+            echo "  ⏱️  Simulating $SIMULATED_TIME seconds of parallel script generation..."
+            sleep 1  # Brief simulation
+            
+            for ((i=0; i<$TOPIC_COUNT; i++)); do
+                TOPIC_NUM=$(printf "%02d" $((i + 1)))
+                echo "  ✅ [DRY RUN] Topic $TOPIC_NUM: Would generate newscast script"
+            done
+            echo "  🎯 [DRY RUN] Parallel script generation simulation completed!"
+        else
+            echo "🎙️ Step 5: [DRY RUN] Simulating newscast script generation (sequential processing)..."
+            for ((i=0; i<$TOPIC_COUNT; i++)); do
+                TOPIC_NUM=$(printf "%02d" $((i + 1)))
+                echo "  🎙️ [DRY RUN] Would generate script for topic $TOPIC_NUM..."
+                sleep 0.3  # Brief simulation
+                echo "  ✅ [DRY RUN] Topic $TOPIC_NUM: Would generate newscast script"
+                echo "  📄 [DRY RUN] Would save newscast-script.json and newscast-script.md files"
+            done
+        fi
+        TOTAL_SCRIPTS=$TOPIC_COUNT
+    elif [ "$RUN_PARALLEL" = true ]; then
+        echo "🎙️ Step 5: Generating newscast scripts for all topics (parallel processing)..."
+        
+        # Create temporary job list for GNU parallel
+        JOB_LIST=$(mktemp)
+        VALID_NEWS=0
+        
+        for ((i=0; i<$TOPIC_COUNT; i++)); do
+            TOPIC_NUM=$(printf "%02d" $((i + 1)))
+            TOPIC_DIR="$OUTPUT_DIR/topic-$TOPIC_NUM"
+            
+            if [ -f "$TOPIC_DIR/news.json" ]; then
+                echo "$TOPIC_DIR/news.json" >> "$JOB_LIST"
+                VALID_NEWS=$((VALID_NEWS + 1))
+            else
+                echo "  ⏭️  No consolidated news found for topic $TOPIC_NUM, skipping script generation"
+            fi
+        done
+        
+        if [ $VALID_NEWS -gt 0 ]; then
+            echo "  ⚡ Processing $VALID_NEWS topics with $MAX_CONCURRENCY concurrent processes..."
+            
+            # Use GNU parallel for concurrent newscast script generation
+            # --delay 2: 2 second delay between job starts (rate limiting)
+            # --progress: show progress
+            # --tagstring: prefix output with topic directory
+            # --jobs: limit concurrent jobs
+            # --env: pass environment variables to child processes
+            parallel --jobs "$MAX_CONCURRENCY" --delay 2 --progress --tagstring '{//}' --env GOOGLE_GENAI_API_KEY \
+                'pnpm run:generator:newscast-script -- --input-file {} --output-file {//}/newscast-script.json --print-format json 2>/dev/null || echo "[ERROR] Failed to generate script for {//}"' \
+                :::: "$JOB_LIST"
+            
+            echo ""
+            echo "  🎯 Parallel script generation completed!"
+        fi
+        
+        rm "$JOB_LIST"
+        
+    else
+        echo "🎙️ Step 5: Generating newscast scripts for all topics (sequential processing)..."
+
+        for ((i=0; i<$TOPIC_COUNT; i++)); do
+            TOPIC_NUM=$(printf "%02d" $((i + 1)))
+            TOPIC_DIR="$OUTPUT_DIR/topic-$TOPIC_NUM"
+            
+            if [ -f "$TOPIC_DIR/news.json" ]; then
+                echo "  🎙️ Generating script for topic $TOPIC_NUM..."
+                SCRIPT_LOG_FILE=$(mktemp)
+                GOOGLE_GENAI_API_KEY="$GOOGLE_GENAI_API_KEY" pnpm run:generator:newscast-script -- --input-file "$TOPIC_DIR/news.json" --output-file "$TOPIC_DIR/newscast-script.json" --print-format json --print-log-file "$SCRIPT_LOG_FILE"
+                
+                if [ -f "$TOPIC_DIR/newscast-script.json" ] && [ -f "$SCRIPT_LOG_FILE" ]; then
+                    SCRIPT_LINES=$(jq -r '.\"script-lines\"' "$SCRIPT_LOG_FILE" 2>/dev/null || echo "unknown")
+                    HOSTS=$(jq -r '.hosts' "$SCRIPT_LOG_FILE" 2>/dev/null || echo "unknown hosts")
+                    echo "  ✅ Topic $TOPIC_NUM: Generated script with $SCRIPT_LINES lines"
+                    echo "  👥 Hosts: $HOSTS"
+                else
+                    echo "  ❌ Failed to generate script for topic $TOPIC_NUM"
+                fi
+                rm "$SCRIPT_LOG_FILE"
+                
+                # Check if both JSON and MD files were created
+                if [ -f "$TOPIC_DIR/newscast-script.json" ] && [ -f "$TOPIC_DIR/newscast-script.md" ]; then
+                    echo "  📄 Saved newscast-script.json and newscast-script.md files"
+                fi
+            else
+                echo "  ⏭️  No consolidated news found for topic $TOPIC_NUM, skipping script generation"
+            fi
+        done
+    fi
+    
+    # Count total generated script files (works for both parallel and sequential)
+    if [ "$DRY_RUN" = true ]; then
+        # Already set above in dry-run logic
+        :
+    else
+        TOTAL_SCRIPTS=$(find "$OUTPUT_DIR" -name "newscast-script.json" -type f | wc -l)
+    fi
+fi
+
 echo ""
 echo "🎉 Complete pipeline finished successfully!"
 echo "📂 Results saved in: $OUTPUT_DIR"
@@ -412,3 +620,4 @@ echo "  - Topics: $TOPIC_COUNT"
 echo "  - News lists: $TOPIC_COUNT topics processed"
 echo "  - News details: $TOTAL_DETAILS total details extracted"
 echo "  - Generated news: $TOTAL_GENERATED consolidated articles"
+echo "  - Newscast scripts: $TOTAL_SCRIPTS scripts generated"

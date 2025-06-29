@@ -3,8 +3,8 @@
 ## 📋 프로젝트 개요
 빅카인드(bigkinds.or.kr)에서 실시간 뉴스를 수집하여 AI 기반 뉴스캐스트를 완전 자동화 생성하는 고급 모노레포 프로젝트
 
-**현재 버전**: v3.3.0 (2025-06-28 뉴스캐스트 스크립트 생성기 완성)  
-**상태**: 60% 완성 (3/10 패키지 완전 구현, 5단계 AI 뉴스캐스트 파이프라인 완성)
+**현재 버전**: v3.3.0 (2025-06-29 5단계 AI 뉴스캐스트 파이프라인 완성)  
+**상태**: 70% 완성 (3/10 패키지 완전 구현, 5단계 완전 자동화 파이프라인 + 모듈화 완성)
 
 ## 🏗️ 핵심 아키텍처
 
@@ -27,14 +27,17 @@ packages/
 
 ## 🔄 개발 변경 이력
 
-### ✅ v3.3.0 완성된 주요 기능 (2025-06-28)
+### ✅ v3.3.0 완성된 주요 기능 (2025-06-29)
 - **5단계 AI 파이프라인 완성**: topics → lists → details → news → **newscast-script** 완전 자동화
+- **코드 모듈화 완성**: news-crawler.py 419줄 → 118줄 (70% 감소) + 4개 기능별 모듈 분리
 - **뉴스캐스트 스크립트 생성**: Google Gemini 2.5 Pro로 두 명의 진행자 대화 형식 스크립트 자동 생성
 - **랜덤 TTS 호스트 선택**: 남녀 페어 조합을 매번 랜덤 선택으로 다양성 확보 (8명 아나운서 풀)
 - **Google Cloud TTS 연동**: Chirp HD Premium 모델 8개 음성 with 한국인 아나운서 캐릭터
 - **Markdown 기반 프롬프트**: 구조화된 .md 파일로 프롬프트 관리 및 가독성 향상
-- **듀얼 출력 시스템**: newscast-script.json (TTS API용) + newscast-script.txt (인간 친화적)
+- **듀얼 출력 시스템**: newscast-script.json (TTS API용) + newscast-script.md (인간 친화적)
 - **Commander.js CLI**: script/audio/newscast 서브명령어로 확장 가능한 구조
+- **병렬 처리 확장**: Step 2 (news-list) + Step 5 (newscast-script) 병렬 처리 지원
+- **통합 Skip 명령어**: `--skip news-topics|news-list|news-details|news|newscast-script` 일관성
 
 ### ✅ v3.2.5 완성된 주요 기능 (2025-06-28)
 - **Commander.js CLI 통합**: TypeScript news-generator에 현대적 CLI 프레임워크 적용
@@ -78,11 +81,12 @@ packages/
 
 ### 🔧 기술적 진화 과정
 - **모노레포 아키텍처**: 단일 스크립트 → Turbo + pnpm workspace 기반 10개 패키지 구조
-- **파이프라인 시스템**: 기본 토픽 추출 → 4단계 AI 파이프라인 (topics → lists → details → **generation**)
-- **AI 통합**: 크롤링 전용 → Google Gemini API로 지능형 뉴스 통합 
+- **파이프라인 시스템**: 기본 토픽 추출 → **5단계 AI 파이프라인** (topics → lists → details → news → **newscast-script**)
+- **AI 통합**: 크롤링 전용 → Google Gemini API로 지능형 뉴스 통합 + 뉴스캐스트 스크립트 생성
+- **코드 구조**: 모놀리식 파일 → 모듈화된 아키텍처 (news-crawler 70% 코드 감소)
 - **데이터 품질**: 중복 토픽 문제 해결 (30개 → 10개 고유 토픽 자동 필터링)
-- **출력 시스템**: 텍스트 로그 → JSON 메타데이터 + jq 파싱 + Turbo 출력 분리
-- **개발자 경험**: 개별 실행 → 스킵/재개 기능이 있는 `scripts/run-all.sh` 통합 파이프라인
+- **출력 시스템**: 텍스트 로그 → JSON 메타데이터 + Markdown 문서 + jq 파싱 + Turbo 출력 분리
+- **개발자 경험**: 개별 실행 → 병렬 처리 + 스킵/재개 기능이 있는 `scripts/run-all.sh` 통합 파이프라인
 
 ## 🛠️ 개발 환경 및 도구
 
@@ -116,9 +120,9 @@ output/
     │   ├── news-list.json  # 최대 100개 뉴스
     │   ├── news/           # 개별 뉴스 상세 폴더
     │   ├── news.json       # AI 통합 뉴스 (JSON 메타데이터)
-    │   ├── news.txt        # AI 통합 뉴스 (인간 친화적 텍스트)
+    │   ├── news.md         # AI 통합 뉴스 (Markdown 문서)
     │   ├── newscast-script.json # 🆕 AI 뉴스캐스트 스크립트 (TTS API용)
-    │   └── newscast-script.txt  # 🆕 AI 뉴스캐스트 스크립트 (인간 친화적)
+    │   └── newscast-script.md   # 🆕 AI 뉴스캐스트 스크립트 (Markdown 문서)
     └── topic-{N}/          # N순위 토픽 (최대 10개)
 ```
 
@@ -156,4 +160,4 @@ docs/
 - **도구 우선순위**: Task > Grep/Glob > Read (효율적 검색 패턴)
 
 ---
-*최종 업데이트: 2025-06-28 v3.3.0 - 뉴스캐스트 스크립트 생성기 완성*
+*최종 업데이트: 2025-06-29 v3.3.0 - 5단계 AI 뉴스캐스트 파이프라인 완성*
