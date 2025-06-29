@@ -20,7 +20,8 @@
     "dotenv": "^17.0.0"
   },
   "devDependencies": {
-    "@types/node": "^24.0.7"
+    "@types/node": "^24.0.7",
+    "wrangler": "^4.22.0"
   },
   "keywords": [
     "ai",
