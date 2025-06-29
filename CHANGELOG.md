@@ -4,6 +4,34 @@
 
 ---
 
+## [3.5.0] - 2025-06-29 🎵 7단계 AI 뉴스캐스트 완전 자동화 완성
+
+### 🚀 Added
+- **최종 오디오 병합**: @ffmpeg-installer/ffmpeg으로 개별 MP3를 `newscast.mp3`로 병합
+- **7단계 파이프라인**: topics → lists → details → news → newscast-script → newscast-audio → **newscast** 완전 자동화
+- **generate-newscast.ts**: FFmpeg 기반 오디오 병합 모듈 (300ms 내외 고속 처리)
+- **병렬 오디오 병합**: GNU Parallel로 로컬 FFmpeg 작업 동시 처리 (네트워크 지연 없음)
+- **newscast-audio-info.json**: 병합 결과 메타데이터 (재생 시간, 파일 크기 등)
+- **완전한 Skip 지원**: `--skip newscast`로 최종 병합 단계 건너뛰기
+
+### 🔧 Changed
+- **프로그램명 개선**: "오늘의 뉴스 브리핑" → "AI 뉴스캐스트" (자연스러운 클로징)
+- **파일명 표준화**: 타임스탬프 기반 → `newscast.mp3` 고정 (예측 가능한 결과)
+- **프롬프트 최적화**: TTS 부자연스러운 발음 표기 제거 (김민재(김-민-재) 등)
+- **메타 표현 제거**: "스크립트를 준비했습니다" 등 제작 과정 언급 금지
+
+### 📊 Performance
+- **완성도 향상**: 80% → 85% (7/7 파이프라인 단계 완전 구현)
+- **오디오 품질**: 4분 8초 재생 시간, 0.95MB 크기로 최적화
+- **로컬 처리**: FFmpeg 병합으로 네트워크 의존성 제거, 초고속 처리
+
+### 🏗️ Architecture
+- **모듈화 완성**: newscast-generator를 4개 파일로 분리 (types.ts, utils.ts, script, audio, merge)
+- **의존성 최적화**: @ffmpeg-installer/ffmpeg으로 크로스 플랫폼 바이너리 자동 설치
+- **CLI 통합**: Commander.js에 newscast 명령어 추가
+
+---
+
 ## [3.4.0] - 2025-06-29 🎵 6단계 AI 뉴스캐스트 오디오 생성 완성
 
 ### 🚀 Added

@@ -3,12 +3,12 @@
 ## 📋 프로젝트 개요
 빅카인드(bigkinds.or.kr)에서 실시간 뉴스를 수집하여 AI 기반 뉴스캐스트를 완전 자동화 생성하는 고급 모노레포 프로젝트
 
-**현재 버전**: v3.4.0 (2025-06-29 6단계 AI 뉴스캐스트 오디오 생성 완성)  
-**상태**: 80% 완성 (3/10 패키지 완전 구현, 6단계 완전 자동화 파이프라인 + Google TTS 통합)
+**현재 버전**: v3.5.0 (2025-06-29 7단계 AI 뉴스캐스트 완전 자동화 완성)  
+**상태**: 85% 완성 (3/10 패키지 완전 구현, 7단계 완전 자동화 파이프라인 + 최종 MP3 병합)
 
 ## 🏗️ 핵심 아키텍처
 
-### 📦 패키지 구조와 구현 상태 (v3.4.0 뉴스캐스트 오디오 생성 완성)
+### 📦 패키지 구조와 구현 상태 (v3.5.0 뉴스캐스트 완전 자동화 완성)
 ```
 packages/
 ├── news-crawler/            # ✅ 완성 - 3단계 크롤링 + Typer CLI (Python + UV)
@@ -16,7 +16,7 @@ packages/
 │   ├── news-list            # ✅ 완성 - 토픽별 뉴스 목록 수집 (최대 100개)
 │   └── news-details         # ✅ 완성 - 개별 뉴스 상세 정보 추출
 ├── news-generator/          # ✅ 완성 - AI 뉴스 통합 + Commander.js CLI (Google Gemini 2.5 Pro)
-├── newscast-generator/      # ✅ 완성 - AI 뉴스캐스트 스크립트 + Google Cloud TTS 오디오 생성
+├── newscast-generator/      # ✅ 완성 - AI 뉴스캐스트 스크립트 + TTS 오디오 + FFmpeg 병합
 ├── core/                    # 🚧 계획 - 공통 타입, 유틸리티 (TypeScript + Zod)
 ├── audio-generator/         # 🚧 계획 - TTS 음성 생성 (Google Cloud TTS Chirp HD)
 ├── audio-processor/         # 🚧 계획 - 오디오 병합/후처리 (FFmpeg 기반)
@@ -27,8 +27,8 @@ packages/
 
 ## 🔄 개발 변경 이력
 
-### ✅ v3.4.0 완성된 주요 기능 (2025-06-29)
-- **6단계 AI 파이프라인 완성**: topics → lists → details → news → newscast-script → **newscast-audio** 완전 자동화
+### ✅ v3.5.0 완성된 주요 기능 (2025-06-29)
+- **7단계 AI 파이프라인 완성**: topics → lists → details → news → newscast-script → newscast-audio → **newscast** 완전 자동화
 - **Google Cloud TTS 완전 통합**: 실제 MP3 오디오 파일 생성 (193개 파일 성공적 생성 확인)
 - **모듈화 아키텍처 완성**: `types.ts`, `utils.ts` 공통 모듈로 코드 중복 제거 및 유지보수성 향상
 - **완전한 오디오 파이프라인**: 스크립트 → TTS → MP3 파일 자동 생성 (host1/host2 구분)
@@ -37,7 +37,11 @@ packages/
 - **환경변수 분리**: `GOOGLE_GEN_AI_API_KEY` (Gemini) / `GOOGLE_CLOUD_API_KEY` (TTS) 구분 관리
 - **Step 6 병렬 처리**: 10개 토픽 동시 오디오 생성으로 시간 단축 (3초 지연으로 API 제한 준수)
 - **오디오 메타데이터**: audio-files.json으로 생성 통계 및 파일 정보 관리
-- **완전한 Skip 명령어**: `--skip newscast-audio`로 오디오 생성 단계 건너뛰기 지원
+- **FFmpeg 오디오 병합**: @ffmpeg-installer/ffmpeg으로 개별 MP3를 `newscast.mp3`로 병합
+- **완전한 Skip 명령어**: `--skip newscast-audio`, `--skip newscast`로 단계별 건너뛰기 지원
+- **병렬 오디오 병합**: GNU Parallel로 로컬 FFmpeg 작업 동시 처리 (지연 없음)
+- **프로그램명 변경**: "오늘의 뉴스 브리핑" → "AI 뉴스캐스트"로 자연스러운 클로징
+- **메타 표현 제거**: TTS 부자연스러운 발음 표기 및 제작 과정 언급 제거
 
 ### ✅ v3.3.0 완성된 주요 기능 (2025-06-29)
 - **5단계 AI 파이프라인 완성**: topics → lists → details → news → **newscast-script** 완전 자동화
@@ -93,8 +97,8 @@ packages/
 
 ### 🔧 기술적 진화 과정
 - **모노레포 아키텍처**: 단일 스크립트 → Turbo + pnpm workspace 기반 10개 패키지 구조
-- **파이프라인 시스템**: 기본 토픽 추출 → **5단계 AI 파이프라인** (topics → lists → details → news → **newscast-script**)
-- **AI 통합**: 크롤링 전용 → Google Gemini API로 지능형 뉴스 통합 + 뉴스캐스트 스크립트 생성
+- **파이프라인 시스템**: 기본 토픽 추출 → **7단계 AI 파이프라인** (topics → lists → details → news → newscast-script → newscast-audio → **newscast**)
+- **AI 통합**: 크롤링 전용 → Google Gemini API로 지능형 뉴스 통합 + 뉴스캐스트 스크립트 생성 + TTS + 오디오 병합
 - **코드 구조**: 모놀리식 파일 → 모듈화된 아키텍처 (news-crawler 70% 코드 감소)
 - **데이터 품질**: 중복 토픽 문제 해결 (30개 → 10개 고유 토픽 자동 필터링)
 - **출력 시스템**: 텍스트 로그 → JSON 메타데이터 + Markdown 문서 + jq 파싱 + Turbo 출력 분리
@@ -135,6 +139,8 @@ output/
     │   ├── news.md         # AI 통합 뉴스 (Markdown 문서)
     │   ├── newscast-script.json # AI 뉴스캐스트 스크립트 (TTS API용)
     │   ├── newscast-script.md   # AI 뉴스캐스트 스크립트 (Markdown 문서)
+    │   ├── newscast.mp3    # 🆕 최종 병합된 뉴스캐스트 오디오
+    │   ├── newscast-audio-info.json # 🆕 오디오 병합 메타데이터
     │   └── audio/          # 🆕 TTS 오디오 파일들
     │       ├── 001-music.mp3    # 🆕 오프닝 음악 (스킵됨)
     │       ├── 002-host1.mp3    # 🆕 호스트1 음성 파일 
@@ -180,4 +186,4 @@ docs/
 - **도구 우선순위**: Task > Grep/Glob > Read (효율적 검색 패턴)
 
 ---
-*최종 업데이트: 2025-06-29 v3.4.0 - 6단계 AI 뉴스캐스트 오디오 생성 완성*
+*최종 업데이트: 2025-06-29 v3.5.0 - 7단계 AI 뉴스캐스트 완전 자동화 완성*

@@ -98,7 +98,7 @@ while [[ $# -gt 0 ]]; do
       echo "  4. news              Generate AI-consolidated news articles"
       echo "  5. newscast-script   Generate newscast dialogue scripts"
       echo "  6. newscast-audio    Generate TTS audio files"
-      echo "  7. newscast          Compile final newscast files (planned)"
+      echo "  7. newscast          Merge audio files into final newscast MP3"
       echo ""
       echo "Options:"
       echo "  --skip STEP          Skip specific pipeline step"
@@ -739,6 +739,121 @@ else
     fi
 fi
 
+# Step 7: Merge newscast audio for all topics
+echo ""
+if [ "$SKIP_NEWSCAST" = true ]; then
+    echo "⏭️  Step 7: Skipping newscast audio merging..."
+    # Count existing newscast files
+    TOTAL_NEWSCAST=0
+    for ((i=0; i<$TOPIC_COUNT; i++)); do
+        TOPIC_NUM=$(printf "%02d" $((i + 1)))
+        TOPIC_DIR="$OUTPUT_DIR/topic-$TOPIC_NUM"
+        if [ -f "$TOPIC_DIR/newscast.mp3" ]; then
+            TOTAL_NEWSCAST=$((TOTAL_NEWSCAST + 1))
+        fi
+    done
+    echo "📊 Found existing $TOTAL_NEWSCAST newscast MP3 files"
+else
+    if [ "$DRY_RUN" = true ]; then
+        if [ "$RUN_PARALLEL" = true ]; then
+            echo "🎵 Step 7: [DRY RUN] Simulating newscast audio merging (parallel processing)..."
+            echo "  ⚡ Would process $TOPIC_COUNT topics with $MAX_CONCURRENCY concurrent processes..."
+            
+            # Simulate parallel processing timing (very fast, local operation)
+            echo "  ⏱️  Simulating 2 seconds of parallel audio merging..."
+            sleep 1  # Brief simulation
+            
+            for ((i=0; i<$TOPIC_COUNT; i++)); do
+                TOPIC_NUM=$(printf "%02d" $((i + 1)))
+                echo "  ✅ [DRY RUN] Topic $TOPIC_NUM: Would merge to newscast.mp3"
+            done
+            echo "  🎯 [DRY RUN] Parallel audio merging simulation completed!"
+        else
+            echo "🎵 Step 7: [DRY RUN] Simulating newscast audio merging (sequential processing)..."
+            for ((i=0; i<$TOPIC_COUNT; i++)); do
+                TOPIC_NUM=$(printf "%02d" $((i + 1)))
+                echo "  🎵 [DRY RUN] Would merge audio for topic $TOPIC_NUM..."
+                sleep 0.1  # Very brief simulation (local operation)
+                echo "  ✅ [DRY RUN] Topic $TOPIC_NUM: Would create newscast.mp3"
+            done
+        fi
+        TOTAL_NEWSCAST=$TOPIC_COUNT
+    elif [ "$RUN_PARALLEL" = true ]; then
+        echo "🎵 Step 7: Merging newscast audio for all topics (parallel processing)..."
+        
+        # Create temporary job list for GNU parallel
+        JOB_LIST=$(mktemp)
+        VALID_AUDIO=0
+        
+        for ((i=0; i<$TOPIC_COUNT; i++)); do
+            TOPIC_NUM=$(printf "%02d" $((i + 1)))
+            TOPIC_DIR="$OUTPUT_DIR/topic-$TOPIC_NUM"
+            
+            if [ -d "$TOPIC_DIR/audio" ] && [ -f "$TOPIC_DIR/audio/audio-files.json" ] && [ "$(find "$TOPIC_DIR/audio" -name "*.mp3" -type f | wc -l)" -gt 0 ]; then
+                echo "$TOPIC_DIR" >> "$JOB_LIST"
+                VALID_AUDIO=$((VALID_AUDIO + 1))
+            else
+                echo "  ⏭️  No audio files found for topic $TOPIC_NUM, skipping newscast merging"
+            fi
+        done
+        
+        if [ $VALID_AUDIO -gt 0 ]; then
+            echo "  ⚡ Processing $VALID_AUDIO topics with $MAX_CONCURRENCY concurrent processes..."
+            
+            # Use GNU parallel for concurrent newscast audio merging
+            # No delay needed - local FFmpeg operation, no API calls
+            # --progress: show progress
+            # --tagstring: prefix output with topic directory
+            # --jobs: limit concurrent jobs
+            parallel --jobs "$MAX_CONCURRENCY" --progress --tagstring '{/}' \
+                'pnpm run:generator:newscast -- --input-dir {} 2>/dev/null || echo "[ERROR] Failed to merge audio for {/}"' \
+                :::: "$JOB_LIST"
+            
+            echo ""
+            echo "  🎯 Parallel audio merging completed!"
+        fi
+        
+        rm "$JOB_LIST"
+        
+    else
+        echo "🎵 Step 7: Merging newscast audio for all topics (sequential processing)..."
+
+        for ((i=0; i<$TOPIC_COUNT; i++)); do
+            TOPIC_NUM=$(printf "%02d" $((i + 1)))
+            TOPIC_DIR="$OUTPUT_DIR/topic-$TOPIC_NUM"
+            
+            if [ -d "$TOPIC_DIR/audio" ] && [ -f "$TOPIC_DIR/audio/audio-files.json" ] && [ "$(find "$TOPIC_DIR/audio" -name "*.mp3" -type f | wc -l)" -gt 0 ]; then
+                echo "  🎵 Merging audio for topic $TOPIC_NUM..."
+                pnpm run:generator:newscast -- --input-dir "$TOPIC_DIR"
+                
+                if [ -f "$TOPIC_DIR/newscast.mp3" ]; then
+                    FILE_SIZE=$(du -h "$TOPIC_DIR/newscast.mp3" | cut -f1)
+                    echo "  ✅ Topic $TOPIC_NUM: Created newscast.mp3 ($FILE_SIZE)"
+                else
+                    echo "  ❌ Failed to merge audio for topic $TOPIC_NUM"
+                fi
+            else
+                echo "  ⏭️  No audio files found for topic $TOPIC_NUM, skipping newscast merging"
+            fi
+        done
+    fi
+    
+    # Count total generated newscast files (works for both parallel and sequential)
+    if [ "$DRY_RUN" = true ]; then
+        # Already set above in dry-run logic
+        :
+    else
+        TOTAL_NEWSCAST=0
+        for ((i=0; i<$TOPIC_COUNT; i++)); do
+            TOPIC_NUM=$(printf "%02d" $((i + 1)))
+            TOPIC_DIR="$OUTPUT_DIR/topic-$TOPIC_NUM"
+            if [ -f "$TOPIC_DIR/newscast.mp3" ]; then
+                TOTAL_NEWSCAST=$((TOTAL_NEWSCAST + 1))
+            fi
+        done
+    fi
+fi
+
 echo ""
 echo "🎉 Complete pipeline finished successfully!"
 echo "📂 Results saved in: $OUTPUT_DIR"
@@ -749,3 +864,4 @@ echo "  - News details: $TOTAL_DETAILS total details extracted"
 echo "  - Generated news: $TOTAL_GENERATED consolidated articles"
 echo "  - Newscast scripts: $TOTAL_SCRIPTS scripts generated"
 echo "  - Audio files: $TOTAL_AUDIO topics with audio generated"
+echo "  - Final newscast: $TOTAL_NEWSCAST newscast.mp3 files created"
