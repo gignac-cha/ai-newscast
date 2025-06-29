@@ -4,6 +4,34 @@
 
 ---
 
+## [3.5.1] - 2025-06-29 ☁️ Cloudflare Workers API 완성
+
+### 🚀 Added
+- **newscast-latest-id 패키지**: TypeScript 기반 Cloudflare Workers API 완전 구현
+- **KV 기반 ID 관리**: 최신 뉴스캐스트 ID 저장/조회 API 완성
+- **REST API 엔드포인트**: GET /latest, POST /update, GET / (worker info) 완성
+- **타입 안전성**: Cloudflare Workers 타입 정의 및 인터페이스 완성
+- **CORS 지원**: 크로스 오리진 요청 완전 지원
+- **Input 검증**: ISO timestamp 형식 검증 및 에러 처리
+- **히스토리 관리**: KV에 업데이트 히스토리 자동 저장
+
+### 🔧 Changed
+- **JavaScript → TypeScript**: esbuild로 컴파일하는 완전한 TypeScript 전환
+- **빌드 시스템**: esbuild --bundle --format=esm으로 최적화된 ES2022 출력
+- **타입 정의**: Env, ApiResponse, UpdateRequest 등 완전한 타입 인터페이스
+
+### 📊 Performance
+- **완성도 향상**: 85% → 87% (4/10 패키지 완전 구현)
+- **번들 크기**: 4.2kb 최적화된 Worker 번들
+- **타입 검증**: 컴파일 타임 타입 안전성 확보
+
+### 🏗️ Architecture
+- **프로덕션 배포**: https://your-worker-name.your-account.workers.dev/ 정상 동작
+- **KV 네임스페이스**: AI_NEWSCAST_KV 바인딩으로 데이터 저장
+- **모듈화**: tsconfig.json 루트 확장으로 일관된 TypeScript 설정
+
+---
+
 ## [3.5.0] - 2025-06-29 🎵 7단계 AI 뉴스캐스트 완전 자동화 완성
 
 ### 🚀 Added

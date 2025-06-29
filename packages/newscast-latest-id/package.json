@@ -1,0 +1,33 @@
+{
+  "name": "@ai-newscast/newscast-latest-id",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker for managing latest newscast ID with KV storage",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --format=esm --outfile=dist/index.js --platform=neutral --target=es2022",
+    "dev": "wrangler dev",
+    "deploy": "npm run build && wrangler deploy",
+    "tail": "wrangler tail",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "wrangler": "^4.22.0",
+    "@types/node": "^24.0.7",
+    "@cloudflare/workers-types": "^4.20240925.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.7.2"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "kv",
+    "newscast",
+    "api"
+  ],
+  "authors": [
+    "AI Newscast Team"
+  ],
+  "license": "MIT"
+}

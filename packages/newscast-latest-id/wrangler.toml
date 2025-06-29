@@ -1,0 +1,14 @@
+name = "ai-newscast-latest-id"
+main = "dist/index.js"
+compatibility_date = "2024-06-29"
+
+[[kv_namespaces]]
+binding = "AI_NEWSCAST_KV"
+id = "1a002997dc124ce9a4ff5080a7e2b5e6"
+preview_id = "1a002997dc124ce9a4ff5080a7e2b5e6"
+
+# Local development settings
+[env.development]
+kv_namespaces = [
+  { binding = "AI_NEWSCAST_KV", id = "local-kv", preview_id = "local-kv" }
+]

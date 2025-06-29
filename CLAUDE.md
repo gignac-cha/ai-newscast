@@ -3,12 +3,12 @@
 ## 📋 프로젝트 개요
 빅카인드(bigkinds.or.kr)에서 실시간 뉴스를 수집하여 AI 기반 뉴스캐스트를 완전 자동화 생성하는 고급 모노레포 프로젝트
 
-**현재 버전**: v3.5.0 (2025-06-29 7단계 AI 뉴스캐스트 완전 자동화 완성)  
-**상태**: 85% 완성 (3/10 패키지 완전 구현, 7단계 완전 자동화 파이프라인 + 최종 MP3 병합)
+**현재 버전**: v3.5.1 (2025-06-29 Cloudflare Workers API 완성)  
+**상태**: 87% 완성 (4/10 패키지 완전 구현, 7단계 완전 자동화 파이프라인 + TypeScript Cloudflare Workers)
 
 ## 🏗️ 핵심 아키텍처
 
-### 📦 패키지 구조와 구현 상태 (v3.5.0 뉴스캐스트 완전 자동화 완성)
+### 📦 패키지 구조와 구현 상태 (v3.5.1 Cloudflare Workers API 완성)
 ```
 packages/
 ├── news-crawler/            # ✅ 완성 - 3단계 크롤링 + Typer CLI (Python + UV)
@@ -20,12 +20,24 @@ packages/
 ├── core/                    # 🚧 계획 - 공통 타입, 유틸리티 (TypeScript + Zod)
 ├── audio-generator/         # 🚧 계획 - TTS 음성 생성 (Google Cloud TTS Chirp HD)
 ├── audio-processor/         # 🚧 계획 - 오디오 병합/후처리 (FFmpeg 기반)
-├── api-server/              # 🚧 계획 - Cloudflare Workers API (KV 기반 배치 ID 관리)
+├── newscast-latest-id/      # ✅ 완성 - Cloudflare Workers API (KV 기반 최신 뉴스캐스트 ID 관리)
+├── api-server/              # 🚧 계획 - Cloudflare Workers API (확장된 API 기능)
 ├── cli/                     # 🚧 계획 - 통합 CLI (ai-newscast 바이너리)
 └── web/                     # 🚧 계획 - 뉴스캐스트 플레이어 웹 인터페이스
 ```
 
 ## 🔄 개발 변경 이력
+
+### ✅ v3.5.1 완성된 주요 기능 (2025-06-29)
+- **Cloudflare Workers API 완성**: TypeScript 기반 newscast-latest-id 패키지 완전 구현
+- **KV 기반 ID 관리**: 최신 뉴스캐스트 ID 저장/조회 API 완성
+- **TypeScript 완전 전환**: JavaScript → TypeScript with esbuild 컴파일
+- **REST API 엔드포인트**: GET /latest, POST /update, GET / (worker info) 완성
+- **타입 안전성 확보**: Cloudflare Workers 타입 정의 및 인터페이스 완성
+- **CORS 지원**: 크로스 오리진 요청 완전 지원
+- **Input 검증**: ISO timestamp 형식 검증 및 에러 처리
+- **히스토리 관리**: KV에 업데이트 히스토리 자동 저장
+- **프로덕션 배포**: https://your-worker-name.your-account.workers.dev/ 정상 동작
 
 ### ✅ v3.5.0 완성된 주요 기능 (2025-06-29)
 - **7단계 AI 파이프라인 완성**: topics → lists → details → news → newscast-script → newscast-audio → **newscast** 완전 자동화
@@ -184,6 +196,24 @@ docs/
 - **무시 파일**: `.claudeignore` - 불필요한 파일 제외 (node_modules, output 등)
 - **메모리 기능**: 개발 진행 상황 및 중요 결정사항 자동 기록
 - **도구 우선순위**: Task > Grep/Glob > Read (효율적 검색 패턴)
+
+### 📝 Git 커밋 스타일 가이드
+프로젝트의 일관된 커밋 메시지를 위한 규칙:
+
+**커밋 접두사**:
+- `feature:` - 새로운 기능 또는 주요 기능 추가
+- `refactor:` - 코드 구조 개선, 재구성
+- `fix:` - 버그 수정
+- `document:` - 문서 업데이트 (`docs:` 아님)
+- `chore:` - 유지보수 작업, 의존성 업데이트
+
+**Claude Code 서명**:
+모든 커밋은 다음으로 끝나야 함:
+```
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
 
 ---
 *최종 업데이트: 2025-06-29 v3.5.0 - 7단계 AI 뉴스캐스트 완전 자동화 완성*
