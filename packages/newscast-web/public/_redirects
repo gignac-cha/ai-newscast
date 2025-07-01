@@ -1,0 +1,7 @@
+# Cloudflare Pages redirects configuration
+
+# SPA fallback - redirect all non-asset requests to index.html
+/*  /index.html  200
+
+# API proxy for local development (not used in production)
+/api/*  PLACEHOLDER_WORKER_URL/:splat  200

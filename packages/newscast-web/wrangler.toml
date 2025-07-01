@@ -1,0 +1,14 @@
+name = "ai-newscast-web"
+pages_build_output_dir = "dist"
+
+[env.production]
+compatibility_date = "2024-06-29"
+
+[[env.production.env_vars]]
+VITE_WORKER_API_URL = "PLACEHOLDER_WORKER_URL"
+
+[env.preview]
+compatibility_date = "2024-06-29"
+
+[[env.preview.env_vars]]
+VITE_WORKER_API_URL = "PLACEHOLDER_WORKER_URL"

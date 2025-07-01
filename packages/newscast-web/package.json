@@ -1,0 +1,50 @@
+{
+  "name": "@ai-newscast/newscast-web",
+  "version": "1.0.0",
+  "description": "AI Newscast web player built with React and Vite for Cloudflare Pages",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:smart": "node smart-build.ts",
+    "build:analyze": "vite build --mode analyze",
+    "build:debug": "DEBUG=vite:* vite build",
+    "build:profile": "vite build --profile",
+    "build:perf": "node build-perf.ts",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@fortawesome/fontawesome-svg-core": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
+    "@radix-ui/react-collapsible": "^1.1.11",
+    "@radix-ui/react-icons": "^1.3.2",
+    "@radix-ui/themes": "^3.2.1",
+    "@tanstack/react-query": "^5.81.5",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "sass": "^1.89.2"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "rollup-plugin-visualizer": "^6.0.3",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.0"
+  },
+  "keywords": [
+    "ai",
+    "newscast",
+    "react",
+    "vite",
+    "cloudflare-pages",
+    "audio-player"
+  ],
+  "authors": [
+    "AI Newscast Team"
+  ],
+  "license": "MIT"
+}

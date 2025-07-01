@@ -1,0 +1,102 @@
+/* Global styles for AI Newscast Web App */
+
+// Variables
+$scrollbar-width: 8px;
+$scrollbar-radius: 4px;
+$transition-fast: 0.1s ease;
+$transition-normal: 0.2s ease;
+$hover-translate: -2px;
+
+// Reset
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+// Base layout
+html, body, #root {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+// Theme transition
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *:before,
+html.theme-transition *:after {
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow !important;
+  transition-duration: 0.3s !important;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+body {
+  background-color: var(--gray-1);
+  color: var(--gray-12);
+  overflow: hidden; // 전체 페이지 스크롤 방지
+}
+
+// Custom scrollbar for webkit browsers
+::-webkit-scrollbar {
+  width: $scrollbar-width;
+  
+  &-track {
+    background: var(--gray-3);
+  }
+  
+  &-thumb {
+    background: var(--gray-8);
+    border-radius: $scrollbar-radius;
+    
+    &:hover {
+      background: var(--gray-9);
+    }
+  }
+}
+
+// Component styles
+.audio-progress {
+  transition: all $transition-fast;
+}
+
+.topic-card {
+  transition: all $transition-normal;
+  
+  &:hover {
+    transform: translateY($hover-translate);
+  }
+  
+  @media (max-width: 768px) {
+    margin: 0 16px;
+  }
+}
+
+// Animations
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.loading-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+// Focus and selection styles
+.focus-visible {
+  outline: 2px solid var(--accent-9);
+  outline-offset: 2px;
+}
+
+::selection {
+  background-color: var(--accent-9);
+  color: var(--accent-1);
+}
