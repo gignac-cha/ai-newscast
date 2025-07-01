@@ -91,6 +91,12 @@ export default {
 };
 
 function handleRoot(): Response {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
   const info: WorkerInfo = {
     name: 'AI Newscast Latest ID Worker',
     version: '1.0.0',
@@ -103,11 +109,17 @@ function handleRoot(): Response {
   };
   
   return new Response(JSON.stringify(info, null, 2), {
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json', ...corsHeaders }
   });
 }
 
 async function handleGetLatest(env: Env): Promise<Response> {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
   try {
     const latestId = await env.AI_NEWSCAST_KV.get('latest-newscast-id');
     
@@ -120,7 +132,8 @@ async function handleGetLatest(env: Env): Promise<Response> {
     return new Response(JSON.stringify(response), {
       headers: { 
         'Content-Type': 'application/json',
-        'Cache-Control': 'max-age=60' // Cache for 1 minute
+        'Cache-Control': 'max-age=60', // Cache for 1 minute
+        ...corsHeaders
       }
     });
   } catch (error) {
@@ -130,13 +143,19 @@ async function handleGetLatest(env: Env): Promise<Response> {
 }
 
 async function handleUpdateLatest(request: Request, env: Env): Promise<Response> {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
   try {
     const body = await request.json() as UpdateRequest;
     
     if (!body.id) {
       return new Response(
         JSON.stringify({ error: 'Missing required field: id' }), 
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
     
@@ -149,7 +168,7 @@ async function handleUpdateLatest(request: Request, env: Env): Promise<Response>
         JSON.stringify({ 
           error: 'Invalid ID format. Expected format: YYYY-MM-DDTHH-MM-SS-NNNNNN' 
         }), 
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
     
@@ -178,14 +197,14 @@ async function handleUpdateLatest(request: Request, env: Env): Promise<Response>
     };
     
     return new Response(JSON.stringify(response), {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
     
   } catch (error) {
     if (error instanceof Error && error.name === 'SyntaxError') {
       return new Response(
         JSON.stringify({ error: 'Invalid JSON in request body' }), 
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

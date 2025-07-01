@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { NewscastData } from '../types/newscast';
 
 const WORKER_API_URL = import.meta.env.VITE_WORKER_API_URL ?? 'INVALID_WORKER_API_URL';
-const OUTPUT_BASE = import.meta.env.VITE_NEWSCAST_STORAGE ?? 'INVALID_NEWSCAST_STORAGE';
+const NEWSCAST_STORAGE = import.meta.env.VITE_NEWSCAST_STORAGE ?? 'INVALID_NEWSCAST_STORAGE';
 
 export const useLatestNewscastId = () => {
   return useQuery({
@@ -29,7 +29,7 @@ export const useNewscastData = (newscastId: string | undefined) => {
       }
 
       // Fetch topic list first
-      const topicListResponse = await fetch(`${OUTPUT_BASE}/${newscastId}/topic-list.json`);
+      const topicListResponse = await fetch(`${NEWSCAST_STORAGE}/${newscastId}/topic-list.json`);
       if (!topicListResponse.ok) {
         throw new Error('Failed to fetch topic list');
       }
@@ -39,15 +39,17 @@ export const useNewscastData = (newscastId: string | undefined) => {
       const topics = await Promise.all(
         topicList.map(async (topic: any, index: number) => {
           const topicNum = String(index + 1).padStart(2, '0');
-          
+
           // Fetch news data
-          const newsResponse = await fetch(`${OUTPUT_BASE}/${newscastId}/topic-${topicNum}/news.json`);
+          const newsResponse = await fetch(`${NEWSCAST_STORAGE}/${newscastId}/topic-${topicNum}/news.json`);
           const newsData = newsResponse.ok ? await newsResponse.json() : null;
-          
+
           // Fetch newscast script
-          const scriptResponse = await fetch(`${OUTPUT_BASE}/${newscastId}/topic-${topicNum}/newscast-script.json`);
+          const scriptResponse = await fetch(
+            `${NEWSCAST_STORAGE}/${newscastId}/topic-${topicNum}/newscast-script.json`
+          );
           const scriptData = scriptResponse.ok ? await scriptResponse.json() : null;
-          
+
           return {
             id: topicNum,
             title: topic.title,
@@ -56,7 +58,7 @@ export const useNewscastData = (newscastId: string | undefined) => {
             keywords: topic.keywords,
             news: newsData,
             script: scriptData,
-            audioUrl: scriptData ? `${OUTPUT_BASE}/${newscastId}/topic-${topicNum}/newscast.mp3` : null
+            audioUrl: scriptData ? `${NEWSCAST_STORAGE}/${newscastId}/topic-${topicNum}/newscast.mp3` : null,
           };
         })
       );
@@ -65,7 +67,7 @@ export const useNewscastData = (newscastId: string | undefined) => {
         id: newscastId,
         title: 'AI 뉴스캐스트',
         timestamp: newscastId,
-        topics: topics.filter(topic => topic.news && topic.script) // Only include topics with both news and script
+        topics: topics.filter((topic) => topic.news && topic.script), // Only include topics with both news and script
       };
     },
     enabled: !!newscastId,

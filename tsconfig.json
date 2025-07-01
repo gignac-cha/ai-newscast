@@ -117,6 +117,7 @@
     { "path": "./packages/news-crawler" },
     { "path": "./packages/news-processor" },
     { "path": "./packages/script-generator" },
-    { "path": "./packages/api-server" }
+    { "path": "./packages/api-server" },
+    { "path": "./packages/newscast-web" }
   ]
 }
