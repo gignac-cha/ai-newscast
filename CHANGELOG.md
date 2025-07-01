@@ -4,6 +4,34 @@
 
 ---
 
+## [3.6.0] - 2025-07-01 🌐 React 웹 플레이어 완성
+
+### 🚀 Added
+- **newscast-web 패키지**: React 19 기반 뉴스캐스트 웹 플레이어 완전 구현
+- **실시간 API 연동**: Cloudflare Workers API를 통한 최신 뉴스캐스트 자동 로딩
+- **인터랙티브 UI**: 토픽별 확장/축소 토글 및 스크롤 기반 네비게이션
+- **무한 렌더링 해결**: React.memo + useCallback 최적화로 성능 문제 완전 해결
+- **타입 안전성**: 실제 데이터 구조 기반 완전한 TypeScript 타입 정의
+- **반응형 디자인**: Radix UI + Emotion 기반 모던 웹 인터페이스
+- **에러 처리**: API 실패 및 데이터 누락 상황 완전 대응
+
+### 🔧 Changed  
+- **데이터 구조 매칭**: API 응답 구조(`latest-newscast-id`)와 파일 시스템 구조 완전 매칭
+- **컴포넌트 최적화**: TopicCard React.memo 적용 및 불필요한 리렌더링 방지
+- **성능 향상**: Vite 빌드 최적화로 90초+ → 1분 48초 단축
+
+### 🏗️ Architecture
+- **기술 스택**: React 19 + TypeScript + Vite + Radix UI + TanStack Query + Emotion
+- **상태 관리**: TanStack Query (서버 상태) + React Hooks (로컬 상태)
+- **API 통합**: GET /latest → topic-list.json → 개별 토픽 데이터 체인
+
+### 📊 Performance
+- **완성도 향상**: 87% → 92% (5/10 패키지 완전 구현)
+- **빌드 최적화**: dependency pre-bundling, manual chunks 적용
+- **캐싱 전략**: 5분 stale time, 10분 refetch interval
+
+---
+
 ## [3.5.1] - 2025-06-29 ☁️ Cloudflare Workers API 완성
 
 ### 🚀 Added

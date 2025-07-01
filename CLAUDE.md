@@ -3,12 +3,12 @@
 ## 📋 프로젝트 개요
 빅카인드(bigkinds.or.kr)에서 실시간 뉴스를 수집하여 AI 기반 뉴스캐스트를 완전 자동화 생성하는 고급 모노레포 프로젝트
 
-**현재 버전**: v3.5.1 (2025-06-29 Cloudflare Workers API 완성)  
-**상태**: 87% 완성 (4/10 패키지 완전 구현, 7단계 완전 자동화 파이프라인 + TypeScript Cloudflare Workers)
+**현재 버전**: v3.6.0 (2025-07-01 웹 플레이어 완성)  
+**상태**: 92% 완성 (5/10 패키지 완전 구현, 7단계 완전 자동화 파이프라인 + TypeScript Cloudflare Workers + React 웹 플레이어)
 
 ## 🏗️ 핵심 아키텍처
 
-### 📦 패키지 구조와 구현 상태 (v3.5.1 Cloudflare Workers API 완성)
+### 📦 패키지 구조와 구현 상태 (v3.6.0 웹 플레이어 완성)
 ```
 packages/
 ├── news-crawler/            # ✅ 완성 - 3단계 크롤링 + Typer CLI (Python + UV)
@@ -21,12 +21,25 @@ packages/
 ├── audio-generator/         # 🚧 계획 - TTS 음성 생성 (Google Cloud TTS Chirp HD)
 ├── audio-processor/         # 🚧 계획 - 오디오 병합/후처리 (FFmpeg 기반)
 ├── newscast-latest-id/      # ✅ 완성 - Cloudflare Workers API (KV 기반 최신 뉴스캐스트 ID 관리)
+├── newscast-web/            # ✅ 완성 - React 웹 플레이어 (TypeScript + Radix UI + TanStack Query)
 ├── api-server/              # 🚧 계획 - Cloudflare Workers API (확장된 API 기능)
 ├── cli/                     # 🚧 계획 - 통합 CLI (ai-newscast 바이너리)
-└── web/                     # 🚧 계획 - 뉴스캐스트 플레이어 웹 인터페이스
+└── web/                     # 🚧 계획 - [DEPRECATED: newscast-web로 대체됨]
 ```
 
 ## 🔄 개발 변경 이력
+
+### ✅ v3.6.0 완성된 주요 기능 (2025-07-01)
+- **React 웹 플레이어 완성**: TypeScript 기반 newscast-web 패키지 완전 구현
+- **무한 렌더링 문제 해결**: useEffect 의존성 배열 최적화 및 React.memo 적용
+- **API 통합 완성**: Cloudflare Workers API 연동 및 실제 파일 구조 매칭
+- **TypeScript 타입 시스템**: 실제 데이터 구조에 맞는 완전한 타입 정의
+- **모던 React 아키텍처**: React 19 + Vite + TanStack Query + Radix UI + Emotion
+- **성능 최적화**: 빌드 시간 단축 (90초+ → 1분 48초) 및 의존성 사전 번들링
+- **스크롤 스파이**: 뷰포트 기반 활성 토픽 자동 감지
+- **반응형 디자인**: 모바일/데스크톱 대응 완료
+- **에러 처리**: API 연결 실패 및 데이터 누락 상황 완전 대응
+- **개발자 경험**: TypeScript strict 모드 + ESLint + 실시간 HMR
 
 ### ✅ v3.5.1 완성된 주요 기능 (2025-06-29)
 - **Cloudflare Workers API 완성**: TypeScript 기반 newscast-latest-id 패키지 완전 구현
@@ -216,4 +229,4 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ---
-*최종 업데이트: 2025-06-29 v3.5.0 - 7단계 AI 뉴스캐스트 완전 자동화 완성*
+*최종 업데이트: 2025-07-01 v3.6.0 - React 웹 플레이어 완성 (무한 렌더링 해결 + API 통합)*

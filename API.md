@@ -1,10 +1,10 @@
 # API 문서
 
-> v3.2.0 AI 뉴스 생성기 완성 버전 기준 API 사용 가이드
+> v3.6.0 웹 플레이어 완성 버전 기준 API 사용 가이드
 
 ## 📋 개요
 
-AI 뉴스캐스트 프로젝트에서 사용하는 외부 API들의 사용법과 실제 응답 구조를 정리한 문서입니다.
+AI 뉴스캐스트 프로젝트에서 사용하는 외부 API 및 내부 API들의 사용법과 실제 응답 구조를 정리한 문서입니다.
 
 ## 🕷️ BigKinds API (현재 구현됨)
 
@@ -407,6 +407,96 @@ curl -X POST https://bigkinds.or.kr/news/getNetworkDataAnalysis.do \
 - **인코딩**: `response.apparent_encoding` 사용으로 한글 깨짐 방지
 - **타임아웃**: 30초 타임아웃 설정
 
+## ☁️ Cloudflare Workers API (현재 구현됨)
+
+### 기본 정보
+- **베이스 URL**: `https://your-worker-name.your-account.workers.dev`
+- **인증**: 불필요 (공개 API)
+- **스토리지**: Cloudflare KV
+- **응답 형식**: JSON
+
+### API 엔드포인트
+
+#### 1. 최신 뉴스캐스트 ID 조회
+```
+GET /latest
+```
+
+**응답**:
+```json
+{
+  "latest-newscast-id": "2025-06-29T01-43-09-804026",
+  "last-updated": "2025-06-29T03:25:30.123Z",
+  "status": "success"
+}
+```
+
+#### 2. 뉴스캐스트 ID 업데이트
+```
+POST /update
+Content-Type: application/json
+
+{
+  "newscast-id": "2025-07-01T12-34-56-789012"
+}
+```
+
+**응답**:
+```json
+{
+  "success": true,
+  "previous-id": "2025-06-29T01-43-09-804026",
+  "new-id": "2025-07-01T12-34-56-789012",
+  "updated-at": "2025-07-01T12:35:00.000Z"
+}
+```
+
+#### 3. Worker 정보 조회
+```
+GET /
+```
+
+**응답**:
+```json
+{
+  "service": "AI Newscast Latest ID API",
+  "version": "1.0.0",
+  "timestamp": "2025-07-01T12:35:00.000Z",
+  "endpoints": ["/latest", "/update"]
+}
+```
+
+### React 웹 플레이어 연동
+
+#### 데이터 플로우
+1. **Latest ID 조회**: `GET /latest`
+2. **토픽 목록**: `GET /output/{id}/topic-list.json`
+3. **개별 토픽 데이터**: 
+   - `GET /output/{id}/topic-XX/news.json`
+   - `GET /output/{id}/topic-XX/newscast-script.json`
+   - `GET /output/{id}/topic-XX/newscast.mp3`
+
+#### TanStack Query 구현
+```typescript
+export const useLatestNewscastId = () => {
+  return useQuery({
+    queryKey: ['latestNewscastId'],
+    queryFn: async (): Promise<string> => {
+      const response = await fetch(`${WORKER_API_URL}/latest`);
+      const data = await response.json();
+      return data['latest-newscast-id'];
+    },
+    staleTime: 1000 * 60 * 5, // 5분
+    refetchInterval: 1000 * 60 * 10, // 10분마다 자동 갱신
+  });
+};
+```
+
+### CORS 지원
+- **Origin**: `*` (모든 도메인 허용)
+- **Methods**: `GET, POST, OPTIONS`
+- **Headers**: `Content-Type, Authorization`
+
 ---
 
-**최종 업데이트**: v3.2.0 (2025-06-27) - Google Gemini API 뉴스 통합 기능 구현 완료
+**최종 업데이트**: v3.6.0 (2025-07-01) - React 웹 플레이어 + Cloudflare Workers API 통합 완료

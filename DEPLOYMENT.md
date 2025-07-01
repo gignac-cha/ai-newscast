@@ -1,6 +1,6 @@
 # 배포 가이드
 
-> v3.1.0 크롤링 파이프라인 완성 버전 기준 Cloudflare 배포 가이드
+> v3.6.0 웹 플레이어 완성 버전 기준 Cloudflare 배포 가이드
 
 ## 📋 개요
 
@@ -225,62 +225,77 @@ wrangler kv:key get --binding NEWSCAST_KV "latest-batch-id"
 wrangler kv:key list --binding NEWSCAST_KV
 ```
 
-## 🌐 4. Cloudflare Pages (웹 플레이어)
+## 🌐 4. Cloudflare Pages (웹 플레이어) ✅ 완성
 
 ### 목적
-- 뉴스캐스트 플레이어 웹 인터페이스
-- 토픽별 챕터 네비게이션
-- 반응형 모바일 친화적 UI
+- React 19 기반 뉴스캐스트 플레이어 웹 인터페이스
+- 토픽별 인터랙티브 카드 및 스크롤 네비게이션
+- 반응형 모바일 친화적 UI (Radix UI + Emotion)
 
-### 예상 구조
+### 실제 구조 (구현 완료)
 ```
-packages/web/                          # Next.js 앱
-├── pages/
-│   ├── index.tsx                      # 메인 플레이어 페이지
-│   ├── batch/[id].tsx                 # 특정 배치 플레이어
-│   └── api/
-│       └── batches.ts                 # API 프록시
-├── components/
-│   ├── AudioPlayer.tsx                # 오디오 플레이어 컴포넌트
-│   ├── TopicList.tsx                  # 토픽 목록
-│   └── ScriptViewer.tsx               # 스크립트 표시
-├── hooks/
-│   └── useNewscastData.ts             # 데이터 패칭 훅
-└── styles/
-    └── globals.css                    # 스타일시트
+packages/newscast-web/                 # React 19 + Vite 앱
+├── src/
+│   ├── components/
+│   │   ├── NewscastViewer.tsx         # 메인 뉴스캐스트 뷰어
+│   │   ├── TopicCard.tsx              # 토픽 카드 컴포넌트
+│   │   ├── AudioPlayer.tsx            # 오디오 플레이어 (예정)
+│   │   └── App.tsx                    # 루트 앱 컴포넌트
+│   ├── hooks/
+│   │   ├── useNewscast.ts             # API 데이터 패칭
+│   │   ├── useAudioPlayer.ts          # 오디오 재생 상태 관리
+│   │   └── useSimpleScrollSpy.ts      # 스크롤 스파이
+│   ├── types/
+│   │   └── newscast.ts                # TypeScript 타입 정의
+│   └── main.tsx                       # 앱 엔트리포인트
+├── public/
+│   └── output/                        # 뉴스캐스트 데이터 폴더
+└── dist/                              # 빌드 출력
 ```
 
-### 배포 설정 (계획)
+### 배포 설정 (실제 구현)
 ```bash
 # Pages 프로젝트 생성
-wrangler pages project create ai-newscast-player
+wrangler pages project create ai-newscast-web
 
 # 빌드 및 배포
-cd packages/web
-npm run build
+cd packages/newscast-web
+pnpm build
 wrangler pages publish dist
 
 # 환경 변수 설정
-wrangler pages secret put API_BASE_URL
+wrangler pages secret put VITE_WORKER_API_URL
+wrangler pages secret put VITE_NEWSCAST_STORAGE
 ```
 
-### next.config.js 설정 예시
-```javascript
-// packages/web/next.config.js (계획)
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  output: 'export',
-  trailingSlash: true,
-  images: {
-    unoptimized: true
+### vite.config.ts 설정 (구현 완료)
+```typescript
+// packages/newscast-web/vite.config.ts
+export default defineConfig({
+  plugins: [react()],
+  optimizeDeps: {
+    include: ['react', 'react-dom', '@radix-ui/themes']
   },
-  env: {
-    API_BASE_URL: process.env.API_BASE_URL || 'https://ai-newscast-api.your-subdomain.workers.dev'
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'radix-vendor': ['@radix-ui/themes', '@radix-ui/react-collapsible'],
+          'emotion-vendor': ['@emotion/react', '@emotion/styled'],
+          'tanstack-vendor': ['@tanstack/react-query']
+        }
+      }
+    }
   }
-};
-
-module.exports = nextConfig;
+});
 ```
+
+### 현재 배포 상태
+- ✅ **로컬 개발**: `pnpm dev` 완전 동작
+- ✅ **빌드 최적화**: 90초+ → 1분 48초로 단축
+- ✅ **API 통합**: Cloudflare Workers API 연동 완료
+- 🚧 **프로덕션 배포**: Cloudflare Pages 배포 예정
 
 ## 🚀 전체 배포 프로세스
 
@@ -415,4 +430,4 @@ wrangler kv:key list --binding NEWSCAST_KV
 
 ---
 
-**최종 업데이트**: v3.1.0 (2025-06-27) - Cloudflare 배포 가이드 초안 완성
+**최종 업데이트**: v3.6.0 (2025-07-01) - React 웹 플레이어 배포 정보 완성

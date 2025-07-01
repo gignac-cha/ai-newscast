@@ -1,17 +1,17 @@
 # AI Newscast
 
-> 🤖 AI-powered automated news casting system - **v3.5.0 Complete Automation** 
+> 🤖 AI-powered automated news casting system - **v3.6.0 Web Player Complete** 
 
-[![Version](https://img.shields.io/badge/version-3.5.0-blue.svg)](https://github.com/your-repo/ai-newscast)
+[![Version](https://img.shields.io/badge/version-3.6.0-blue.svg)](https://github.com/your-repo/ai-newscast)
 [![Pipeline](https://img.shields.io/badge/pipeline-7/7%20steps-brightgreen.svg)](PIPELINE_PLAN.md)
-[![AI](https://img.shields.io/badge/status-complete%20automation-brightgreen.svg)](CLAUDE.md)
+[![AI](https://img.shields.io/badge/status-automation%20+%20web%20player-brightgreen.svg)](CLAUDE.md)
 [![License](https://img.shields.io/badge/license-ISC-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![TypeScript](https://img.shields.io/badge/typescript-5.0+-blue.svg)](https://typescriptlang.org)
 [![Node.js](https://img.shields.io/badge/node.js-24+-green.svg)](https://nodejs.org)
 [![pnpm](https://img.shields.io/badge/pnpm-10.12.2-yellow.svg)](https://pnpm.io)
 
-## 🚀 Features (v3.5.0 - Complete Implementation)
+## 🚀 Features (v3.6.0 - Web Player Complete)
 
 - **🕷️ Complete News Crawling**: ✅ 3-stage pipeline (topics → lists → details) with deduplication
 - **🤖 AI News Generation**: ✅ Google Gemini 2.5 Pro integration for intelligent news consolidation
@@ -26,12 +26,13 @@
 - **🎵 Multi-voice TTS**: ✅ Google Cloud TTS Chirp HD integration (8 premium Korean voices)
 - **🎛️ Audio Processing**: ✅ FFmpeg-based audio merging with @ffmpeg-installer integration
 - **⚡ High Performance**: ✅ UV + Turbo monorepo + TypeScript experimental stripping
-- **🏗️ Clean Architecture**: ✅ 3/10 packages fully implemented, 7/7 pipeline steps complete
+- **🌐 React Web Player**: ✅ TypeScript + React 19 + Radix UI newscast player with real-time API integration
+- **🏗️ Clean Architecture**: ✅ 5/10 packages fully implemented, 7/7 pipeline steps + web player complete
 - **📋 Systematic Development**: ✅ PIPELINE_PLAN.md-based step-by-step implementation
 
 ## 📦 Architecture
 
-### Package Structure (v3.5.0 Complete Automation)
+### Package Structure (v3.6.0 Web Player Complete)
 ```
 packages/
 ├── news-crawler/         # ✅ Complete 3-stage pipeline (Python + UV)
@@ -40,11 +41,12 @@ packages/
 │   └── news-details      # ✅ Full article content extraction
 ├── news-generator/       # ✅ Complete AI news consolidation (TypeScript + Google Gemini)
 ├── newscast-generator/   # ✅ Complete AI script + TTS audio + FFmpeg merging (modularized)
+├── newscast-latest-id/   # ✅ Complete Cloudflare Workers API (TypeScript + KV storage)
+├── newscast-web/         # ✅ Complete React web player (TypeScript + React 19 + Radix UI)
 ├── core/                 # 🚧 Planned - Common types, utilities, configurations
 ├── audio-processor/      # 🚧 Planned - Audio mixing and post-processing
-├── api-server/           # 🚧 Planned - Cloudflare Workers API
-├── cli/                  # 🚧 Planned - Unified CLI interface
-└── web/                  # 🚧 Planned - Newscast player web interface
+├── api-server/           # 🚧 Planned - Extended Cloudflare Workers API
+└── cli/                  # 🚧 Planned - Unified CLI interface
 ```
 
 ### Technology Stack
