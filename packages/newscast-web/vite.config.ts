@@ -15,7 +15,11 @@ export default defineConfig(({ mode }) => ({
   ].filter(Boolean),
   server: {
     port: 3000,
-    host: true
+    host: true,
+    watch: {
+      usePolling: true,
+      interval: 300
+    }
   },
   build: {
     outDir: 'dist',
@@ -27,7 +31,14 @@ export default defineConfig(({ mode }) => ({
     // 증분 빌드 및 캐싱 최적화
     emptyOutDir: false, // dist 폴더를 완전히 비우지 않음
     write: true,
-    watch: null, // 개발 모드가 아닐 때 watch 비활성화
+    watch: {
+      include: ['src/**'],
+      exclude: ['node_modules/**', 'dist/**'],
+      chokidar: {
+        usePolling: true,
+        interval: 300
+      }
+    },
     rollupOptions: {
       output: {
         manualChunks: {

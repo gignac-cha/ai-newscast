@@ -67,5 +67,6 @@ export interface AudioActions {
   pause: () => void;
   seekTo: (time: number) => void;
   setVolume: (volume: number) => void;
+  stop: () => void;
   setCurrentTopicIndex: (index: number) => void;
 }

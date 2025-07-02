@@ -1,8 +1,10 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { css } from '@emotion/react';
-import { Box, Container, Flex, Text, Badge } from '@radix-ui/themes';
+import { Box, Container, Flex, Text, IconButton, Badge } from '@radix-ui/themes';
+import { Cross2Icon, ClockIcon } from '@radix-ui/react-icons';
+import dayjs from 'dayjs';
 import { TopicCard } from './TopicCard';
-import { AudioPlayer } from './AudioPlayer';
+import { AudioPlayer, type AudioPlayerRef } from './AudioPlayer';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { useSimpleScrollSpy } from '../hooks/useSimpleScrollSpy';
 import type { NewscastData } from '../types/newscast';
@@ -23,16 +25,75 @@ const mainContainerStyles = css`
   overflow: hidden;
 `;
 
-const scrollContainerStyles = css`
+const scrollContainerStyles = (hasBottomPlayer: boolean) => css`
   flex: 1;
   overflow-y: auto;
-  padding: 100px 0 120px 0;
+  padding: 120px 12px ${hasBottomPlayer ? '120px' : '60px'} 12px;
   min-height: 0;
+  
+  @media (min-width: 768px) {
+    padding: 120px 0 ${hasBottomPlayer ? '120px' : '60px'} 0;
+  }
 `;
+
+const headerStyles = (isScrolled: boolean) => css`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background-color: var(--gray-1);
+  border-bottom: 1px solid var(--gray-6);
+  transition: all 0.3s ease;
+  padding: ${isScrolled ? '12px 16px' : '16px 16px'};
+  
+  @media (min-width: 768px) {
+    padding: ${isScrolled ? '12px 0' : '16px 0'};
+  }
+`;
+
+const bottomPlayerStyles = (isVisible: boolean) => css`
+  position: fixed;
+  bottom: ${isVisible ? '0' : '-100px'};
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background-color: var(--gray-1);
+  border-top: 1px solid var(--gray-6);
+  transition: all 0.3s ease;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+`;
+
+// Format timestamp to readable date
+const formatTimestamp = (timestamp: string): string => {
+  try {
+    // Convert ISO timestamp format: 2025-06-29T01-43-09-804026 -> 2025-06-29T01:43:09.804026Z
+    const isoTimestamp = timestamp.replace(/T(\d{2})-(\d{2})-(\d{2})-(\d+)/, 'T$1:$2:$3.$4Z');
+    return dayjs(isoTimestamp).format('YYYY년 M월 D일 HH시 mm분');
+  } catch {
+    return timestamp;
+  }
+};
 
 export const NewscastViewer: React.FC<NewscastViewerProps> = ({ newscastData }) => {
   const [expandedTopicIndex, setExpandedTopicIndex] = useState(-1);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { state: audioState, actions: audioActions } = useAudioPlayer();
+  const audioPlayerRef = useRef<AudioPlayerRef>(null);
+
+  // 스크롤 상태 감지
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      setIsScrolled(target.scrollTop > 50);
+    };
+
+    const scrollContainer = document.querySelector('[data-scroll-container]');
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+      return () => scrollContainer.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
 
   // 토픽 ID 목록 생성 (안정된 참조)
   const topicIds = useMemo(
@@ -59,40 +120,55 @@ export const NewscastViewer: React.FC<NewscastViewerProps> = ({ newscastData }) 
     [newscastData.topics.length, handleTopicToggle]
   );
 
-  const currentTopic = audioState.currentTopicIndex >= 0 
-    ? newscastData.topics[audioState.currentTopicIndex] 
+
+  const expandedTopic = expandedTopicIndex >= 0 
+    ? newscastData.topics[expandedTopicIndex] 
     : undefined;
+
+  const handleClosePlayer = useCallback(() => {
+    // Stop the AudioPlayer component using ref
+    audioPlayerRef.current?.stop();
+    audioActions.pause();
+    audioActions.setCurrentTopicIndex(-1);
+    setExpandedTopicIndex(-1);
+  }, [audioActions]);
 
   return (
     <>
       {/* Fixed Header */}
-      <Box p="4" style={{ 
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        right: 0, 
-        zIndex: 100,
-        backgroundColor: 'var(--gray-1)',
-        borderBottom: '1px solid var(--gray-6)'
-      }}>
+      <Box css={headerStyles(isScrolled)}>
         <Container size="4">
           <Flex justify="between" align="center">
             <Box>
-              <Text size="6" weight="bold">AI Newscast</Text>
-              <Text size="2" color="gray" style={{ display: 'block', marginTop: '4px' }}>
-                {newscastData.id} • {newscastData.topics.length} topics
-              </Text>
+              <Flex align="center" gap="2">
+                <Text size={isScrolled ? "5" : "6"} weight="bold" css={css`
+                  transition: font-size 0.3s ease;
+                `}>AI Newscast</Text>
+                {isScrolled && (
+                  <Badge color="blue" variant="soft" size="1">
+                    {newscastData.topics.length} Topics
+                  </Badge>
+                )}
+              </Flex>
+              {!isScrolled && (
+                <Flex align="center" gap="1" style={{ marginTop: '2px' }}>
+                  <ClockIcon width="12" height="12" />
+                  <Text size="1" color="gray">
+                    {formatTimestamp(newscastData.id)}
+                  </Text>
+                  <Badge color="blue" variant="soft" size="1">
+                    {newscastData.topics.length} Topics
+                  </Badge>
+                </Flex>
+              )}
             </Box>
-            <Badge color="blue" variant="soft" size="2">
-              Live
-            </Badge>
           </Flex>
         </Container>
       </Box>
 
       {/* Main Content */}
       <Box css={mainContainerStyles}>
-        <Box css={scrollContainerStyles}>
+        <Box css={scrollContainerStyles(!!expandedTopic)} data-scroll-container>
           <Container size="3">
             <Flex direction="column" gap="4">
               {newscastData.topics.map((topic, index) => (
@@ -115,23 +191,49 @@ export const NewscastViewer: React.FC<NewscastViewerProps> = ({ newscastData }) 
         </Box>
       </Box>
 
-      {/* Fixed Audio Player */}
-      <Box style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        zIndex: 100,
-        borderTop: '1px solid var(--gray-6)',
-        backgroundColor: 'var(--gray-1)'
-      }}>
-        <Container size="4">
-          <AudioPlayer
-            currentTopic={currentTopic}
-            onTopicChange={(index) => audioActions.setCurrentTopicIndex(index)}
-          />
-        </Container>
-      </Box>
+      {/* Fixed Bottom Audio Player */}
+      {expandedTopic && (
+        <Box css={bottomPlayerStyles(!!expandedTopic)}>
+          <Box px="3" py="3" css={css`
+            @media (min-width: 768px) {
+              padding: 16px 0;
+            }
+          `}>
+            <Container size="4">
+              <Flex align="center" gap="3">
+                <Box css={css`
+                  flex: 1;
+                  min-width: 0;
+                  overflow: hidden;
+                `}>
+                  <AudioPlayer 
+                    ref={audioPlayerRef}
+                    currentTopic={expandedTopic}
+                    onTopicChange={() => {}}
+                    isCompact={true}
+                  />
+                </Box>
+                <IconButton 
+                  size="2" 
+                  variant="ghost" 
+                  onClick={handleClosePlayer}
+                  css={css`
+                    flex-shrink: 0;
+                    margin-left: 4px;
+                    margin-right: 4px;
+                    @media (min-width: 768px) {
+                      margin-left: 6px;
+                      margin-right: 6px;
+                    }
+                  `}
+                >
+                  <Cross2Icon />
+                </IconButton>
+              </Flex>
+            </Container>
+          </Box>
+        </Box>
+      )}
     </>
   );
 };

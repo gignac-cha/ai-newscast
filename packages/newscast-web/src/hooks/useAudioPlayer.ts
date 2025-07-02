@@ -82,12 +82,26 @@ export const useAudioPlayer = () => {
     setState(prev => ({ ...prev, currentTopicIndex: index }));
   }, []);
 
+  const stop = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setState(prev => ({
+        ...prev,
+        isPlaying: false,
+        currentTime: 0,
+        currentTopicIndex: -1
+      }));
+    }
+  }, []);
+
   const actions: AudioActions = {
     play,
     pause,
     seekTo,
     setVolume,
     setCurrentTopicIndex,
+    stop,
   };
 
   return {
