@@ -1,8 +1,8 @@
 # AI Newscast
 
-> 🤖 AI-powered automated news casting system - **v3.6.0 Web Player Complete** 
+> 🤖 AI-powered automated news casting system - **v3.6.1 Web Player UI/UX Complete** 
 
-[![Version](https://img.shields.io/badge/version-3.6.0-blue.svg)](https://github.com/your-repo/ai-newscast)
+[![Version](https://img.shields.io/badge/version-3.6.1-blue.svg)](https://github.com/your-repo/ai-newscast)
 [![Pipeline](https://img.shields.io/badge/pipeline-7/7%20steps-brightgreen.svg)](PIPELINE_PLAN.md)
 [![AI](https://img.shields.io/badge/status-automation%20+%20web%20player-brightgreen.svg)](CLAUDE.md)
 [![License](https://img.shields.io/badge/license-ISC-green.svg)](LICENSE)
@@ -11,7 +11,7 @@
 [![Node.js](https://img.shields.io/badge/node.js-24+-green.svg)](https://nodejs.org)
 [![pnpm](https://img.shields.io/badge/pnpm-10.12.2-yellow.svg)](https://pnpm.io)
 
-## 🚀 Features (v3.6.0 - Web Player Complete)
+## 🚀 Features (v3.6.1 - Web Player UI/UX Complete)
 
 - **🕷️ Complete News Crawling**: ✅ 3-stage pipeline (topics → lists → details) with deduplication
 - **🤖 AI News Generation**: ✅ Google Gemini 2.5 Pro integration for intelligent news consolidation
@@ -26,8 +26,11 @@
 - **🎵 Multi-voice TTS**: ✅ Google Cloud TTS Chirp HD integration (8 premium Korean voices)
 - **🎛️ Audio Processing**: ✅ FFmpeg-based audio merging with @ffmpeg-installer integration
 - **⚡ High Performance**: ✅ UV + Turbo monorepo + TypeScript experimental stripping
-- **🌐 React Web Player**: ✅ TypeScript + React 19 + Radix UI newscast player with real-time API integration
-- **🏗️ Clean Architecture**: ✅ 5/10 packages fully implemented, 7/7 pipeline steps + web player complete
+- **🌐 React Web Player**: ✅ TypeScript + React 19 + Radix UI newscast player with complete UI/UX
+- **🎮 Advanced Audio Player**: ✅ Play/pause, progress bar, time display, fixed bottom player
+- **🎨 Interactive UI**: ✅ Expand/collapse cards, hover effects, marquee text animation
+- **📱 Responsive Design**: ✅ Markdown rendering, optimized click areas, smooth animations
+- **🏗️ Clean Architecture**: ✅ 5/10 packages fully implemented, 7/7 pipeline steps + complete web player
 - **📋 Systematic Development**: ✅ PIPELINE_PLAN.md-based step-by-step implementation
 
 ## 📦 Architecture
