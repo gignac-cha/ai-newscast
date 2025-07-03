@@ -9,7 +9,12 @@ export interface NewscastTopic {
     summary: string;
     content: string;
     sources_count: number;
-    sources: string[];
+    sources: {
+      [provider: string]: {
+        title: string;
+        url: string;
+      }[];
+    };
     generation_timestamp: string;
     input_articles_count: number;
   };
@@ -45,6 +50,27 @@ export interface NewscastTopic {
     };
   };
   audioUrl?: string;
+  audioInfo?: {
+    final_duration_formatted: string;
+    final_duration_seconds: number;
+    file_size_formatted: string;
+  };
+  audioFiles?: {
+    audio_files: Array<{
+      file_path: string;
+      sequence: number;
+      type: string;
+      host_id: string;
+      duration_seconds: number;
+    }>;
+    all_segments: Array<{
+      sequence: number;
+      type: string;
+      role: string;
+      content: string;
+      has_audio: boolean;
+    }>;
+  };
 }
 
 export interface NewscastData {
@@ -69,4 +95,5 @@ export interface AudioActions {
   setVolume: (volume: number) => void;
   stop: () => void;
   setCurrentTopicIndex: (index: number) => void;
+  playWithUrl: (url: string) => Promise<void>;
 }

@@ -80,6 +80,7 @@ const TopicCardComponent: React.FC<TopicCardProps> = ({
         <TopicHeader 
           topic={topic}
           isExpanded={isExpanded}
+          isPlaying={isPlaying}
           onToggle={onToggle}
         />
 
@@ -88,7 +89,7 @@ const TopicCardComponent: React.FC<TopicCardProps> = ({
           <NewsSources topic={topic} />
         </Collapsible.Content>
 
-        <TopicMetadata isPlaying={isPlaying} />
+        {isExpanded && <TopicMetadata topic={topic} isPlaying={isPlaying} isExpanded={isExpanded} />}
       </Card>
     </Collapsible.Root>
   );

@@ -1,13 +1,14 @@
 import React from 'react';
 import { css } from '@emotion/react';
 import { Flex, Text, Badge, Button, Box } from '@radix-ui/themes';
-import { ExternalLinkIcon, ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons';
+import { ChevronDownIcon, ChevronUpIcon, ClockIcon, ExternalLinkIcon } from '@radix-ui/react-icons';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import type { NewscastTopic } from '../../types/newscast';
 
 interface TopicHeaderProps {
   topic: NewscastTopic;
   isExpanded: boolean;
+  isPlaying: boolean;
   onToggle: () => void;
 }
 
@@ -55,8 +56,11 @@ const sourcesBadgeStyles = css`
 export const TopicHeader: React.FC<TopicHeaderProps> = React.memo(({
   topic,
   isExpanded,
+  isPlaying,
   onToggle
 }) => {
+  const sourcesCount = topic.news?.sources ? Object.keys(topic.news.sources).length : 0;
+  
   return (
     <Collapsible.Trigger asChild>
       <Box css={headerStyles}>
@@ -93,13 +97,28 @@ export const TopicHeader: React.FC<TopicHeaderProps> = React.memo(({
           </Box>
         )}
         
-        {/* 세 번째 행: 소스 개수 (접힌 상태에서만) */}
-        {!isExpanded && topic.news?.sources && (
-          <Flex align="center" gap="2">
-            <Badge color="gray" variant="soft" size="1">
-              <ExternalLinkIcon width="10" height="10" style={{ marginRight: '4px' }} />
-              {topic.news?.sources?.length ?? 0} sources
-            </Badge>
+        {/* 세 번째 행: 메타데이터 (접힌 상태에서만) */}
+        {!isExpanded && (
+          <Flex justify="between" align="center">
+            <Flex gap="2" align="center">
+              {sourcesCount > 0 && (
+                <Badge color="gray" variant="soft" size="1">
+                  <ExternalLinkIcon width="10" height="10" style={{ marginRight: '4px' }} />
+                  {sourcesCount} Sources
+                </Badge>
+              )}
+              {topic.audioInfo?.final_duration_formatted && (
+                <Badge color="gray" variant="soft" size="1">
+                  <ClockIcon width="10" height="10" style={{ marginRight: '4px' }} />
+                  {topic.audioInfo.final_duration_formatted}
+                </Badge>
+              )}
+            </Flex>
+            {isPlaying && (
+              <Badge color="green" variant="soft">
+                Playing
+              </Badge>
+            )}
           </Flex>
         )}
       </Box>

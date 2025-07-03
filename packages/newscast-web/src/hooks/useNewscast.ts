@@ -50,6 +50,18 @@ export const useNewscastData = (newscastId: string | undefined) => {
           );
           const scriptData = scriptResponse.ok ? await scriptResponse.json() : null;
 
+          // Fetch audio info for duration
+          const audioInfoResponse = await fetch(
+            `${NEWSCAST_STORAGE}/${newscastId}/topic-${topicNum}/newscast-audio-info.json`
+          );
+          const audioInfoData = audioInfoResponse.ok ? await audioInfoResponse.json() : null;
+
+          // Fetch audio files for script timing
+          const audioFilesResponse = await fetch(
+            `${NEWSCAST_STORAGE}/${newscastId}/topic-${topicNum}/audio/audio-files.json`
+          );
+          const audioFilesData = audioFilesResponse.ok ? await audioFilesResponse.json() : null;
+
           return {
             id: topicNum,
             title: topic.title,
@@ -59,6 +71,15 @@ export const useNewscastData = (newscastId: string | undefined) => {
             news: newsData,
             script: scriptData,
             audioUrl: scriptData ? `${NEWSCAST_STORAGE}/${newscastId}/topic-${topicNum}/newscast.mp3` : null,
+            audioInfo: audioInfoData ? {
+              final_duration_formatted: audioInfoData.final_duration_formatted,
+              final_duration_seconds: audioInfoData.final_duration_seconds,
+              file_size_formatted: audioInfoData.file_size_formatted,
+            } : null,
+            audioFiles: audioFilesData ? {
+              audio_files: audioFilesData.audio_files,
+              all_segments: audioFilesData.all_segments,
+            } : null,
           };
         })
       );

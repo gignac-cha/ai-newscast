@@ -7,6 +7,7 @@ import { MoonIcon, SunIcon } from '@radix-ui/react-icons';
 import { NewscastViewer } from './components/NewscastViewer';
 import { useLatestNewscastId, useNewscastData } from './hooks/useNewscast';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { AudioProvider } from './contexts/AudioContext';
 // Radix UI CSS는 별도 엔트리 포인트로 분리됨
 import './styles/globals.scss';
 
@@ -127,7 +128,9 @@ const ThemedApp: React.FC = React.memo(() => {
         </Button>
       </Box>
       <Suspense fallback={<LoadingFallback />}>
-        <NewscastApp />
+        <AudioProvider>
+          <NewscastApp />
+        </AudioProvider>
       </Suspense>
     </Theme>
   );

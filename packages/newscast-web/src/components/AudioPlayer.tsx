@@ -1,8 +1,8 @@
-import { useImperativeHandle, forwardRef } from 'react';
+import { useImperativeHandle, forwardRef, useCallback } from 'react';
 import { css } from '@emotion/react';
 import { Box, Flex, Text } from '@radix-ui/themes';
 import type { NewscastTopic } from '../types/newscast';
-import { useAudioController } from '../hooks/useAudioController';
+import { useAudioContext } from '../contexts/AudioContext';
 import { PlayButton } from './audio/PlayButton';
 import { ProgressSlider } from './audio/ProgressSlider';
 import { ScrollingTitle } from './audio/ScrollingTitle';
@@ -33,23 +33,26 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({
   currentTopic,
   isCompact = false
 }, ref) => {
-  const {
-    isPlaying,
-    isLoading,
-    currentTime,
-    duration,
-    handlePlayPause,
-    handleSeek,
-    stop
-  } = useAudioController({
-    audioUrl: currentTopic?.audioUrl,
-    topicId: currentTopic?.id
-  });
+  const { state: audioState, actions: audioActions, isLoading } = useAudioContext();
+  
+  const handlePlayPause = useCallback(async () => {
+    if (!currentTopic?.audioUrl) return;
+    
+    if (audioState.isPlaying) {
+      audioActions.pause();
+    } else {
+      await audioActions.playWithUrl(currentTopic.audioUrl);
+    }
+  }, [currentTopic?.audioUrl, audioState.isPlaying, audioActions]);
+
+  const handleSeek = useCallback((time: number) => {
+    audioActions.seekTo(time);
+  }, [audioActions]);
 
   // Expose stop function to parent via ref
   useImperativeHandle(ref, () => ({
-    stop
-  }), [stop]);
+    stop: audioActions.stop
+  }), [audioActions.stop]);
 
   if (!currentTopic) {
     return (
@@ -68,7 +71,7 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({
       <Box style={{ flex: 1 }}>
         <Flex gap="2" css={compactPlayerStyles}>
           <PlayButton
-            isPlaying={isPlaying}
+            isPlaying={audioState.isPlaying}
             isLoading={isLoading}
             hasAudioUrl={!!currentTopic.audioUrl}
             onPlayPause={handlePlayPause}
@@ -79,18 +82,18 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({
           <Flex direction="column" gap="3" css={playerContainerStyles}>
             <ScrollingTitle 
               title={currentTopic.title}
-              isPlaying={isPlaying}
+              isPlaying={audioState.isPlaying}
             />
             
             <ProgressSlider
-              currentTime={currentTime}
-              duration={duration}
+              currentTime={audioState.currentTime}
+              duration={audioState.duration}
               onSeek={handleSeek}
             />
             
             <TimeDisplay
-              currentTime={currentTime}
-              duration={duration}
+              currentTime={audioState.currentTime}
+              duration={audioState.duration}
             />
           </Flex>
         </Flex>
@@ -102,7 +105,7 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({
     <Box p="4">
       <Flex align="center" gap="3">
         <PlayButton
-          isPlaying={isPlaying}
+          isPlaying={audioState.isPlaying}
           isLoading={isLoading}
           hasAudioUrl={!!currentTopic.audioUrl}
           onPlayPause={handlePlayPause}
@@ -112,7 +115,7 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({
         <Box css={playerContainerStyles}>
           <ScrollingTitle 
             title={currentTopic.title}
-            isPlaying={isPlaying}
+            isPlaying={audioState.isPlaying}
           />
           <Text size="1" color="gray" style={{ display: 'block' }}>
             {currentTopic.id.replace('topic-', 'Topic ')}
