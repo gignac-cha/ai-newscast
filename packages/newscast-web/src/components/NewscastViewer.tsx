@@ -35,7 +35,7 @@ const scrollContainerStyles = (hasBottomPlayer: boolean) => css`
   }
 `;
 
-export const NewscastViewer: React.FC<NewscastViewerProps> = ({ newscastData }) => {
+export const NewscastViewer: React.FC<NewscastViewerProps> = React.memo(({ newscastData }) => {
   const [expandedTopicIndex, setExpandedTopicIndex] = useState(-1);
   const [isScrolled, setIsScrolled] = useState(false);
   const { state: audioState, actions: audioActions } = useAudioPlayer();
@@ -131,4 +131,4 @@ export const NewscastViewer: React.FC<NewscastViewerProps> = ({ newscastData }) 
       />
     </>
   );
-};
+});

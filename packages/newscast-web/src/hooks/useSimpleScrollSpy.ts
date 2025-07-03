@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 export const useSimpleScrollSpy = (elementIds: string[]) => {
   const [activeId, setActiveId] = useState<string>('');
 
-  // elementIds를 안정된 문자열로 메모화
+  // elementIds를 안정된 참조로 메모화 (깊은 비교 대신 문자열 비교)
   const stableElementIds = useMemo(() => elementIds, [elementIds.join(',')]);
 
   useEffect(() => {

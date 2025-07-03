@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { css } from '@emotion/react';
 import { Box, Flex, Badge, Text } from '@radix-ui/themes';
 import { ExternalLinkIcon, ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons';
@@ -30,21 +30,24 @@ const moreToggleStyles = css`
   }
 `;
 
-export const NewsSources: React.FC<NewsSourcesProps> = ({ topic }) => {
+export const NewsSources: React.FC<NewsSourcesProps> = React.memo(({ topic }) => {
   const [isSourcesExpanded, setIsSourcesExpanded] = useState(false);
 
   if (!topic.news?.sources || topic.news.sources.length === 0) {
     return null;
   }
 
-  const toggleSourcesExpansion = (e: React.MouseEvent) => {
+  const toggleSourcesExpansion = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsSourcesExpanded(!isSourcesExpanded);
-  };
+    setIsSourcesExpanded(prev => !prev);
+  }, []);
 
-  const displayedSources = isSourcesExpanded 
-    ? topic.news.sources 
-    : topic.news.sources.slice(0, 5);
+  const displayedSources = useMemo(() => 
+    isSourcesExpanded 
+      ? topic.news?.sources ?? []
+      : topic.news?.sources?.slice(0, 5) ?? [],
+    [isSourcesExpanded, topic.news?.sources]
+  );
 
   return (
     <Box css={sourcesContainerStyles}>
@@ -74,4 +77,4 @@ export const NewsSources: React.FC<NewsSourcesProps> = ({ topic }) => {
       </Flex>
     </Box>
   );
-};
+});

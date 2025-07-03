@@ -1,3 +1,4 @@
+import React from 'react';
 import { css } from '@emotion/react';
 import { Flex, Text, Badge, Button, Box } from '@radix-ui/themes';
 import { ExternalLinkIcon, ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons';
@@ -51,7 +52,7 @@ const sourcesBadgeStyles = css`
   flex-shrink: 0;
 `;
 
-export const TopicHeader: React.FC<TopicHeaderProps> = ({
+export const TopicHeader: React.FC<TopicHeaderProps> = React.memo(({
   topic,
   isExpanded,
   onToggle
@@ -104,4 +105,4 @@ export const TopicHeader: React.FC<TopicHeaderProps> = ({
       </Box>
     </Collapsible.Trigger>
   );
-};
+});

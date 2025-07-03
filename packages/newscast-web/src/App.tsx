@@ -38,7 +38,7 @@ const themeToggleStyles = css`
   z-index: 1000;
 `;
 
-const NewscastApp: React.FC = () => {
+const NewscastApp: React.FC = React.memo(() => {
   const { data: latestId, isLoading: isLoadingId } = useLatestNewscastId();
   
   if (isLoadingId) {
@@ -61,9 +61,9 @@ const NewscastApp: React.FC = () => {
   }
 
   return <NewscastDataLoader newscastId={latestId} />;
-};
+});
 
-const NewscastDataLoader: React.FC<{ newscastId: string }> = ({ newscastId }) => {
+const NewscastDataLoader: React.FC<{ newscastId: string }> = React.memo(({ newscastId }) => {
   const { data: newscastData, isLoading, error } = useNewscastData(newscastId);
   
   if (isLoading) {
@@ -87,9 +87,9 @@ const NewscastDataLoader: React.FC<{ newscastId: string }> = ({ newscastId }) =>
   }
 
   return <NewscastViewer newscastData={newscastData} />;
-};
+});
 
-const LoadingFallback: React.FC = () => (
+const LoadingFallback: React.FC = React.memo(() => (
   <Box css={fullHeightStyles}>
     <Container size="2">
       <Flex direction="column" align="center" justify="center" css={centeredFlexStyles} gap="4">
@@ -98,9 +98,9 @@ const LoadingFallback: React.FC = () => (
       </Flex>
     </Container>
   </Box>
-);
+));
 
-const ThemedApp: React.FC = () => {
+const ThemedApp: React.FC = React.memo(() => {
   const { colorScheme, toggleTheme } = useTheme();
 
   return (
@@ -131,7 +131,7 @@ const ThemedApp: React.FC = () => {
       </Suspense>
     </Theme>
   );
-};
+});
 
 const App: React.FC = () => {
   return (

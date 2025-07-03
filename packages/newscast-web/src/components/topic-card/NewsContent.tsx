@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { css } from '@emotion/react';
 import { Box, Flex, Button } from '@radix-ui/themes';
 import { ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons';
@@ -89,17 +89,17 @@ const showMoreButtonStyles = css`
   margin-top: 12px;
 `;
 
-export const NewsContent: React.FC<NewsContentProps> = ({ topic }) => {
+export const NewsContent: React.FC<NewsContentProps> = React.memo(({ topic }) => {
   const [isNewsExpanded, setIsNewsExpanded] = useState(false);
 
   if (!topic.news?.content) {
     return null;
   }
 
-  const toggleNewsExpansion = (e: React.MouseEvent) => {
+  const toggleNewsExpansion = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsNewsExpanded(!isNewsExpanded);
-  };
+    setIsNewsExpanded(prev => !prev);
+  }, []);
 
   const shouldTruncate = topic.news.content.length > 200;
   const truncatedContent = topic.news.content.substring(0, 200);
@@ -137,4 +137,4 @@ export const NewsContent: React.FC<NewsContentProps> = ({ topic }) => {
       </Collapsible.Root>
     </Box>
   );
-};
+});

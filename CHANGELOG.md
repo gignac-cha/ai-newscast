@@ -4,6 +4,39 @@
 
 ---
 
+## [3.7.1] - 2025-07-03 ⚡ 성능 최적화 및 메모이제이션 완성
+
+### 🚀 Added
+- **React.memo 전면 적용**: 모든 컴포넌트에 메모이제이션 적용으로 불필요한 리렌더링 방지 (15개 컴포넌트)
+  - `App.tsx`: NewscastApp, NewscastDataLoader, LoadingFallback, ThemedApp
+  - `NewscastViewer`, `NewscastHeader`, `BottomAudioPlayer` 모든 메인 컴포넌트
+  - `TopicHeader`, `NewsContent`, `NewsSources`, `TopicMetadata` 모든 서브 컴포넌트
+- **useCallback 최적화**: 함수 참조 안정화로 성능 향상
+  - `NewscastViewer`: handleTopicToggle, handleClosePlayer 메모이제이션
+  - `NewsContent`, `NewsSources`: 이벤트 핸들러 최적화
+- **useMemo 최적화**: 계산 비용이 높은 값들 메모이제이션
+  - `topicIds`, `activeTopicIndex`, `toggleHandlers` 안정된 참조 확보
+  - `displayedSources` 필터링 로직 최적화
+
+### 🔧 Changed
+- **hooks 의존성 배열 최적화**: 효율적인 리렌더링 조건 설정
+  - `useAudioController`: 이벤트 핸들러를 안정된 함수로 분리
+  - `useSimpleScrollSpy`: elementIds 깊은 비교 → 문자열 비교 최적화
+- **TypeScript 타입 안전성**: null/undefined 처리 개선 (`?.` 연산자 추가)
+- **번들 크기 최적화**: 벤더 청크 분리로 초기 로딩 성능 향상
+  - react-vendor (11.83 kB), radix-vendor (85.64 kB), main (195.55 kB)
+
+### 🐛 Fixed
+- **TTS 프롬프트 개선**: "(웃음)", "(박수)" 등 TTS가 읽기 어려운 메타 표현 제외 지침 추가
+- **TypeScript 컴파일 에러**: NewsSources 컴포넌트 null 체크 개선
+- **빌드 성능**: 33.97초로 안정된 빌드 시간 확보
+
+### 📊 Performance Metrics
+- **메모이제이션**: 15개 컴포넌트 React.memo 적용으로 리렌더링 최소화
+- **번들 크기**: 청크 분리로 효율적인 로딩 (gzip: 61.78 kB main)
+- **빌드 시간**: TypeScript strict 모드에서 33.97초 안정적 빌드
+- **메모리 효율성**: 안정된 함수 참조로 GC 부담 감소
+
 ## [3.7.0] - 2025-07-03 🏗️ 컴포넌트 리팩토링 및 React 19 업그레이드 완성
 
 ### 🚀 Added

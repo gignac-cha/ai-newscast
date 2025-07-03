@@ -1,3 +1,4 @@
+import React from 'react';
 import { css } from '@emotion/react';
 import { Box, Container, Flex, Text, Badge } from '@radix-ui/themes';
 import { ClockIcon } from '@radix-ui/react-icons';
@@ -44,7 +45,7 @@ const formatTimestamp = (timestamp: string): string => {
   }
 };
 
-export const NewscastHeader: React.FC<NewscastHeaderProps> = ({ 
+export const NewscastHeader: React.FC<NewscastHeaderProps> = React.memo(({ 
   newscastData, 
   isScrolled 
 }) => {
@@ -83,4 +84,4 @@ export const NewscastHeader: React.FC<NewscastHeaderProps> = ({
       </Container>
     </Box>
   );
-};
+});

@@ -44,21 +44,28 @@ export const useAudioController = ({ audioUrl, topicId }: UseAudioControllerProp
       if (!audioRef.current) {
         audioRef.current = new Audio(audioUrl);
         
-        audioRef.current.addEventListener('ended', () => {
+        // 안정된 이벤트 핸들러들 - 의존성 없음
+        const handleEnded = () => {
           setIsPlaying(false);
           setCurrentTime(0);
-        });
+        };
         
-        audioRef.current.addEventListener('loadstart', () => setIsLoading(true));
-        audioRef.current.addEventListener('canplay', () => setIsLoading(false));
+        const handleLoadStart = () => setIsLoading(true);
+        const handleCanPlay = () => setIsLoading(false);
         
-        audioRef.current.addEventListener('loadedmetadata', () => {
+        const handleLoadedMetadata = () => {
           setDuration(audioRef.current?.duration ?? 0);
-        });
+        };
         
-        audioRef.current.addEventListener('timeupdate', () => {
+        const handleTimeUpdate = () => {
           setCurrentTime(audioRef.current?.currentTime ?? 0);
-        });
+        };
+        
+        audioRef.current.addEventListener('ended', handleEnded);
+        audioRef.current.addEventListener('loadstart', handleLoadStart);
+        audioRef.current.addEventListener('canplay', handleCanPlay);
+        audioRef.current.addEventListener('loadedmetadata', handleLoadedMetadata);
+        audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
       }
 
       if (isPlaying) {

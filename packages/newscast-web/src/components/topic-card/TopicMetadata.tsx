@@ -1,3 +1,4 @@
+import React from 'react';
 import { css } from '@emotion/react';
 import { Flex, Badge } from '@radix-ui/themes';
 
@@ -9,7 +10,7 @@ const metadataStyles = css`
   margin-top: auto;
 `;
 
-export const TopicMetadata: React.FC<TopicMetadataProps> = ({ isPlaying }) => {
+export const TopicMetadata: React.FC<TopicMetadataProps> = React.memo(({ isPlaying }) => {
   return (
     <Flex justify="between" align="center" css={metadataStyles}>
       {isPlaying && (
@@ -19,4 +20,4 @@ export const TopicMetadata: React.FC<TopicMetadataProps> = ({ isPlaying }) => {
       )}
     </Flex>
   );
-};
+});

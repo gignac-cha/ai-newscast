@@ -1,3 +1,4 @@
+import React from 'react';
 import { css } from '@emotion/react';
 import { Box, Container, Flex, IconButton } from '@radix-ui/themes';
 import { Cross2Icon } from '@radix-ui/react-icons';
@@ -45,7 +46,7 @@ const closeButtonStyles = css`
   }
 `;
 
-export const BottomAudioPlayer: React.FC<BottomAudioPlayerProps> = ({ 
+export const BottomAudioPlayer: React.FC<BottomAudioPlayerProps> = React.memo(({ 
   expandedTopic, 
   audioPlayerRef, 
   onClose 
@@ -79,4 +80,4 @@ export const BottomAudioPlayer: React.FC<BottomAudioPlayerProps> = ({
       </Box>
     </Box>
   );
-};
+});
