@@ -36,7 +36,12 @@ export async function generateScript(
 
   // 프롬프트 템플릿 로드 및 치환
   const promptTemplate = await loadPrompt();
-  const mainSources = newsData.sources.slice(0, 5);
+  
+  // sources가 객체 형태인 경우 키 배열로 변환
+  const sourcesArray = Array.isArray(newsData.sources) 
+    ? newsData.sources 
+    : Object.keys(newsData.sources);
+  const mainSources = sourcesArray.slice(0, 5);
   
   const prompt = promptTemplate
     .replace('{program_name}', 'AI 뉴스캐스트')

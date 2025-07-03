@@ -67,6 +67,7 @@ export interface AudioFileInfo {
   sequence: number;
   type: string;
   host_id: string;
+  duration_seconds: number;
 }
 
 export interface AudioOutput {

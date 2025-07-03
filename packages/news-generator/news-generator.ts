@@ -29,7 +29,12 @@ interface GeneratedNews {
   summary: string;
   content: string;
   sources_count: number;
-  sources: string[];
+  sources: {
+    [provider: string]: {
+      title: string;
+      url: string;
+    }[];
+  };
   generation_timestamp: string;
   input_articles_count: number;
 }
@@ -116,13 +121,28 @@ URL: ${metadata.url}`;
 
     const parsed = JSON.parse(jsonMatch[0]);
 
+    // Group articles by provider with URLs
+    const sourcesByProvider: { [provider: string]: { title: string; url: string }[] } = {};
+    
+    newsDetails.forEach((news) => {
+      const provider = news.news_detail?.PROVIDER ?? news.metadata.provider ?? 'Unknown';
+      const title = news.news_detail?.TITLE ?? news.metadata.title ?? 'Untitled';
+      const url = news.news_detail?.PROVIDER_LINK_PAGE ?? news.metadata.url ?? '';
+      
+      if (!sourcesByProvider[provider]) {
+        sourcesByProvider[provider] = [];
+      }
+      
+      sourcesByProvider[provider].push({ title, url });
+    });
+
     // Create output data
     const generatedNews: GeneratedNews = {
       title: parsed.title ?? '통합 뉴스',
       summary: parsed.summary ?? '',
       content: parsed.content ?? '',
-      sources_count: parsed.sources_count ?? newsDetails.length,
-      sources: parsed.sources ?? [...new Set(newsDetails.map((n) => n.metadata.provider))],
+      sources_count: Object.keys(sourcesByProvider).length,
+      sources: sourcesByProvider,
       generation_timestamp: new Date().toISOString(),
       input_articles_count: newsDetails.length,
     };
@@ -170,6 +190,16 @@ URL: ${metadata.url}`;
 }
 
 function formatAsMarkdown(news: GeneratedNews): string {
+  // Format sources list
+  const sourcesList = Object.entries(news.sources)
+    .map(([provider, articles]) => {
+      const articlesList = articles
+        .map((article) => `  - [${article.title}](${article.url})`)
+        .join('\n');
+      return `- **${provider}** (${articles.length}개)\n${articlesList}`;
+    })
+    .join('\n\n');
+
   return `# ${news.title}
 
 > **AI 뉴스 통합 보고서**  
@@ -192,7 +222,10 @@ ${news.content}
 | **생성 시간** | ${news.generation_timestamp} |
 | **참고 기사 수** | ${news.input_articles_count}개 |
 | **참고 언론사 수** | ${news.sources_count}개사 |
-| **참고 언론사** | ${news.sources.join(', ')} |
+
+## 📰 참고 기사 목록
+
+${sourcesList}
 
 ---
 
