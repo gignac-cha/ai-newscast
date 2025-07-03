@@ -45,9 +45,12 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({
     }
   }, [currentTopic?.audioUrl, audioState.isPlaying, audioActions]);
 
-  const handleSeek = useCallback((time: number) => {
-    audioActions.seekTo(time);
-  }, [audioActions]);
+  const handleSeek = useCallback((value: number[]) => {
+    if (value.length > 0 && audioState.duration > 0) {
+      const time = (value[0] / 100) * audioState.duration;
+      audioActions.seekTo(time);
+    }
+  }, [audioActions, audioState.duration]);
 
   // Expose stop function to parent via ref
   useImperativeHandle(ref, () => ({

@@ -18,10 +18,19 @@ importers:
         specifier: ^5.8.3
         version: 5.8.3
 
+  packages/core:
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.8.3
+
   packages/news-crawler: {}
 
   packages/news-generator:
     dependencies:
+      '@ai-newscast/core':
+        specifier: workspace:*
+        version: link:../core
       '@google/genai':
         specifier: ^1.7.0
         version: 1.7.0
@@ -35,6 +44,9 @@ importers:
 
   packages/newscast-generator:
     dependencies:
+      '@ai-newscast/core':
+        specifier: workspace:*
+        version: link:../core
       '@ffmpeg-installer/ffmpeg':
         specifier: ^1.1.0
         version: 1.1.0
@@ -78,6 +90,9 @@ importers:
 
   packages/newscast-web:
     dependencies:
+      '@ai-newscast/core':
+        specifier: workspace:*
+        version: link:../core
       '@emotion/react':
         specifier: ^11.14.0
         version: 11.14.0(@types/react@19.1.8)(react@19.1.0)

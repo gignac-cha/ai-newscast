@@ -1,15 +1,20 @@
-// 공통 타입 정의들
+/**
+ * Re-export core types and add generator-specific types
+ */
 
-export interface GeneratedNews {
-  title: string;
-  summary: string;
-  content: string;
-  sources_count: number;
-  sources: string[];
-  generation_timestamp: string;
-  input_articles_count: number;
-}
+export type {
+  GeneratedNews,
+  SelectedHosts,
+  ScriptLine,
+  NewscastScript,
+  NewscastOutput,
+  AudioFileInfo,
+  AudioOutput,
+  AudioSegment,
+  ProcessingStats
+} from '@ai-newscast/core';
 
+// Generator-specific types
 export interface TTSVoices {
   voices: Record<string, {
     name: string;
@@ -19,58 +24,8 @@ export interface TTSVoices {
   }>;
 }
 
-export interface SelectedHosts {
-  host1: {
-    voice_model: string;
-    name: string;
-    gender: string;
-  };
-  host2: {
-    voice_model: string;
-    name: string;
-    gender: string;
-  };
-}
-
-export interface ScriptLine {
-  type: 'dialogue' | 'music';
-  role: string;
-  name: string;
-  content: string;
-  voice_model?: string;
-}
-
-export interface NewscastScript {
-  title: string;
-  program_name: string;
-  estimated_duration: string;
-  script: ScriptLine[];
-}
-
-export interface NewscastOutput {
-  title: string;
-  program_name: string;
-  hosts: SelectedHosts;
-  estimated_duration: string;
-  script: ScriptLine[];
-  metadata: {
-    total_articles: number;
-    sources_count: number;
-    main_sources: string[];
-    generation_timestamp: string;
-    total_script_lines: number;
-  };
-}
-
-export interface AudioFileInfo {
-  file_path: string;
-  sequence: number;
-  type: string;
-  host_id: string;
-  duration_seconds: number;
-}
-
-export interface AudioOutput {
+// Extended AudioOutput with generator-specific metadata
+export interface GeneratorAudioOutput {
   title: string;
   program_name: string;
   generation_timestamp: string;

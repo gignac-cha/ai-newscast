@@ -5,6 +5,7 @@ import { readFile, writeFile, readdir, mkdir } from 'fs/promises';
 import { dirname, join } from 'path';
 import { existsSync } from 'fs';
 import { Command } from 'commander';
+import type { GeneratedNews } from '@ai-newscast/core';
 
 interface NewsDetail {
   extraction_timestamp: string;
@@ -24,20 +25,7 @@ interface NewsDetail {
   };
 }
 
-interface GeneratedNews {
-  title: string;
-  summary: string;
-  content: string;
-  sources_count: number;
-  sources: {
-    [provider: string]: {
-      title: string;
-      url: string;
-    }[];
-  };
-  generation_timestamp: string;
-  input_articles_count: number;
-}
+// GeneratedNews type now imported from @ai-newscast/core
 
 async function loadPrompt(): Promise<string> {
   const promptPath = join(import.meta.dirname, 'prompts', 'news-consolidation.md');

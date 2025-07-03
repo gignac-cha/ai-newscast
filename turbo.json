@@ -2,6 +2,10 @@
   "$schema": "https://turbo.build/schema.json",
   "globalEnv": ["PATH", "VIRTUAL_ENV"],
   "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
     "crawl:news-topics": {
       "outputs": ["output/**"],
       "env": ["PATH", "VIRTUAL_ENV"]

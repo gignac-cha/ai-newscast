@@ -1,24 +1,5 @@
 import { useMemo } from 'react';
-import type { NewscastTopic } from '../types/newscast';
-
-interface AudioFileInfo {
-  file_path: string;
-  sequence: number;
-  type: string;
-  host_id: string;
-  duration_seconds: number;
-}
-
-interface AudioFilesData {
-  audio_files: AudioFileInfo[];
-  all_segments: Array<{
-    sequence: number;
-    type: string;
-    role: string;
-    content: string;
-    has_audio: boolean;
-  }>;
-}
+import type { NewscastTopic, AudioFileInfo, AudioSegment } from '../types/newscast';
 
 export function useCurrentScript(
   topic: NewscastTopic | null,
@@ -88,13 +69,13 @@ export function useCurrentScript(
     const scriptLine = topic.script.script.find(
       (line) => 
         line.type === 'dialogue' && 
-        topic.audioFiles.all_segments.find(
+        topic.audioFiles!.all_segments.find(
           (seg) => seg.sequence === currentSegment.sequence && seg.content === line.content
         )
     );
 
     // all_segments에서 직접 해당 sequence의 대화 찾기
-    const segment = topic.audioFiles?.all_segments.find(
+    const segment = topic.audioFiles!.all_segments.find(
       (seg: any) => seg.sequence === currentSegment.sequence && seg.type === 'dialogue'
     );
 

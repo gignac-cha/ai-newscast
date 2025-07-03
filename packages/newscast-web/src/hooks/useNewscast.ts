@@ -87,8 +87,13 @@ export const useNewscastData = (newscastId: string | undefined) => {
       return {
         id: newscastId,
         title: 'AI 뉴스캐스트',
-        timestamp: newscastId,
+        generation_timestamp: newscastId,
         topics: topics.filter((topic) => topic.news && topic.script), // Only include topics with both news and script
+        metadata: {
+          total_topics: topics.length,
+          total_articles: topics.reduce((sum, topic) => sum + (topic.news?.input_articles_count ?? 0), 0),
+          sources_count: topics.reduce((sum, topic) => sum + (topic.news?.sources_count ?? 0), 0),
+        }
       };
     },
     enabled: !!newscastId,

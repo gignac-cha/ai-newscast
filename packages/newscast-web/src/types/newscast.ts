@@ -1,93 +1,39 @@
-export interface NewscastTopic {
-  id: string;
-  title: string;
-  rank: number;
-  newsCount: number;
-  keywords: string[];
-  news?: {
-    title: string;
-    summary: string;
-    content: string;
-    sources_count: number;
-    sources: {
-      [provider: string]: {
-        title: string;
-        url: string;
-      }[];
-    };
-    generation_timestamp: string;
-    input_articles_count: number;
-  };
-  script?: {
-    title: string;
-    program_name: string;
-    hosts: {
-      host1: {
-        voice_model: string;
-        name: string;
-        gender: string;
-      };
-      host2: {
-        voice_model: string;
-        name: string;
-        gender: string;
-      };
-    };
-    estimated_duration: string;
-    script: Array<{
-      type: string;
-      role: string;
-      name: string;
-      content: string;
-      voice_model?: string;
-    }>;
-    metadata: {
-      total_articles: number;
-      sources_count: number;
-      main_sources: string[];
-      generation_timestamp: string;
-      total_script_lines: number;
-    };
-  };
-  audioUrl?: string;
-  audioInfo?: {
-    final_duration_formatted: string;
-    final_duration_seconds: number;
-    file_size_formatted: string;
-  };
-  audioFiles?: {
-    audio_files: Array<{
-      file_path: string;
-      sequence: number;
-      type: string;
-      host_id: string;
-      duration_seconds: number;
-    }>;
-    all_segments: Array<{
-      sequence: number;
-      type: string;
-      role: string;
-      content: string;
-      has_audio: boolean;
-    }>;
-  };
-}
+/**
+ * Re-export core types and add web-specific types
+ */
 
-export interface NewscastData {
-  id: string;
-  title: string;
-  timestamp: string;
-  topics: NewscastTopic[];
-}
+import type {
+  NewscastTopic as CoreNewscastTopic,
+  NewscastData as CoreNewscastData,
+  AudioState,
+  CurrentScriptInfo,
+  GeneratedNews,
+  NewscastOutput,
+  AudioInfo,
+  AudioFiles,
+  AudioFileInfo,
+  ScriptLine,
+  SelectedHosts
+} from '@ai-newscast/core';
 
-export interface AudioState {
-  isPlaying: boolean;
-  currentTime: number;
-  duration: number;
-  volume: number;
-  currentTopicIndex: number;
-}
+// Re-export core types
+export type {
+  AudioState,
+  CurrentScriptInfo,
+  GeneratedNews,
+  NewscastOutput,
+  AudioInfo,
+  AudioFiles,
+  AudioFileInfo,
+  ScriptLine,
+  SelectedHosts
+} from '@ai-newscast/core';
 
+// Use core types with web-specific naming
+export type NewscastTopic = CoreNewscastTopic;
+export type NewscastData = CoreNewscastData;
+
+// Web-specific types that are not in core
 export interface AudioActions {
   play: () => void;
   pause: () => void;
@@ -96,4 +42,12 @@ export interface AudioActions {
   stop: () => void;
   setCurrentTopicIndex: (index: number) => void;
   playWithUrl: (url: string) => Promise<void>;
+}
+
+// Backwards compatibility - transform NewscastData for web usage
+export interface NewscastDataForWeb {
+  id: string;
+  title: string;
+  timestamp: string; // Note: this differs from core's generation_timestamp
+  topics: NewscastTopic[];
 }

@@ -8,6 +8,7 @@
   },
   "packageManager": "pnpm@10.12.2",
   "scripts": {
+    "build": "turbo build",
     "run:crawler:news-topics": "turbo crawl:news-topics",
     "run:crawler:news-list": "turbo crawl:news-list",
     "run:crawler:news-details": "turbo crawl:news-details",
