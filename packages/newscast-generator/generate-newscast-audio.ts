@@ -2,11 +2,34 @@ import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { dirname, join, basename, relative } from 'path';
 import { existsSync } from 'fs';
+import { promisify } from 'util';
+import { exec } from 'child_process';
+import ffmpeg from '@ffmpeg-installer/ffmpeg';
 import type { ScriptLine, NewscastOutput, AudioFileInfo, AudioOutput } from './types.ts';
 import { getHostIdFromRole } from './utils.ts';
 
+const execAsync = promisify(exec);
+
 // Google Cloud TTS 클라이언트 초기화
 const ttsClient = new TextToSpeechClient();
+
+async function getAudioDuration(filePath: string): Promise<number> {
+  try {
+    const ffmpegPath = ffmpeg.path;
+    const ffprobePath = ffmpegPath.replace('ffmpeg', 'ffprobe');
+    const { stdout } = await execAsync(`"${ffprobePath}" -v quiet -show_entries format=duration -of csv=p=0 "${filePath}"`);
+    return parseFloat(stdout.trim());
+  } catch (error) {
+    // ffprobe 실패 시 시스템 ffprobe 시도
+    try {
+      const { stdout } = await execAsync(`ffprobe -v quiet -show_entries format=duration -of csv=p=0 "${filePath}"`);
+      return parseFloat(stdout.trim());
+    } catch (systemError) {
+      console.warn(`   ⚠️  오디오 길이 측정 실패: ${error}`);
+      return 0;
+    }
+  }
+}
 
 async function generateAudioForDialogue(
   scriptLine: ScriptLine, 
@@ -116,11 +139,15 @@ export async function generateAudio(
       await generateAudioForDialogue(scriptLine, sequence, audioFilePath);
       
       if (scriptLine.type === 'dialogue') {
+        // 생성된 오디오 파일의 길이 측정
+        const duration = await getAudioDuration(audioFilePath);
+        
         audioFiles.push({
           file_path: relative(outputDir, audioFilePath),
           sequence,
           type: scriptLine.type,
-          host_id: getHostIdFromRole(scriptLine.role)
+          host_id: getHostIdFromRole(scriptLine.role),
+          duration_seconds: duration
         });
         successCount++;
         // API 요청 간격 조절 (과부하 방지)
