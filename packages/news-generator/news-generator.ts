@@ -118,11 +118,11 @@ URL: ${metadata.url}`;
 
     // Create output data
     const generatedNews: GeneratedNews = {
-      title: parsed.title || '통합 뉴스',
-      summary: parsed.summary || '',
-      content: parsed.content || '',
-      sources_count: parsed.sources_count || newsDetails.length,
-      sources: parsed.sources || [...new Set(newsDetails.map((n) => n.metadata.provider))],
+      title: parsed.title ?? '통합 뉴스',
+      summary: parsed.summary ?? '',
+      content: parsed.content ?? '',
+      sources_count: parsed.sources_count ?? newsDetails.length,
+      sources: parsed.sources ?? [...new Set(newsDetails.map((n) => n.metadata.provider))],
       generation_timestamp: new Date().toISOString(),
       input_articles_count: newsDetails.length,
     };

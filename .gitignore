@@ -449,8 +449,8 @@ credentials*.json
 
 # AI News Cast - Demo/Test outputs
 demo-output/
-**/audio/
+output/**/audio/
 **/newscast-*.mp3
-**/topic-*/
+output/**/topic-*/
 
 .wrangler

@@ -4,7 +4,7 @@ export interface NewscastTopic {
   rank: number;
   newsCount: number;
   keywords: string[];
-  news: {
+  news?: {
     title: string;
     summary: string;
     content: string;
@@ -12,8 +12,8 @@ export interface NewscastTopic {
     sources: string[];
     generation_timestamp: string;
     input_articles_count: number;
-  } | null;
-  script: {
+  };
+  script?: {
     title: string;
     program_name: string;
     hosts: {
@@ -43,8 +43,8 @@ export interface NewscastTopic {
       generation_timestamp: string;
       total_script_lines: number;
     };
-  } | null;
-  audioUrl: string | null;
+  };
+  audioUrl?: string;
 }
 
 export interface NewscastData {

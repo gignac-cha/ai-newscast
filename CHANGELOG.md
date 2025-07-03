@@ -4,6 +4,40 @@
 
 ---
 
+## [3.7.0] - 2025-07-03 🏗️ 컴포넌트 리팩토링 및 React 19 업그레이드 완성
+
+### 🚀 Added
+- **컴포넌트 아키텍처 모듈화**: 대형 컴포넌트들을 재사용 가능한 작은 모듈로 완전 분해
+  - `AudioPlayer` (354줄) → `PlayButton`, `ProgressSlider`, `ScrollingTitle`, `TimeDisplay`, `useAudioController` 분리
+  - `TopicCard` (346줄) → `TopicHeader`, `NewsContent`, `NewsSources`, `TopicMetadata` 분리
+  - `NewscastViewer` → `NewscastHeader`, `BottomAudioPlayer` 분리
+- **환경변수 KV 시스템**: Cloudflare Pages secrets → KV 스토리지 기반 빌드 시스템
+- **뉴스 본문 접기/펼치기**: Collapsible을 활용한 부드러운 애니메이션 구현
+- **소스 목록 확장 기능**: 5개 초과 소스 Show More/Less 토글 기능
+
+### 🔧 Changed
+- **React 19 완전 적용**: `forwardRef` 제거하고 `ref` as prop 방식으로 현대화
+- **Nullish Coalescing 완전 전환**: 전체 프로젝트에서 `||` → `??` 논리적 변환
+- **스타일 아키텍처 개선**: 중앙화된 `styles.ts` 제거, 각 컴포넌트별 스타일 관리
+- **Vite 설정 경량화**: 불필요한 빌드 옵션 제거 및 성능 최적화
+- **토픽 카드 구조 복원**: 3행 레이아웃 (번호+제목, 요약, 소스) 완전 복구
+
+### 🐛 Fixed
+- **TopicCard 렌더링 오류**: 접기/펼치기 기능 및 레이아웃 마진 문제 해결
+- **제목 스크롤링**: 하단 바 제목 marquee 효과 및 한 줄 표시 복원
+- **재생 버튼 떨림**: 아이콘 크기 통일 및 고정 크기 컨테이너로 덜거덕거림 해결
+- **소스 표시**: 뱃지 형태로 일관된 스타일 적용 및 외부 링크 아이콘 추가
+
+### 🎨 UI/UX
+- **인터랙션 완성도**: 카드 호버 줌 효과, 접기/펼치기 캐럿 아이콘 완전 적용
+- **콘텐츠 표시**: 뉴스 본문 200자 기본 표시 후 더보기 기능
+- **시각적 일관성**: 모든 Show More/Less 버튼에 방향 표시 아이콘 통일
+
+### ⚡ Performance
+- **컴포넌트 재사용성**: 모듈화된 컴포넌트로 개발 생산성 및 유지보수성 향상
+- **타입 안전성**: React 19 타입 시스템 완전 활용
+- **빌드 최적화**: fontawesome 빈 청크 정리 및 의존성 최적화
+
 ## [3.6.1] - 2025-01-02 🎨 웹 플레이어 UI/UX 완성
 
 ### 🚀 Added

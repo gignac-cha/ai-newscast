@@ -62,12 +62,12 @@ export async function generateScript(
     const text = response.text ?? '';
 
     // JSON 응답 파싱
-    const jsonMatch = text.match(/```json\s*(\{[\s\S]*?\})\s*```/) || text.match(/\{[\s\S]*\}/);
+    const jsonMatch = text.match(/```json\s*(\{[\s\S]*?\})\s*```/) ?? text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('No valid JSON found in generated content');
     }
 
-    const parsed: NewscastScript = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+    const parsed: NewscastScript = JSON.parse(jsonMatch[1] ?? jsonMatch[0]);
 
     // script 배열의 각 항목에 voice_model 정보 추가
     const enhancedScript = parsed.script.map(line => {

@@ -25,27 +25,30 @@ export default defineConfig(({ mode }) => ({
     outDir: 'dist',
     sourcemap: false,
     minify: 'esbuild',
-    target: 'es2020',
-    reportCompressedSize: false, // 압축 사이즈 분석 비활성화로 빌드 속도 향상
-    chunkSizeWarningLimit: 1000,
-    // 증분 빌드 및 캐싱 최적화
-    emptyOutDir: false, // dist 폴더를 완전히 비우지 않음
-    write: true,
-    watch: {
-      include: ['src/**'],
-      exclude: ['node_modules/**', 'dist/**'],
-      chokidar: {
-        usePolling: true,
-        interval: 300
+    target: 'esnext',
+    ...(mode === 'watch' && {
+      watch: {
+        include: ['src/**'],
+        exclude: ['node_modules/**', 'dist/**'],
+        chokidar: {
+          usePolling: true,
+          interval: 300
+        }
       }
-    },
+    }),
     rollupOptions: {
+      input: {
+        main: './index.html',
+        'radix-vendor': './src/styles/radix-vendor.css'
+      },
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
           'radix-vendor': ['@radix-ui/themes', '@radix-ui/react-collapsible', '@radix-ui/react-icons'],
           'emotion-vendor': ['@emotion/react'],
-          'tanstack-vendor': ['@tanstack/react-query']
+          'tanstack-vendor': ['@tanstack/react-query'],
+          'markdown-vendor': ['react-markdown'],
+          'util-vendor': ['dayjs']
         },
         // 파일명에 해시 사용하여 캐시 최적화
         chunkFileNames: 'assets/[name]-[hash].js',
@@ -74,7 +77,9 @@ export default defineConfig(({ mode }) => ({
       '@tanstack/react-query',
       '@fortawesome/fontawesome-svg-core',
       '@fortawesome/free-solid-svg-icons',
-      '@fortawesome/react-fontawesome'
+      '@fortawesome/react-fontawesome',
+      'dayjs',
+      'react-markdown'
     ],
     exclude: []
   },

@@ -1,14 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import type { NewscastData } from '../types/newscast';
 
-const WORKER_API_URL = import.meta.env.VITE_WORKER_API_URL ?? 'INVALID_WORKER_API_URL';
+const LATEST_NEWSCAST_ID_URL = import.meta.env.VITE_LATEST_NEWSCAST_ID_URL ?? 'INVALID_LATEST_NEWSCAST_ID_URL';
 const NEWSCAST_STORAGE = import.meta.env.VITE_NEWSCAST_STORAGE ?? 'INVALID_NEWSCAST_STORAGE';
 
 export const useLatestNewscastId = () => {
   return useQuery({
     queryKey: ['latestNewscastId'],
     queryFn: async (): Promise<string> => {
-      const response = await fetch(`${WORKER_API_URL}/latest`);
+      const response = await fetch(`${LATEST_NEWSCAST_ID_URL}/latest`);
       if (!response.ok) {
         throw new Error('Failed to fetch latest newscast ID');
       }

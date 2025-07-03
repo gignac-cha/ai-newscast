@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:smart": "node smart-build.ts",
+    "build:kv": "scripts/load-kv-config.sh pnpm build",
+    "build:watch": "vite build --mode watch",
     "build:analyze": "vite build --mode analyze",
     "build:debug": "DEBUG=vite:* vite build",
     "build:profile": "vite build --profile",

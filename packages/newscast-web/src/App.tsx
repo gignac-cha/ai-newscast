@@ -7,7 +7,7 @@ import { MoonIcon, SunIcon } from '@radix-ui/react-icons';
 import { NewscastViewer } from './components/NewscastViewer';
 import { useLatestNewscastId, useNewscastData } from './hooks/useNewscast';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
-import '@radix-ui/themes/styles.css';
+// Radix UI CSS는 별도 엔트리 포인트로 분리됨
 import './styles/globals.scss';
 
 const queryClient = new QueryClient({
@@ -29,6 +29,13 @@ const centeredFlexStyles = css`
 
 const centerTextStyles = css`
   text-align: center;
+`;
+
+const themeToggleStyles = css`
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
 `;
 
 const NewscastApp: React.FC = () => {
@@ -104,7 +111,7 @@ const ThemedApp: React.FC = () => {
       radius="medium"
       scaling="100%"
     >
-      <Box style={{ position: 'fixed', top: '16px', right: '16px', zIndex: 1000 }}>
+      <Box css={themeToggleStyles}>
         <Button
           variant="ghost"
           size="2"
