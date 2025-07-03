@@ -1,8 +1,8 @@
 # AI Newscast
 
-> 🤖 AI-powered automated news casting system - **v3.7.1 Performance Optimization & Memoization Complete** 
+> 🤖 AI-powered automated news casting system - **v3.7.2 Real-time Subtitle System & Source Links Complete** 
 
-[![Version](https://img.shields.io/badge/version-3.7.1-blue.svg)](https://github.com/your-repo/ai-newscast)
+[![Version](https://img.shields.io/badge/version-3.7.2-blue.svg)](https://github.com/your-repo/ai-newscast)
 [![Pipeline](https://img.shields.io/badge/pipeline-7/7%20steps-brightgreen.svg)](PIPELINE_PLAN.md)
 [![AI](https://img.shields.io/badge/status-automation%20+%20web%20player-brightgreen.svg)](CLAUDE.md)
 [![License](https://img.shields.io/badge/license-ISC-green.svg)](LICENSE)
@@ -11,7 +11,7 @@
 [![Node.js](https://img.shields.io/badge/node.js-24+-green.svg)](https://nodejs.org)
 [![pnpm](https://img.shields.io/badge/pnpm-10.12.2-yellow.svg)](https://pnpm.io)
 
-## 🚀 Features (v3.7.1 - Performance Optimization & Memoization Complete)
+## 🚀 Features (v3.7.2 - Real-time Subtitle System & Source Links Complete)
 
 - **🕷️ Complete News Crawling**: ✅ 3-stage pipeline (topics → lists → details) with deduplication
 - **🤖 AI News Generation**: ✅ Google Gemini 2.5 Pro integration for intelligent news consolidation
@@ -35,12 +35,15 @@
 - **🔧 Modern Tooling**: ✅ Nullish coalescing (??), KV-based environment variables, Vite optimization
 - **🚀 Performance Optimization**: ✅ React.memo, useCallback, useMemo - 전면 메모이제이션 적용 (15개 컴포넌트)
 - **⚡ Bundle Optimization**: ✅ 벤더 청크 분리로 초기 로딩 성능 향상 (main 195.55 kB, build 33.97s)
+- **📺 Real-time Subtitle System**: ✅ Time-based script matching with duration_seconds from audio-files.json
+- **🔗 Interactive Source Links**: ✅ Popover-based source lists with clickable article links to original news
+- **🎯 Audio State Synchronization**: ✅ AudioContext for global state management across components
 - **🏗️ Clean Architecture**: ✅ 5/10 packages fully implemented, 7/7 pipeline steps + modular web player
 - **📋 Systematic Development**: ✅ PIPELINE_PLAN.md-based step-by-step implementation
 
 ## 📦 Architecture
 
-### Package Structure (v3.7.1 Performance Optimization Complete)
+### Package Structure (v3.7.2 Real-time Subtitle & Source Links Complete)
 ```
 packages/
 ├── news-crawler/         # ✅ Complete 3-stage pipeline (Python + UV)
