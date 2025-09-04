@@ -12,15 +12,15 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.12.2",
+  "packageManager": "pnpm@10.15.1",
   "dependencies": {
-    "@google-cloud/text-to-speech": "^6.1.0",
-    "@google/genai": "^1.6.0",
-    "dotenv": "^16.5.0"
+    "@google-cloud/text-to-speech": "^6.3.0",
+    "@google/genai": "^1.17.0",
+    "dotenv": "^17.2.2"
   },
   "devDependencies": {
-    "@types/node": "^24.0.3",
+    "@types/node": "^24.3.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.2"
   }
 }

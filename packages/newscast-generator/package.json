@@ -15,14 +15,14 @@
   "dependencies": {
     "@ai-newscast/core": "workspace:*",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
-    "@google-cloud/text-to-speech": "^6.1.0",
-    "@google/genai": "^1.7.0",
+    "@google-cloud/text-to-speech": "^6.3.0",
+    "@google/genai": "^1.17.0",
     "commander": "^14.0.0",
-    "dotenv": "^17.0.0"
+    "dotenv": "^17.2.2"
   },
   "devDependencies": {
-    "@types/node": "^24.0.7",
-    "wrangler": "^4.22.0"
+    "@types/node": "^24.3.0",
+    "wrangler": "^4.33.2"
   },
   "keywords": [
     "ai",

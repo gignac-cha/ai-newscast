@@ -6,7 +6,7 @@
   "engines": {
     "node": ">=24.0.0"
   },
-  "packageManager": "pnpm@10.12.2",
+  "packageManager": "pnpm@10.15.1",
   "scripts": {
     "build": "turbo build",
     "run:crawler:news-topics": "turbo crawl:news-topics",
@@ -15,7 +15,11 @@
     "run:generator:news": "turbo generate:news",
     "run:generator:newscast-script": "turbo generate:newscast-script",
     "run:generator:newscast-audio": "turbo generate:newscast-audio",
-    "run:generator:newscast": "turbo generate:newscast"
+    "run:generator:newscast": "turbo generate:newscast",
+    "update:latest-id:local": "pnpm --filter @ai-newscast/newscast-latest-id update:local --",
+    "update:latest-id:remote": "pnpm --filter @ai-newscast/newscast-latest-id update:remote --",
+    "get:latest-id:local": "pnpm --filter @ai-newscast/newscast-latest-id get:local",
+    "get:latest-id:remote": "pnpm --filter @ai-newscast/newscast-latest-id get:remote"
   },
   "keywords": [
     "ai",
@@ -27,8 +31,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^24.0.3",
-    "turbo": "^2.5.4",
-    "typescript": "^5.8.3"
+    "@types/node": "^24.3.0",
+    "turbo": "^2.5.6",
+    "typescript": "^5.9.2",
+    "wrangler": "^4.33.2"
   }
 }

@@ -12,11 +12,11 @@
   },
   "dependencies": {
     "@ai-newscast/core": "workspace:*",
-    "@google/genai": "^1.7.0",
+    "@google/genai": "^1.17.0",
     "commander": "^14.0.0"
   },
   "devDependencies": {
-    "@types/node": "^24.0.7"
+    "@types/node": "^24.3.0"
   },
   "keywords": [
     "ai",
