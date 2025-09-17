@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**📋 패키지별 상세 가이드**: 각 패키지 폴더(`packages/*/`)에는 개별 CLAUDE.md 파일이 있을 수 있습니다. 해당 패키지에서 작업할 때는 먼저 패키지별 CLAUDE.md를 읽어 구체적인 가이드라인을 확인하세요.
+
 ## 📋 프로젝트 개요
 빅카인드(bigkinds.or.kr)에서 실시간 뉴스를 수집하여 AI 기반 뉴스캐스트를 완전 자동화 생성하는 고급 모노레포 프로젝트
 
@@ -13,10 +15,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### 📦 패키지 구조와 구현 상태 (v3.6.1 웹 플레이어 UI/UX 완성)
 ```
 packages/
-├── news-crawler/            # ✅ 완성 - 3단계 크롤링 + Typer CLI (Python + UV)
+├── news-crawler/            # ✅ 완성 - 3단계 크롤링 + 듀얼 언어 (Python + TypeScript)
 │   ├── news-topics          # ✅ 완성 - 트렌딩 토픽 추출 (10개 토픽, 중복 제거)
 │   ├── news-list            # ✅ 완성 - 토픽별 뉴스 목록 수집 (최대 100개)
 │   └── news-details         # ✅ 완성 - 개별 뉴스 상세 정보 추출
+├── news-crawler-worker/     # ✅ 완성 - Cloudflare Workers 크롤링 API (큐 기반 배치 처리)
 ├── news-generator/          # ✅ 완성 - AI 뉴스 통합 + Commander.js CLI (Google Gemini 2.5 Pro)
 ├── newscast-generator/      # ✅ 완성 - AI 뉴스캐스트 스크립트 + TTS 오디오 + FFmpeg 병합
 ├── core/                    # ✅ 완성 - 공통 타입, 유틸리티 (TypeScript + Zod)
@@ -111,10 +114,8 @@ cd packages/newscast-web && pnpm dev
 ## 🔧 기술 스택 및 패턴
 
 ### Python 패키지 (news-crawler)
-- **패키지 매니저**: UV (10-100배 빠른 설치)
-- **CLI 프레임워크**: Typer (현대적 CLI 경험)
-- **HTTP 클라이언트**: requests + lxml (BigKinds 크롤링)
-- **실행 방식**: `uv run python news_crawler.py {command}`
+- **듀얼 언어 지원**: Python (Typer) + TypeScript (Commander.js)
+- **상세 정보**: `packages/news-crawler/CLAUDE.md` 참조
 
 ### TypeScript 패키지
 - **빌드**: Node.js 24+ experimental type stripping
@@ -158,7 +159,7 @@ output/{ISO_TIMESTAMP}/
 ## 🎯 개발 가이드라인
 
 ### 코드 작성 규칙
-- **Python**: Typer CLI, UV 가상환경, Pydantic 타입 검증
+- **크롤링**: `packages/news-crawler/CLAUDE.md` 참조 (Python + TypeScript)
 - **TypeScript**: Commander.js CLI, experimental type stripping, Zod 스키마
 - **React**: React 19 + ref as prop (forwardRef 제거), React.memo 메모이제이션
 - **공통**: Nullish coalescing (`??`) 사용, `||` 금지
@@ -174,7 +175,7 @@ output/{ISO_TIMESTAMP}/
 - **Turbo**: `globalEnv`, `env` 설정으로 환경변수 전파
 
 ### 성능 최적화
-- **Python**: UV + PYTHONOPTIMIZE=1
+- **크롤링**: `packages/news-crawler/CLAUDE.md` 참조 (UV 최적화 등)
 - **Node.js**: Turbo 병렬 빌드 + TypeScript experimental stripping
 - **React**: React.memo + useCallback + useMemo 전면 적용
 - **AI**: GNU Parallel로 동시 처리 (API rate limit 준수)
@@ -184,10 +185,10 @@ output/{ISO_TIMESTAMP}/
 ### API Rate Limits
 - **Google Gemini**: 3초 지연으로 API 제한 준수
 - **Google Cloud TTS**: 개별 요청 간 지연 없음 (로컬 FFmpeg 병합)
-- **BigKinds**: 1초 간격으로 크롤링 (서버 부하 최소화)
+- **BigKinds**: 크롤링 세부사항은 `packages/news-crawler/CLAUDE.md` 참조
 
 ### 에러 처리
-- **Python**: Typer 기반 구조화된 에러 메시지
+- **크롤링**: `packages/news-crawler/CLAUDE.md` 참조
 - **TypeScript**: Commander.js 오류 처리 + 재시도 로직
 - **React**: ErrorBoundary + 로딩 상태 관리
 
