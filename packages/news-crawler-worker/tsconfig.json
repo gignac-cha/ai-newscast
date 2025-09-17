@@ -1,0 +1,28 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "types": ["@cloudflare/workers-types"],
+    "lib": ["ES2022", "WebWorker"],
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@ai-newscast/news-crawler/*": ["../news-crawler/*"]
+    },
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": [
+    "worker.ts",
+    "build.ts"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
+}

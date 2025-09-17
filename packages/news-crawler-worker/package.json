@@ -1,0 +1,50 @@
+{
+  "name": "@ai-newscast/news-crawler-worker",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Cloudflare Worker for news crawling functionality",
+  "main": "dist/worker.js",
+  "types": "dist/worker.d.ts",
+  "scripts": {
+    "build": "node build.ts",
+    "dev": "node build.ts --watch",
+    "typecheck": "tsc --noEmit",
+    "deploy": "pnpm build && wrangler deploy",
+    "dev:worker": "pnpm build && wrangler dev"
+  },
+  "keywords": [
+    "cloudflare",
+    "worker",
+    "news",
+    "crawler",
+    "bigkinds"
+  ],
+  "author": "AI Newscast",
+  "license": "MIT",
+  "dependencies": {
+    "@ai-newscast/core": "workspace:*",
+    "@ai-newscast/news-crawler": "workspace:*",
+    "cheerio": "^1.1.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250909.0",
+    "esbuild": "^0.25.9",
+    "typescript": "^5.9.2",
+    "wrangler": "^4.35.0"
+  },
+  "files": [
+    "dist",
+    "worker.ts",
+    "build.ts",
+    "wrangler.toml"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/worker.d.ts",
+      "default": "./dist/worker.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
