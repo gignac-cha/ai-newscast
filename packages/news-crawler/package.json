@@ -2,15 +2,43 @@
   "name": "@ai-newscast/news-crawler",
   "version": "1.0.0",
   "description": "News crawler for bigkinds.or.kr",
-  "main": "index.js",
+  "main": "command.ts",
+  "type": "module",
   "scripts": {
     "postinstall": "uv venv && uv pip install -r requirements.txt",
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
     "crawl:news-topics": "uv run python news_crawler.py news-topics",
     "crawl:news-list": "uv run python news_crawler.py news-list",
-    "crawl:news-details": "uv run python news_crawler.py news-details"
+    "crawl:news-details": "uv run python news_crawler.py news-details",
+    "crawl:ts-topics": "node --experimental-strip-types command.ts topics",
+    "crawl:ts-full": "node --experimental-strip-types command.ts full-crawl"
   },
-  "keywords": ["news", "crawler", "bigkinds"],
+  "keywords": [
+    "news",
+    "crawler",
+    "bigkinds"
+  ],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.15.1"
+  "packageManager": "pnpm@10.15.1",
+  "dependencies": {
+    "cheerio": "^1.1.2",
+    "commander": "^14.0.0",
+    "zod": "^4.1.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  },
+  "files": [
+    "dist",
+    "*.ts"
+  ],
+  "exports": {
+    "./crawl-news-topics": "./crawl-news-topics.ts",
+    "./crawl-news-list": "./crawl-news-list.ts",
+    "./crawl-news-detail": "./crawl-news-detail.ts",
+    "./command": "./command.ts"
+  }
 }
