@@ -1,146 +1,143 @@
 import { GoogleGenAI } from '@google/genai';
-import { readFile, writeFile, mkdir } from 'fs/promises';
-import { dirname } from 'path';
-import { existsSync } from 'fs';
-import type { GeneratedNews, NewscastScript, NewscastOutput } from './types.ts';
-import { loadPrompt, loadTTSHosts, selectRandomHosts, formatAsMarkdown } from './utils.ts';
+import type { GeneratedNews, NewscastOutput, NewscastScript, SelectedHosts } from './types.ts';
+import type { TTSVoices } from './types.ts';
+import { formatAsMarkdown, selectRandomHosts } from './runtime-utils.ts';
 
-export async function generateScript(
-  inputFile: string,
-  outputFile: string,
-  printFormat: string = 'text',
-  printLogFile?: string
-): Promise<void> {
-  const startTime = Date.now();
+export interface GenerateNewscastScriptOptions {
+  news: GeneratedNews;
+  promptTemplate: string;
+  voices: TTSVoices;
+  apiKey: string;
+  programName?: string;
+  model?: string;
+  selectHosts?: (voices: TTSVoices) => SelectedHosts;
+  now?: () => Date;
+}
 
-  // API key 확인
-  const apiKey = process.env.GOOGLE_GEN_AI_API_KEY;
+export interface GenerateNewscastScriptResult {
+  output: NewscastOutput;
+  markdown: string;
+  stats: {
+    startedAt: string;
+    completedAt: string;
+    elapsedMs: number;
+    scriptLines: number;
+    hosts: {
+      host1: string;
+      host2: string;
+    };
+  };
+  prompt: string;
+  rawText: string;
+}
+
+export async function generateNewscastScript({
+  news,
+  promptTemplate,
+  voices,
+  apiKey,
+  programName = 'AI 뉴스캐스트',
+  model = 'gemini-2.5-pro',
+  selectHosts: selectHostsFn,
+  now = () => new Date(),
+}: GenerateNewscastScriptOptions): Promise<GenerateNewscastScriptResult> {
   if (!apiKey) {
-    console.error('Error: GOOGLE_GEN_AI_API_KEY environment variable is required');
-    process.exit(1);
+    throw new Error('Google AI API key is required');
   }
 
-  // 입력 파일 확인
-  if (!existsSync(inputFile)) {
-    console.error(`Error: Input file does not exist: ${inputFile}`);
-    process.exit(1);
+  if (!news) {
+    throw new Error('Generated news data is required');
   }
 
-  // 뉴스 데이터 로드
-  const newsContent = await readFile(inputFile, 'utf-8');
-  const newsData: GeneratedNews = JSON.parse(newsContent);
+  if (!promptTemplate) {
+    throw new Error('Prompt template is required');
+  }
 
-  // TTS 호스트 설정 로드 및 랜덤 선택
-  const ttsVoices = await loadTTSHosts();
-  const selectedHosts = selectRandomHosts(ttsVoices);
+  if (!voices) {
+    throw new Error('TTS voices configuration is required');
+  }
 
-  // 프롬프트 템플릿 로드 및 치환
-  const promptTemplate = await loadPrompt();
-  
-  // sources가 객체 형태인 경우 키 배열로 변환
-  const sourcesArray = Array.isArray(newsData.sources) 
-    ? newsData.sources 
-    : Object.keys(newsData.sources);
+  const startTime = now();
+  const selectedHosts = selectHostsFn ? selectHostsFn(voices) : selectRandomHosts(voices);
+
+  const sourcesArray = Array.isArray(news.sources)
+    ? news.sources
+    : Object.keys(news.sources);
   const mainSources = sourcesArray.slice(0, 5);
-  
+
   const prompt = promptTemplate
-    .replace('{program_name}', 'AI 뉴스캐스트')
+    .replace('{program_name}', programName)
     .replace(/{host1_name}/g, selectedHosts.host1.name)
     .replace(/{host1_gender}/g, selectedHosts.host1.gender === 'male' ? '남성' : '여성')
     .replace(/{host2_name}/g, selectedHosts.host2.name)
     .replace(/{host2_gender}/g, selectedHosts.host2.gender === 'male' ? '남성' : '여성')
-    .replace('{topic}', newsData.title)
+    .replace('{topic}', news.title)
     .replace('{main_sources}', mainSources.join(', '))
-    .replace('{sources_count}', newsData.sources_count.toString())
-    .replace('{total_articles}', newsData.input_articles_count.toString())
-    .replace('{consolidated_content}', newsData.content);
+    .replace('{sources_count}', news.sources_count.toString())
+    .replace('{total_articles}', news.input_articles_count.toString())
+    .replace('{consolidated_content}', news.content);
 
-  // Google AI 초기화
   const genAI = new GoogleGenAI({ apiKey });
 
-  try {
-    // 스크립트 생성
-    const response = await genAI.models.generateContent({
-      model: 'gemini-2.5-pro',
-      contents: prompt,
-    });
-    const text = response.text ?? '';
+  const response = await genAI.models.generateContent({
+    model,
+    contents: prompt,
+  });
+  const text = response.text ?? '';
 
-    // JSON 응답 파싱
-    const jsonMatch = text.match(/```json\s*(\{[\s\S]*?\})\s*```/) ?? text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('No valid JSON found in generated content');
-    }
-
-    const parsed: NewscastScript = JSON.parse(jsonMatch[1] ?? jsonMatch[0]);
-
-    // script 배열의 각 항목에 voice_model 정보 추가
-    const enhancedScript = parsed.script.map(line => {
-      if (line.type === 'dialogue') {
-        if (line.role === 'host1') {
-          return { ...line, voice_model: selectedHosts.host1.voice_model };
-        } else if (line.role === 'host2') {
-          return { ...line, voice_model: selectedHosts.host2.voice_model };
-        }
-      }
-      return line;
-    });
-
-    // 출력 데이터 생성
-    const newscastOutput: NewscastOutput = {
-      title: parsed.title,
-      program_name: parsed.program_name,
-      hosts: selectedHosts,
-      estimated_duration: parsed.estimated_duration,
-      script: enhancedScript,
-      metadata: {
-        total_articles: newsData.input_articles_count,
-        sources_count: newsData.sources_count,
-        main_sources: mainSources,
-        generation_timestamp: new Date().toISOString(),
-        total_script_lines: enhancedScript.length,
-      }
-    };
-
-    // 출력 디렉터리 생성
-    await mkdir(dirname(outputFile), { recursive: true });
-
-    // JSON 출력 저장
-    await writeFile(outputFile, JSON.stringify(newscastOutput, null, 2));
-
-    // 마크다운 출력 저장
-    const markdownFile = outputFile.replace('.json', '.md');
-    const markdownContent = formatAsMarkdown(newscastOutput);
-    await writeFile(markdownFile, markdownContent);
-
-    const endTime = Date.now();
-    const elapsedSeconds = ((endTime - startTime) / 1000).toFixed(2);
-
-    // 로그 출력 생성
-    const logOutput = {
-      timestamp: new Date().toISOString(),
-      'elapsed-time': `${elapsedSeconds}s`,
-      'script-lines': enhancedScript.length,
-      'hosts': `${selectedHosts.host1.name}, ${selectedHosts.host2.name}`,
-      'output-file': outputFile,
-    };
-
-    // 로그 출력
-    if (printFormat === 'json') {
-      console.log(JSON.stringify(logOutput, null, 2));
-    } else {
-      console.log(`✅ Generated newscast script: ${outputFile}`);
-      console.log(`🎙️ Hosts: ${selectedHosts.host1.name} (${selectedHosts.host1.gender}), ${selectedHosts.host2.name} (${selectedHosts.host2.gender})`);
-      console.log(`📝 Script lines: ${enhancedScript.length} in ${elapsedSeconds}s`);
-    }
-
-    // 로그 파일 저장
-    if (printLogFile) {
-      await mkdir(dirname(printLogFile), { recursive: true });
-      await writeFile(printLogFile, JSON.stringify(logOutput, null, 2));
-    }
-  } catch (error) {
-    console.error('Error generating newscast script:', error);
-    process.exit(1);
+  const jsonMatch = text.match(/```json\s*(\{[\s\S]*?\})\s*```/) ?? text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error('No valid JSON found in generated content');
   }
+
+  const parsed: NewscastScript = JSON.parse(jsonMatch[1] ?? jsonMatch[0]);
+
+  const enhancedScript = parsed.script.map((line) => {
+    if (line.type === 'dialogue') {
+      if (line.role === 'host1') {
+        return { ...line, voice_model: selectedHosts.host1.voice_model };
+      }
+      if (line.role === 'host2') {
+        return { ...line, voice_model: selectedHosts.host2.voice_model };
+      }
+    }
+    return line;
+  });
+
+  const completedAt = now();
+  const newscastOutput: NewscastOutput = {
+    title: parsed.title,
+    program_name: parsed.program_name ?? programName,
+    hosts: selectedHosts,
+    estimated_duration: parsed.estimated_duration,
+    script: enhancedScript,
+    metadata: {
+      total_articles: news.input_articles_count,
+      sources_count: news.sources_count,
+      main_sources: mainSources,
+      generation_timestamp: completedAt.toISOString(),
+      total_script_lines: enhancedScript.length,
+    },
+  };
+
+  const markdown = formatAsMarkdown(newscastOutput);
+
+  return {
+    output: newscastOutput,
+    markdown,
+    stats: {
+      startedAt: startTime.toISOString(),
+      completedAt: completedAt.toISOString(),
+      elapsedMs: completedAt.getTime() - startTime.getTime(),
+      scriptLines: enhancedScript.length,
+      hosts: {
+        host1: selectedHosts.host1.name,
+        host2: selectedHosts.host2.name,
+      },
+    },
+    prompt,
+    rawText: text,
+  };
 }
+
+export const generateScript = generateNewscastScript;
