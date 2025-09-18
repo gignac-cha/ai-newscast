@@ -17,10 +17,10 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "wrangler": "^4.33.2",
-    "@types/node": "^24.3.0",
-    "@cloudflare/workers-types": "^4.20250904.0",
-    "esbuild": "^0.25.9",
+    "wrangler": "^4.38.0",
+    "@types/node": "^24.5.2",
+    "@cloudflare/workers-types": "^4.20250918.0",
+    "esbuild": "^0.25.10",
     "typescript": "^5.9.2"
   },
   "keywords": [
