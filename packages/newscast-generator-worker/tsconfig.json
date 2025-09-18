@@ -1,0 +1,40 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "ES2022",
+      "WebWorker"
+    ],
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": [
+      "@cloudflare/workers-types"
+    ],
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@ai-newscast/newscast-generator/*": [
+        "../newscast-generator/*"
+      ],
+      "@ai-newscast/core/*": [
+        "../core/*"
+      ]
+    },
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "name": "@ai-newscast/newscast-generator-worker",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Cloudflare Worker for AI newscast generation functionality",
+  "main": "dist/worker.js",
+  "types": "dist/worker.d.ts",
+  "scripts": {
+    "build": "node build.ts",
+    "dev": "node build.ts --watch",
+    "typecheck": "tsc --noEmit",
+    "deploy": "pnpm build && wrangler deploy",
+    "dev:worker": "pnpm build && wrangler dev"
+  },
+  "keywords": [
+    "cloudflare",
+    "worker",
+    "newscast",
+    "ai",
+    "tts",
+    "gemini"
+  ],
+  "author": "AI Newscast",
+  "license": "MIT",
+  "dependencies": {
+    "@ai-newscast/core": "workspace:*",
+    "@ai-newscast/news-generator": "workspace:*",
+    "@ai-newscast/newscast-generator": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250918.0",
+    "esbuild": "^0.25.10",
+    "typescript": "^5.9.2",
+    "wrangler": "^4.38.0"
+  },
+  "files": [
+    "dist",
+    "worker.ts",
+    "build.ts",
+    "wrangler.toml"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/worker.d.ts",
+      "default": "./dist/worker.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

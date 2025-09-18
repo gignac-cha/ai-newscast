@@ -1,0 +1,24 @@
+name = "ai-newscast-newscast-generator-worker"
+main = "dist/worker.js"
+compatibility_date = "2024-12-18"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# Add environment variables here
+# GOOGLE_GEN_AI_API_KEY will be set via secrets
+
+[triggers]
+crons = [
+  "51-59 9 * * *",  # Daily at 9:51-9:59AM - script generation window
+  "0 10 * * *"      # Daily at 10:00AM - final script run
+]
+
+[[r2_buckets]]
+binding = "AI_NEWSCAST_BUCKET"
+bucket_name = "ai-newscast"
+preview_bucket_name = "ai-newscast"
+
+[[kv_namespaces]]
+binding = "AI_NEWSCAST_KV"
+id = "1a002997dc124ce9a4ff5080a7e2b5e6"
+preview_id = "1a002997dc124ce9a4ff5080a7e2b5e6"
