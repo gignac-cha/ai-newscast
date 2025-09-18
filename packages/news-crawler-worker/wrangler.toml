@@ -8,8 +8,8 @@ compatibility_flags = ["nodejs_compat", "cots_on_external_fetch"]
 
 [triggers]
 crons = [
-  "0 * * * *",     # Every hour at 0 minutes - topics
-  "5-30 * * * *"   # Every hour at 5-30 minutes - news details
+  "5 9 * * *",       # Daily at 9AM every 5 minutes - topics
+  "10-40 9 * * *"    # Daily at 9AM every 10-40 minutes - news details
 ]
 
 [[r2_buckets]]

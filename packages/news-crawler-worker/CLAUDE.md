@@ -9,7 +9,7 @@
 **핵심 기능:**
 - 트렌딩 토픽 추출 및 R2 스토리지 저장
 - 큐 기반 뉴스 상세정보 배치 처리 (40개씩)
-- 스케줄링 기반 자동 크롤링 (Cron Jobs)
+- 스케줄링 기반 자동 크롤링 (오전 9시 집중 크롤링)
 - CORS 지원 및 에러 처리
 
 ## 🛠️ 기술 스택
@@ -17,7 +17,7 @@
 ### Cloudflare Workers 환경
 - **Runtime**: TypeScript + esbuild 번들링
 - **스토리지**: R2 Bucket (뉴스 데이터) + KV Namespace (메타데이터)
-- **스케줄링**: Cron Triggers (매시간 자동 실행)
+- **스케줄링**: Cron Triggers (오전 9시 집중 실행)
 - **빌드**: ESBuild (최적화된 번들링)
 
 ### 의존성
@@ -60,8 +60,8 @@ id = "1a002997dc124ce9a4ff5080a7e2b5e6"
 
 [triggers]
 crons = [
-  "0 * * * *",     # 매시간 0분 - topics 수집
-  "5-30 * * * *"   # 매시간 5-30분 - news details 처리
+  "5 9 * * *",       # 매일 오전 9시 5분 - topics 수집
+  "10-40 9 * * *"    # 매일 오전 9시 10-40분 - news details 처리
 ]
 ```
 
@@ -121,9 +121,14 @@ curl "https://ai-newscast-news-crawler-worker.r-s-account.workers.dev/news-detai
 ## ⏰ 스케줄링 시스템
 
 ### 자동 실행 스케줄
-- **매시간 0분**: Topics 수집 (`handleTopics`)
-- **매시간 5-30분**: News Details 처리 (`handleNewsDetails`)
-- **시간당 처리량**: 최대 1,040개 (26분 × 40개)
+- **매일 오전 9시 5분**: Topics 수집 (`handleTopics`)
+- **매일 오전 9시 10-40분**: News Details 처리 (`handleNewsDetails`)
+- **일일 처리량**: 최대 1,240개 (31분 × 40개)
+
+### 스케줄 최적화 배경
+- **분석 결과**: 오전 9시부터 뉴스 내용이 크게 변화 (경제/주식 중심)
+- **효율성**: 야간 시간대 리소스 절약, 중요 시간대 집중 크롤링
+- **증시 연동**: 한국 증시 개장(09:00) 시점과 맞춘 뉴스 수집
 
 ### 큐 기반 처리 흐름
 1. **Topics 수집**: 플랫한 news-list.json 생성 + 큐 인덱스 0으로 초기화
@@ -182,7 +187,7 @@ pnpm run deploy
 - **Subrequest**: 50개/요청 (10개씩 서브 배치 처리)
 
 ### 에러 처리 및 모니터링
-- **실패한 배치**: 로그에 기록, 다음 스케줄에서 재시도
+- **실패한 배치**: 로그에 기록, 다음날 9시에 재시도
 - **KV 상태**: `last-working-news-queue-index`로 진행상황 추적
 - **R2 저장**: 실패 시 이전 데이터 유지
 
@@ -212,11 +217,10 @@ curl "https://ai-newscast-news-crawler-worker.r-s-account.workers.dev/news-detai
 
 ## 🔄 업데이트 이력
 
-### v1.0.0 (2025-09-18)
+### v1.1.0 (2025-09-19)
+- 뉴스 내용 분석 기반 스케줄 최적화 (오전 9시 집중 크롤링)
 - 큐 기반 배치 처리 시스템 구현
-- 스케줄링 최적화 (5-30분, 40개 배치)
-- 플랫한 news-list.json 구조 도입
 - TypeScript 크롤링 함수 통합
 
 ---
-*최종 업데이트: 2025-09-18 - 큐 기반 배치 처리 및 스케줄링 최적화 완성*
+*최종 업데이트: 2025-09-19 - 데이터 분석 기반 스케줄 최적화 완성*

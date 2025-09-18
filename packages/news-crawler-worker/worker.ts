@@ -50,14 +50,14 @@ export default {
         const workingNewscastID = await env.AI_NEWSCAST_KV.get('last-working-newscast-id');
 
         switch (cronExpression) {
-          case "0 * * * *": {
+          case "5 9 * * *": {
             const topicsURL = new URL('http://www.example.com/topics?save=true');
             await handleTopics(topicsURL, env);
             break;
           }
 
-          case "5-30 * * * *": {
-            // Every hour at 5-30 minutes - Run news detail crawling
+          case "10-40 9 * * *": {
+            // Daily at 9AM every 10-40 minutes - Run news detail crawling
 
             if (workingNewscastID) {
               // Use handleNewsDetails without topic-index
