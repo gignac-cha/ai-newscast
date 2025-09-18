@@ -6,6 +6,11 @@ compatibility_flags = ["nodejs_compat", "cots_on_external_fetch"]
 [vars]
 # Add environment variables here
 
+[triggers]
+crons = [
+  "41-50 9 * * *"    # Daily at 9:41-50AM - generate news for all topics (10 minutes)
+]
+
 [[r2_buckets]]
 binding = "AI_NEWSCAST_BUCKET"
 bucket_name = "ai-newscast"
