@@ -9,7 +9,6 @@ export type {
   NewscastScript,
   NewscastOutput,
   AudioFileInfo,
-  AudioOutput,
   AudioSegment,
   ProcessingStats
 } from '@ai-newscast/core';
@@ -24,8 +23,8 @@ export interface TTSVoices {
   }>;
 }
 
-// Extended AudioOutput with generator-specific metadata
-export interface GeneratorAudioOutput {
+// Generator-specific AudioOutput with extended metadata
+export interface AudioOutput {
   title: string;
   program_name: string;
   generation_timestamp: string;
@@ -36,13 +35,7 @@ export interface GeneratorAudioOutput {
   skipped_music_files: number;
   failed_audio_files: number;
   audio_files: AudioFileInfo[];
-  all_segments: Array<{
-    sequence: number;
-    type: string;
-    role: string;
-    content: string;
-    has_audio: boolean;
-  }>;
+  all_segments: AudioSegment[];
   metadata: {
     audio_generation_time_ms: number;
     success_rate: string;

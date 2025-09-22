@@ -7,10 +7,13 @@ compatibility_flags = ["nodejs_compat"]
 # Add environment variables here
 # GOOGLE_GEN_AI_API_KEY will be set via secrets
 
+[observability]
+enabled = true
+
 [triggers]
 crons = [
-  "51-59 9 * * *",  # Daily at 9:51-9:59AM - script generation window
-  "0 10 * * *"      # Daily at 10:00AM - final script run
+  "1-10 10 * * *",  # Daily at 10:01-10 UTC (19:01-10 KST) - script generation
+  "11-20 10 * * *"  # Test at 10:11-20 UTC (19:11-20 KST) - audio generation
 ]
 
 [[r2_buckets]]

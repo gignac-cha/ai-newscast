@@ -20,12 +20,9 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "@ai-newscast/newscast-generator/*": [
-        "../newscast-generator/*"
-      ],
-      "@ai-newscast/core/*": [
-        "../core/*"
-      ]
+      "@ai-newscast/core": ["../core/dist/index.d.ts"],
+      "@ai-newscast/core/*": ["../core/dist/*"],
+      "@ai-newscast/newscast-generator/*": ["../newscast-generator/*"]
     },
     "allowImportingTsExtensions": true
   },
