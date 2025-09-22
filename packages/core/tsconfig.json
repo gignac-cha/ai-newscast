@@ -4,6 +4,7 @@
     "module": "ESNext",
     "lib": ["ES2020"],
     "declaration": true,
+    "declarationMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
@@ -13,7 +14,8 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": false
+    "noEmit": false,
+    "composite": true
   },
   "include": [
     "src/**/*"

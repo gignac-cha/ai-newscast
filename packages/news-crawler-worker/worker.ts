@@ -45,33 +45,76 @@ export default {
 
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
     const executeScheduledTask = async () => {
+      const startTime = new Date().toISOString();
+      console.log(`[SCHEDULED START] ${startTime} - Cron: ${controller.cron}`);
+
       try {
         const cronExpression = controller.cron;
+        console.log(`[SCHEDULED INFO] Processing cron expression: ${cronExpression}`);
+
         const workingNewscastID = await env.AI_NEWSCAST_KV.get('last-working-newscast-id');
+        console.log(`[SCHEDULED INFO] Retrieved working newscast ID: ${workingNewscastID}`);
 
         switch (cronExpression) {
           case "5 9 * * *": {
+            console.log(`[SCHEDULED TOPICS] Starting topics collection at ${new Date().toISOString()}`);
             const topicsURL = new URL('http://www.example.com/topics?save=true');
-            await handleTopics(topicsURL, env);
+            console.log(`[SCHEDULED TOPICS] Calling handleTopics with URL: ${topicsURL.toString()}`);
+
+            const result = await handleTopics(topicsURL, env);
+            console.log(`[SCHEDULED TOPICS] Topics collection completed. Status: ${result.status}`);
+
+            if (result.status === 200) {
+              const responseText = await result.text();
+              console.log(`[SCHEDULED TOPICS] Response: ${responseText.substring(0, 500)}...`);
+            } else {
+              console.error(`[SCHEDULED TOPICS] Failed with status ${result.status}`);
+            }
             break;
           }
 
           case "10-40 9 * * *": {
-            // Daily at 9AM every 10-40 minutes - Run news detail crawling
+            console.log(`[SCHEDULED NEWS] Starting news details collection at ${new Date().toISOString()}`);
 
             if (workingNewscastID) {
-              // Use handleNewsDetails without topic-index
               const newsDetailsURL = new URL(`http://www.example.com/news-details?newscast-id=${workingNewscastID}`);
-              await handleNewsDetails(newsDetailsURL, env);
+              console.log(`[SCHEDULED NEWS] Calling handleNewsDetails with URL: ${newsDetailsURL.toString()}`);
+
+              const result = await handleNewsDetails(newsDetailsURL, env);
+              console.log(`[SCHEDULED NEWS] News details collection completed. Status: ${result.status}`);
+
+              if (result.status === 200) {
+                const responseText = await result.text();
+                console.log(`[SCHEDULED NEWS] Response: ${responseText.substring(0, 500)}...`);
+              } else {
+                console.error(`[SCHEDULED NEWS] Failed with status ${result.status}`);
+              }
+            } else {
+              console.warn(`[SCHEDULED NEWS] No working newscast ID found in KV. Skipping news details collection.`);
             }
             break;
           }
 
           default:
+            console.warn(`[SCHEDULED WARN] Unknown cron expression: ${cronExpression}`);
             break;
         }
+
+        const endTime = new Date().toISOString();
+        console.log(`[SCHEDULED SUCCESS] Completed at ${endTime} - Cron: ${cronExpression}`);
+
       } catch (error) {
-        console.error('Scheduled task error:', error);
+        const errorTime = new Date().toISOString();
+        console.error(`[SCHEDULED ERROR] ${errorTime} - Cron: ${controller.cron}`);
+        console.error('[SCHEDULED ERROR] Error details:', error);
+
+        if (error instanceof Error) {
+          console.error(`[SCHEDULED ERROR] Error name: ${error.name}`);
+          console.error(`[SCHEDULED ERROR] Error message: ${error.message}`);
+          console.error(`[SCHEDULED ERROR] Error stack: ${error.stack}`);
+        } else {
+          console.error(`[SCHEDULED ERROR] Non-Error object: ${JSON.stringify(error)}`);
+        }
       }
     };
 

@@ -15,86 +15,124 @@ export async function handleTopics(
   const startTime = Date.now();
   const saveToR2 = url.searchParams.get('save') === 'true';
 
-  const result = await crawlNewsTopics({ includeHtml: saveToR2 });
+  console.log(`[TOPICS START] ${new Date().toISOString()} - saveToR2: ${saveToR2}`);
 
-  const endTime = Date.now();
-  const executionTime = endTime - startTime;
+  try {
+    console.log(`[TOPICS CRAWL] Starting crawlNewsTopics with includeHtml: ${saveToR2}`);
+    const result = await crawlNewsTopics({ includeHtml: saveToR2 });
+    console.log(`[TOPICS CRAWL] Completed. Found ${result.topics.length} topics`);
 
-  const responseData = {
-    success: true,
-    topics: result.topics,
-    count: result.topics.length,
-    timestamp: new Date().toISOString(),
-    execution_time_ms: executionTime,
-    message: undefined as string | undefined,
-    path: undefined as string | undefined,
-    newscast_id: undefined as string | undefined
-  };
+    const endTime = Date.now();
+    const executionTime = endTime - startTime;
 
-  if (saveToR2) {
-    // Generate timestamp once for consistent use
-    const now = new Date();
-    const timestamp = now.toISOString().replace(/[:.]/g, '-');
-    const basePath = `newscasts/${timestamp}`;
-
-    // Save HTML to R2
-    if (result.html) {
-      const htmlKey = `${basePath}/topics.raw.html`;
-      await env.AI_NEWSCAST_BUCKET.put(htmlKey, result.html);
-    }
-
-    // Save JSON to R2
-    const jsonKey = `${basePath}/topics.json`;
-    const jsonData = {
-      timestamp: now.toISOString(),
+    const responseData = {
+      success: true,
+      topics: result.topics,
       count: result.topics.length,
+      timestamp: new Date().toISOString(),
       execution_time_ms: executionTime,
-      topics: result.topics
+      message: undefined as string | undefined,
+      path: undefined as string | undefined,
+      newscast_id: undefined as string | undefined
     };
-    await env.AI_NEWSCAST_BUCKET.put(jsonKey, JSON.stringify(jsonData, null, 2));
 
-    // Store the newscast ID in KV
-    await env.AI_NEWSCAST_KV.put('last-working-newscast-id', timestamp);
+    if (saveToR2) {
+      console.log(`[TOPICS R2] Starting R2 save operations`);
 
-    // Save news_ids to topic-{index}/news-list.json
-    for (let i = 0; i < result.topics.length; i++) {
-      const topic = result.topics[i];
-      const topicIndex = (i + 1).toString().padStart(2, '0');
-      const newsListKey = `${basePath}/topic-${topicIndex}/news-list.json`;
+      // Generate timestamp once for consistent use
+      const now = new Date();
+      const timestamp = now.toISOString().replace(/[:.]/g, '-');
+      const basePath = `newscasts/${timestamp}`;
+      console.log(`[TOPICS R2] Generated newscast ID: ${timestamp}, basePath: ${basePath}`);
 
-      await env.AI_NEWSCAST_BUCKET.put(newsListKey, JSON.stringify({
-        topic_index: i + 1,
-        news_ids: topic.news_ids,
-        count: topic.news_ids.length,
-        timestamp: now.toISOString()
-      }, null, 2));
-    }
-
-    // Save flattened news list entries to newscasts/{newscast-id}/news-list.json
-    const flattenedNewsEntries = [];
-    for (let i = 0; i < result.topics.length; i++) {
-      const topic = result.topics[i];
-      const topicIndex = i + 1;
-
-      for (const newsID of topic.news_ids) {
-        flattenedNewsEntries.push({
-          index: topicIndex,
-          newsID: newsID
-        });
+      // Save HTML to R2
+      if (result.html) {
+        const htmlKey = `${basePath}/topics.raw.html`;
+        console.log(`[TOPICS R2] Saving HTML to: ${htmlKey} (${result.html.length} chars)`);
+        await env.AI_NEWSCAST_BUCKET.put(htmlKey, result.html);
+        console.log(`[TOPICS R2] HTML saved successfully`);
       }
+
+      // Save JSON to R2
+      const jsonKey = `${basePath}/topics.json`;
+      const jsonData = {
+        timestamp: now.toISOString(),
+        count: result.topics.length,
+        execution_time_ms: executionTime,
+        topics: result.topics
+      };
+      console.log(`[TOPICS R2] Saving topics JSON to: ${jsonKey}`);
+      await env.AI_NEWSCAST_BUCKET.put(jsonKey, JSON.stringify(jsonData, null, 2));
+      console.log(`[TOPICS R2] Topics JSON saved successfully`);
+
+      // Store the newscast ID in KV
+      console.log(`[TOPICS KV] Storing newscast ID in KV: ${timestamp}`);
+      await env.AI_NEWSCAST_KV.put('last-working-newscast-id', timestamp);
+      console.log(`[TOPICS KV] Newscast ID stored successfully`);
+
+      // Save news_ids to topic-{index}/news-list.json
+      console.log(`[TOPICS R2] Saving ${result.topics.length} topic-specific news lists`);
+      for (let i = 0; i < result.topics.length; i++) {
+        const topic = result.topics[i];
+        const topicIndex = (i + 1).toString().padStart(2, '0');
+        const newsListKey = `${basePath}/topic-${topicIndex}/news-list.json`;
+
+        console.log(`[TOPICS R2] Saving topic ${topicIndex} news list: ${newsListKey} (${topic.news_ids.length} items)`);
+        await env.AI_NEWSCAST_BUCKET.put(newsListKey, JSON.stringify({
+          topic_index: i + 1,
+          news_ids: topic.news_ids,
+          count: topic.news_ids.length,
+          timestamp: now.toISOString()
+        }, null, 2));
+      }
+      console.log(`[TOPICS R2] All topic-specific news lists saved`);
+
+      // Save flattened news list entries to newscasts/{newscast-id}/news-list.json
+      console.log(`[TOPICS R2] Creating flattened news list`);
+      const flattenedNewsEntries = [];
+      for (let i = 0; i < result.topics.length; i++) {
+        const topic = result.topics[i];
+        const topicIndex = i + 1;
+
+        for (const newsID of topic.news_ids) {
+          flattenedNewsEntries.push({
+            index: topicIndex,
+            newsID: newsID
+          });
+        }
+      }
+
+      const newsListKey = `${basePath}/news-list.json`;
+      console.log(`[TOPICS R2] Saving flattened news list: ${newsListKey} (${flattenedNewsEntries.length} total items)`);
+      await env.AI_NEWSCAST_BUCKET.put(newsListKey, JSON.stringify(flattenedNewsEntries, null, 2));
+      console.log(`[TOPICS R2] Flattened news list saved successfully`);
+
+      // Initialize queue index in KV
+      console.log(`[TOPICS KV] Initializing queue index to 0`);
+      await env.AI_NEWSCAST_KV.put('last-working-news-queue-index', '0');
+      console.log(`[TOPICS KV] Queue index initialized successfully`);
+
+      // Add R2 save info to response
+      responseData.message = 'Topics and news lists saved to R2';
+      responseData.path = basePath;
+      responseData.newscast_id = timestamp;
+
+      console.log(`[TOPICS R2] All R2 operations completed successfully`);
     }
 
-    const newsListKey = `${basePath}/news-list.json`;
-    await env.AI_NEWSCAST_BUCKET.put(newsListKey, JSON.stringify(flattenedNewsEntries, null, 2));
+    console.log(`[TOPICS SUCCESS] Returning response with ${responseData.count} topics`);
+    return response(cors(json(responseData)));
 
-    // Initialize queue index in KV
-    await env.AI_NEWSCAST_KV.put('last-working-news-queue-index', '0');
+  } catch (error) {
+    console.error(`[TOPICS ERROR] ${new Date().toISOString()}`);
+    console.error('[TOPICS ERROR] Error details:', error);
 
-    // Add R2 save info to response
-    responseData.message = 'Topics and news lists saved to R2';
-    responseData.path = basePath;
-    responseData.newscast_id = timestamp;
+    if (error instanceof Error) {
+      console.error(`[TOPICS ERROR] Error name: ${error.name}`);
+      console.error(`[TOPICS ERROR] Error message: ${error.message}`);
+      console.error(`[TOPICS ERROR] Error stack: ${error.stack}`);
+    }
+
+    throw error;
   }
-
-  return response(cors(json(responseData)));
 }

@@ -16,31 +16,40 @@ export async function handleNewsDetails(
   const startTime = Date.now();
   const newscastID = url.searchParams.get('newscast-id');
 
+  console.log(`[NEWS_DETAILS START] ${new Date().toISOString()} - newscastID: ${newscastID}`);
+
   if (!newscastID) {
+    console.error(`[NEWS_DETAILS ERROR] Missing newscast-id parameter`);
     return response(cors(error('Bad Request', 'Missing required parameter: newscast-id')));
   }
 
   try {
     // Read the flattened news-list.json
     const newsListKey = `newscasts/${newscastID}/news-list.json`;
+    console.log(`[NEWS_DETAILS R2] Reading news list from: ${newsListKey}`);
     const newsListData = await env.AI_NEWSCAST_BUCKET.get(newsListKey);
 
     if (!newsListData) {
+      console.error(`[NEWS_DETAILS ERROR] News list not found: ${newsListKey}`);
       return response(cors(error('Not Found', `News list not found for newscast ${newscastID}`)));
     }
 
     const newsList: Array<{ index: number; newsID: string }> = JSON.parse(await newsListData.text());
+    console.log(`[NEWS_DETAILS R2] Loaded news list with ${newsList.length} total items`);
 
     // Get current queue index from KV
     const currentIndexStr = await env.AI_NEWSCAST_KV.get('last-working-news-queue-index') || '0';
     const currentIndex = parseInt(currentIndexStr);
+    console.log(`[NEWS_DETAILS KV] Current queue index: ${currentIndex}`);
 
     // Process 40 items starting from current index
     const batchSize = 40;
     const endIndex = Math.min(currentIndex + batchSize, newsList.length);
     const itemsToProcess = newsList.slice(currentIndex, endIndex);
+    console.log(`[NEWS_DETAILS BATCH] Processing items ${currentIndex}-${endIndex-1} (${itemsToProcess.length} items)`);
 
     if (itemsToProcess.length === 0) {
+      console.log(`[NEWS_DETAILS COMPLETE] No more items to process. Queue completed.`);
       return response(cors(json({
         success: true,
         newscast_id: newscastID,
@@ -53,26 +62,35 @@ export async function handleNewsDetails(
     // Process news details in batches to avoid subrequest limits (max 10 per batch)
     const subrequestBatchSize = 10;
     const responses: Response[] = [];
+    console.log(`[NEWS_DETAILS PROCESS] Processing in sub-batches of ${subrequestBatchSize}`);
 
     for (let i = 0; i < itemsToProcess.length; i += subrequestBatchSize) {
       const batch = itemsToProcess.slice(i, i + subrequestBatchSize);
+      console.log(`[NEWS_DETAILS SUB_BATCH] Processing sub-batch ${Math.floor(i/subrequestBatchSize) + 1}: ${batch.length} items`);
 
-      const batchPromises = batch.map(async (item) => {
+      const batchPromises = batch.map(async (item, itemIndex) => {
         try {
           const newsDetailURL = new URL(`http://www.example.com/news-detail?news-id=${item.newsID}&newscast-id=${newscastID}&topic-index=${item.index}`);
-          return await handleNewsDetail(newsDetailURL, env);
+          console.log(`[NEWS_DETAILS ITEM] Processing item ${i + itemIndex + 1}/${itemsToProcess.length}: ${item.newsID}`);
+          const result = await handleNewsDetail(newsDetailURL, env);
+          console.log(`[NEWS_DETAILS ITEM] Completed item ${i + itemIndex + 1}: ${result.status}`);
+          return result;
         } catch (err) {
+          console.error(`[NEWS_DETAILS ITEM] Failed item ${i + itemIndex + 1}: ${item.newsID}`, err);
           return response(cors(error(err instanceof Error ? err : 'Unknown error')));
         }
       });
 
       const batchResponses = await Promise.all(batchPromises);
       responses.push(...batchResponses);
+      console.log(`[NEWS_DETAILS SUB_BATCH] Completed sub-batch ${Math.floor(i/subrequestBatchSize) + 1}`);
     }
 
     // Update KV with new index
     const newIndex = endIndex;
+    console.log(`[NEWS_DETAILS KV] Updating queue index from ${currentIndex} to ${newIndex}`);
     await env.AI_NEWSCAST_KV.put('last-working-news-queue-index', newIndex.toString());
+    console.log(`[NEWS_DETAILS KV] Queue index updated successfully`);
 
     const endTime = Date.now();
     const executionTime = endTime - startTime;
@@ -80,6 +98,8 @@ export async function handleNewsDetails(
     // Count successful and failed responses
     const successCount = responses.filter(response => response.ok).length;
     const failureCount = responses.length - successCount;
+    console.log(`[NEWS_DETAILS RESULT] Processed ${responses.length} items: ${successCount} success, ${failureCount} failures`);
+    console.log(`[NEWS_DETAILS RESULT] Execution time: ${executionTime}ms`);
 
     const responseData = {
       success: true,
@@ -95,10 +115,19 @@ export async function handleNewsDetails(
       message: `Successfully processed ${successCount}/${itemsToProcess.length} news items (index ${currentIndex}-${endIndex-1})`
     };
 
+    console.log(`[NEWS_DETAILS SUCCESS] Returning response for ${itemsToProcess.length} processed items`);
     return response(cors(json(responseData)));
 
   } catch (err) {
-    console.error('Process news details error:', err);
+    console.error(`[NEWS_DETAILS ERROR] ${new Date().toISOString()}`);
+    console.error('[NEWS_DETAILS ERROR] Error details:', err);
+
+    if (err instanceof Error) {
+      console.error(`[NEWS_DETAILS ERROR] Error name: ${err.name}`);
+      console.error(`[NEWS_DETAILS ERROR] Error message: ${err.message}`);
+      console.error(`[NEWS_DETAILS ERROR] Error stack: ${err.stack}`);
+    }
+
     return response(cors(error(err instanceof Error ? err : 'Unknown error')));
   }
 }

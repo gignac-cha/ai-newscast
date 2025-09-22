@@ -10,16 +10,6 @@ export const markdownLoaderPlugin = {
   name: 'markdown-loader',
   setup(build: PluginBuild) {
     build.onResolve({ filter: /\.md$/ }, (args) => {
-      // Handle @ai-newscast/news-generator paths
-      if (args.path.startsWith('@ai-newscast/news-generator/')) {
-        const subPath = args.path.replace('@ai-newscast/news-generator/', '');
-        const absolutePath = resolve(__dirname, '../../news-generator', subPath);
-        return {
-          path: absolutePath,
-          namespace: 'markdown',
-        };
-      }
-
       return {
         path: resolve(args.resolveDir, args.path),
         namespace: 'markdown',

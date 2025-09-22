@@ -6,6 +6,9 @@ compatibility_flags = ["nodejs_compat", "cots_on_external_fetch"]
 [vars]
 # Add environment variables here
 
+[observability]
+enabled = true
+
 [triggers]
 crons = [
   "41-50 9 * * *"    # Daily at 9:41-50AM - generate news for all topics (10 minutes)

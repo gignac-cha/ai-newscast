@@ -7,10 +7,7 @@
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "types": ["@cloudflare/workers-types", "node"],
-    "baseUrl": ".",
-    "paths": {
-      "@ai-newscast/news-generator/*": ["../news-generator/*"]
-    }
+    "baseUrl": "."
   },
   "include": [
     "**/*.ts"
