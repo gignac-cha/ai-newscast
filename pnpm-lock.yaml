@@ -146,6 +146,31 @@ importers:
         specifier: ^4.38.0
         version: 4.38.0(@cloudflare/workers-types@4.20250918.0)
 
+  packages/newscast-generator-worker:
+    dependencies:
+      '@ai-newscast/core':
+        specifier: workspace:*
+        version: link:../core
+      '@ai-newscast/news-generator':
+        specifier: workspace:*
+        version: link:../news-generator
+      '@ai-newscast/newscast-generator':
+        specifier: workspace:*
+        version: link:../newscast-generator
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20250918.0
+        version: 4.20250918.0
+      esbuild:
+        specifier: ^0.25.10
+        version: 0.25.10
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.2
+      wrangler:
+        specifier: ^4.38.0
+        version: 4.38.0(@cloudflare/workers-types@4.20250918.0)
+
   packages/newscast-latest-id:
     devDependencies:
       '@cloudflare/workers-types':

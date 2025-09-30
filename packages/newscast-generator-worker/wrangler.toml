@@ -6,6 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 # Add environment variables here
 # GOOGLE_GEN_AI_API_KEY will be set via secrets
+AWS_LAMBDA_NEWSCAST_API_URL = "https://mjo3i4woz9.execute-api.ap-northeast-2.amazonaws.com"
 
 [observability]
 enabled = true

@@ -137,7 +137,6 @@ export async function handleAudio(
       stats: result.stats,
       timestamp: new Date().toISOString(),
       message: `Generated TTS audio for topic ${topicIndexNumber}`,
-      audio_output: result.audioOutput,
     };
 
     const totalTime = Date.now() - startTime;

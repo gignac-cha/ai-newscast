@@ -2,6 +2,7 @@
 import { handleHelp } from './handlers/help.ts';
 import { handleScript } from './handlers/script.ts';
 import { handleAudio } from './handlers/audio.ts';
+import { handleNewscast } from './handlers/newscast.ts';
 import type { Env } from './types/env.ts';
 
 // Import utilities
@@ -32,7 +33,11 @@ export default {
         return handleAudio(request, env);
       }
 
-      return response(cors(error('Not Found', 'Available endpoints: GET /, GET /script?newscast-id=X&topic-index=N, GET /audio?newscast-id=X&topic-index=N')));
+      if (request.method === 'GET' && url.pathname === '/newscast') {
+        return handleNewscast(request, env);
+      }
+
+      return response(cors(error('Not Found', 'Available endpoints: GET /, GET /script?newscast-id=X&topic-index=N, GET /audio?newscast-id=X&topic-index=N, GET /newscast?newscast-id=X&topic-index=N')));
 
     } catch (err) {
       console.error('Worker error:', err);

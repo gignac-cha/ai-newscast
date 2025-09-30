@@ -1,0 +1,14 @@
+# AWS Lambda Python 3.13 Dependencies
+# Note: boto3 and botocore are included in Lambda runtime
+
+# For this function, we only use Python standard library:
+# - json (built-in)
+# - os (built-in)
+# - subprocess (built-in)
+# - tempfile (built-in)
+# - urllib (built-in)
+# - typing (built-in)
+# - logging (built-in)
+
+# No external dependencies required - keeping it lightweight
+# FFmpeg will be provided via Lambda Layer

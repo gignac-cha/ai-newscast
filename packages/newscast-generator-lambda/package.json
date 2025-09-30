@@ -1,0 +1,44 @@
+{
+  "name": "@ai-newscast/newscast-generator-lambda",
+  "version": "1.0.0",
+  "description": "AWS Lambda function for merging newscast audio files using FFmpeg",
+  "type": "module",
+  "main": "lambda_function.py",
+  "scripts": {
+    "deploy": "bash deploy.sh",
+    "test": "python3 test_lambda.py",
+    "build": "python3 -m py_compile *.py",
+    "clean": "rm -rf build deployment-package.zip response.json",
+    "logs": "aws logs tail /aws/lambda/newscast-generator-lambda --follow"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "ffmpeg",
+    "audio",
+    "newscast",
+    "serverless",
+    "python"
+  ],
+  "author": "AI Newscast Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ai-newscast/ai-newscast.git",
+    "directory": "packages/newscast-generator-lambda"
+  },
+  "engines": {
+    "python": ">=3.13"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "files": [
+    "lambda_function.py",
+    "audio_downloader.py",
+    "audio_processor.py",
+    "utils.py",
+    "test_lambda.py",
+    "deploy.sh",
+    "README.md"
+  ]
+}

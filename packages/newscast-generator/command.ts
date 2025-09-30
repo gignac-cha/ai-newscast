@@ -108,7 +108,7 @@ async function getAudioDuration(filePath: string): Promise<number> {
   }
 }
 
-async function generateAudioToFiles({
+export async function generateAudioToFiles({
   inputFile,
   outputDir,
   printFormat = 'text',

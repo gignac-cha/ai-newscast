@@ -22,5 +22,4 @@ export interface AudioGenerationResponse {
   };
   timestamp: string;
   message: string;
-  audio_output: AudioOutput;
 }
