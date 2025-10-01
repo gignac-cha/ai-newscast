@@ -1,17 +1,19 @@
-# News Generator Worker Package
+# News Generator Worker Package - AI Development Guide
 
-AI 뉴스 통합 기능을 제공하는 Cloudflare Workers API 서비스
+Claude에게: 이 패키지는 `@ai-newscast/news-generator`의 순수 함수를 Workers 환경에서 호출합니다. 사용자 친화적 정보는 README.md를 참조하세요. 이 문서는 Workers 통합 패턴과 기술 세부사항에 집중합니다.
 
-## 📋 개요
+## 🏗️ 아키텍처 패턴
 
-이 패키지는 Cloudflare Workers 환경에서 실행되는 AI 뉴스 통합 서버입니다. `@ai-newscast/news-generator` 패키지의 핵심 함수들을 활용하여 크롤링된 뉴스 기사들을 Google Gemini AI로 통합된 뉴스로 생성합니다.
+**핵심 설계:**
+- **순수 함수 래핑**: `@ai-newscast/news-generator`의 `generateNews()` 호출
+- **중앙화된 프롬프트**: `news-consolidation.md` 공유 사용 (CLI와 Worker 일관성)
+- **R2 데이터 흐름**: R2 읽기 → AI 처리 → R2 쓰기
+- **esbuild 통합**: .md 파일 import 지원 (text loader)
 
-**핵심 기능:**
-- `@ai-newscast/news-generator` 순수 함수 라이브러리 활용
-- Google Gemini 2.5 Pro 기반 뉴스 통합 (중앙화된 프롬프트 사용)
-- R2에서 크롤링된 뉴스 데이터 읽기
-- JSON/Markdown 형태로 통합 뉴스 저장
-- 토픽별 생성 상태 추적
+**Workers 제약사항 대응:**
+- CPU 시간 30초: AI 호출 시간 포함하여 제한 준수
+- 메모리 128MB: 대용량 뉴스 데이터 처리 시 주의
+- 외부 API: Google Gemini API 호출 신뢰성 확보
 
 ## 🛠️ 기술 스택
 

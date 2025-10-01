@@ -1,17 +1,20 @@
-# Newscast Generator Package
+# Newscast Generator Package - AI Development Guide
 
-AI 기반 뉴스캐스트 스크립트 생성을 담당하는 핵심 패키지
+Claude에게: 이 패키지는 뉴스캐스트 스크립트 생성 및 오디오 처리를 담당합니다. 사용자 친화적 정보는 README.md를 참조하세요. 이 문서는 스크립트 생성 로직, TTS 통합, 오디오 병합 아키텍처에 집중합니다.
 
-## 📋 개요
+## 🏗️ 아키텍처 및 파일 구조
 
-이 패키지는 통합된 뉴스 데이터를 입력받아 Google Gemini 2.5 Pro를 사용하여 대화형 뉴스캐스트 스크립트를 생성합니다. 두 명의 호스트가 진행하는 전문적인 뉴스 방송 스크립트를 자동으로 만들어줍니다.
+**핵심 파일 역할:**
+- `generate-newscast-script.ts`: 스크립트 생성 순수 함수 (Gemini AI 호출)
+- `generate-audio.ts`: TTS 오디오 생성 (Google Cloud TTS API)
+- `generate-newscast.ts`: Lambda API 호출로 오디오 병합
+- `command.ts`: CLI 인터페이스 (Commander.js)
+- `newscast-generator.ts`: 메인 진입점
 
-**핵심 기능:**
-- Google Gemini 2.5 Pro 기반 스크립트 생성
-- 듀얼 호스트 대화형 뉴스캐스트 구조
-- TTS 음성 모델 자동 할당 및 관리
-- JSON/Markdown 형태 출력 지원
-- Commander.js 기반 CLI 인터페이스
+**의존성 체인:**
+1. 스크립트 생성: Gemini 2.5 Pro → NewscastScript JSON
+2. 오디오 생성: TTS API → 개별 MP3 파일들
+3. 오디오 병합: Lambda API (FFmpeg) → 최종 newscast.mp3
 
 ## 🛠️ 기술 스택
 

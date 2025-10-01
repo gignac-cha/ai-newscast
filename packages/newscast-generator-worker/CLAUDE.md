@@ -1,17 +1,22 @@
-# Newscast Generator Worker Package
+# Newscast Generator Worker Package - AI Development Guide
 
-AI 기반 뉴스캐스트 생성 기능을 제공하는 Cloudflare Workers API 서비스
+Claude에게: 이 패키지는 뉴스캐스트 생성 파이프라인을 Workers API로 제공합니다. 사용자 친화적 정보는 README.md를 참조하세요. 이 문서는 스케줄링 시스템, 토픽 분산 처리, Lambda 통합에 집중합니다.
 
-## 📋 개요
+## 🏗️ 아키텍처 및 스케줄링 시스템
 
-이 패키지는 Cloudflare Workers 환경에서 실행되는 뉴스캐스트 생성 API 서버입니다. `@ai-newscast/newscast-generator` 패키지의 기능을 웹 API 형태로 제공하여 뉴스캐스트 스크립트 생성, TTS 오디오 생성, 최종 병합을 처리합니다.
+**핵심 설계:**
+- **토픽별 분산 처리**: 각 토픽을 개별 cron으로 분산 (09:51-10:00, 매분 1토픽)
+- **스크립트 생성 완료**: Gemini AI 통합 (handlers/script.ts)
+- **오디오 생성 제약**: TTS API 호환성 검증 필요 (Workers 환경 제약)
+- **병합 처리 해결**: Lambda API 호출로 FFmpeg 실행 (handlers/newscast.ts)
 
-**핵심 기능:**
-- AI 뉴스캐스트 스크립트 생성 (Google Gemini 2.5 Pro)
-- TTS 오디오 파일 생성 (Google Cloud TTS)
-- 오디오 파일 병합 및 최종 뉴스캐스트 생성
-- 스케줄링 기반 자동 뉴스캐스트 생성 (오전 10시/10시 30분)
-- 전체 파이프라인 또는 개별 단계 실행 지원
+**Cron 스케줄 설계:**
+```toml
+crons = [
+  "51-59 9 * * *",  # 09:51-09:59 → 토픽 1-9 (시간 기반 매핑)
+  "0 10 * * *"      # 10:00 → 토픽 10
+]
+```
 
 ## 🛠️ 기술 스택
 

@@ -1,17 +1,19 @@
-# News Generator Package
+# News Generator Package - AI Development Guide
 
-AI 기반 뉴스 통합 생성 기능을 제공하는 순수 함수 라이브러리
+Claude에게: 이 패키지는 순수 함수 라이브러리로 설계되어 CLI와 Cloudflare Workers 양쪽에서 재사용됩니다. 사용자 친화적 정보는 README.md를 참조하세요. 이 문서는 코드 작성 시 필요한 아키텍처 원칙과 기술 세부사항에 집중합니다.
 
-## 📋 개요
+## 🏗️ 아키텍처 원칙
 
-이 패키지는 Google Gemini 2.5 Pro를 활용하여 여러 뉴스 기사를 하나의 통합된 뉴스로 생성하는 핵심 기능을 제공합니다. 파일 I/O와 비즈니스 로직을 분리하여 다양한 환경(CLI, Cloudflare Workers 등)에서 재사용 가능한 순수 함수로 설계되었습니다.
+**설계 철학:**
+1. **순수 함수**: `news-generator.ts`는 파일 I/O 없는 순수 함수만 포함
+2. **관심사 분리**: CLI 로직은 `command.ts`에서 완전 분리
+3. **재사용성**: Workers 환경에서도 동일 함수 import 가능
+4. **타입 안전성**: TypeScript + Zod 스키마 검증
 
-**핵심 기능:**
-- 여러 뉴스 기사를 하나의 통합 뉴스로 생성
-- Google Gemini 2.5 Pro AI 모델 활용
-- JSON/Markdown 형태 출력 지원
-- 언론사별 소스 정리 및 메타데이터 생성
-- CLI 및 라이브러리 두 가지 사용 방식 지원
+**파일 역할:**
+- `news-generator.ts`: 순수 함수만 (generateNews, formatAsMarkdown)
+- `command.ts`: 파일 I/O + CLI 인터페이스 (Commander.js)
+- `prompts/`: AI 프롬프트 템플릿 (Markdown 형식)
 
 ## 🛠️ 기술 스택
 

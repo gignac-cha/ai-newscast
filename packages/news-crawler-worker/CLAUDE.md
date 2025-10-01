@@ -1,16 +1,14 @@
-# News Crawler Worker Package
+# News Crawler Worker Package - AI Development Guide
 
-빅카인드 뉴스 크롤링 기능을 제공하는 Cloudflare Workers API 서비스
+Claude에게: 이 패키지는 Cloudflare Workers 환경에서 실행되는 뉴스 크롤링 API 서버입니다. 사용자 친화적 정보는 README.md를 참조하세요. 이 문서는 코드 작성 및 디버깅에 필요한 기술적 세부사항에 집중합니다.
 
-## 📋 개요
+## 🏗️ 아키텍처 및 기술 스택
 
-이 패키지는 Cloudflare Workers 환경에서 실행되는 뉴스 크롤링 API 서버입니다. `@ai-newscast/news-crawler` 패키지의 TypeScript 구현을 활용하여 웹 API 형태로 크롤링 기능을 제공합니다.
-
-**핵심 기능:**
-- 트렌딩 토픽 추출 및 R2 스토리지 저장
-- 큐 기반 뉴스 상세정보 배치 처리 (40개씩)
-- 스케줄링 기반 자동 크롤링 (오전 9시 집중 크롤링)
-- CORS 지원 및 에러 처리
+**핵심 원칙:**
+- `@ai-newscast/news-crawler`의 TypeScript 크롤링 함수를 HTTP 엔드포인트로 래핑
+- R2 Bucket: 크롤링된 뉴스 데이터 저장
+- KV Namespace: 큐 인덱스 및 메타데이터 관리
+- Cron Triggers: 자동 스케줄링 (09:05, 09:10-09:40)
 
 ## 🛠️ 기술 스택
 
