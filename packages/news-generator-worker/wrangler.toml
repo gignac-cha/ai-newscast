@@ -9,10 +9,9 @@ compatibility_flags = ["nodejs_compat", "cots_on_external_fetch"]
 [observability]
 enabled = true
 
-[triggers]
-crons = [
-  "41-50 9 * * *"    # Daily at 9:41-50AM - generate news for all topics (10 minutes)
-]
+# Cron triggers removed - now managed by newscast-scheduler-worker
+# Previous schedule:
+# - "41-50 9 * * *" (09:41-09:50 - Generate News for topics 1-10)
 
 [[r2_buckets]]
 binding = "AI_NEWSCAST_BUCKET"

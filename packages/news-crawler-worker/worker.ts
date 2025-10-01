@@ -73,7 +73,7 @@ export default {
             break;
           }
 
-          case "10-40 9 * * *": {
+          case "11-40 9 * * *": {
             console.log(`[SCHEDULED NEWS] Starting news details collection at ${new Date().toISOString()}`);
 
             if (workingNewscastID) {

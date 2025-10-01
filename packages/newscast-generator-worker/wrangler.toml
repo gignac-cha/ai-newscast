@@ -11,11 +11,10 @@ AWS_LAMBDA_NEWSCAST_API_URL = "https://mjo3i4woz9.execute-api.ap-northeast-2.ama
 [observability]
 enabled = true
 
-[triggers]
-crons = [
-  "1-10 10 * * *",  # Daily at 10:01-10 UTC (19:01-10 KST) - script generation
-  "11-20 10 * * *"  # Test at 10:11-20 UTC (19:11-20 KST) - audio generation
-]
+# Cron triggers removed - now managed by newscast-scheduler-worker
+# Previous schedule:
+# - "1-10 10 * * *" (10:01-10:10 - Generate Script for topics 1-10)
+# - "11-20 10 * * *" (10:11-10:20 - Generate Audio & Merge Newscast for topics 1-10)
 
 [[r2_buckets]]
 binding = "AI_NEWSCAST_BUCKET"
