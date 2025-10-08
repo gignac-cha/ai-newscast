@@ -5,10 +5,8 @@
   "type": "module",
   "main": "news-generator.ts",
   "scripts": {
-    "generate": "node --experimental-strip-types command.ts",
-    "generate:news": "node --experimental-strip-types command.ts",
-    "dev": "node --experimental-strip-types --watch command.ts",
-    "test": "node --experimental-strip-types --test **/*.test.ts"
+    "typecheck": "tsc --noEmit",
+    "generate:news": "node command.ts"
   },
   "dependencies": {
     "@ai-newscast/core": "workspace:*",

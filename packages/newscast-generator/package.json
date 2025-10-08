@@ -5,12 +5,10 @@
   "type": "module",
   "main": "newscast-generator.js",
   "scripts": {
-    "generate": "node --experimental-strip-types newscast-generator.ts",
-    "generate:newscast-script": "node --experimental-strip-types newscast-generator.ts script",
-    "generate:newscast-audio": "node --experimental-strip-types newscast-generator.ts audio",
-    "generate:newscast": "node --experimental-strip-types newscast-generator.ts newscast",
-    "dev": "node --experimental-strip-types --watch newscast-generator.ts",
-    "test": "node --experimental-strip-types --test **/*.test.ts"
+    "typecheck": "tsc --noEmit",
+    "generate:script": "node newscast-generator.ts script",
+    "generate:audio": "node newscast-generator.ts audio",
+    "generate:newscast": "node newscast-generator.ts newscast"
   },
   "dependencies": {
     "@ai-newscast/core": "workspace:*",

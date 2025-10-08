@@ -18,8 +18,8 @@ export async function handleTopics(
   console.log(`[TOPICS START] ${new Date().toISOString()} - saveToR2: ${saveToR2}`);
 
   try {
-    console.log(`[TOPICS CRAWL] Starting crawlNewsTopics with includeHtml: ${saveToR2}`);
-    const result = await crawlNewsTopics({ includeHtml: saveToR2 });
+    console.log(`[TOPICS CRAWL] Starting crawlNewsTopics with includeHTML: ${saveToR2}`);
+    const result = await crawlNewsTopics({ includeHTML: saveToR2 });
     console.log(`[TOPICS CRAWL] Completed. Found ${result.topics.length} topics`);
 
     const endTime = Date.now();
@@ -30,10 +30,10 @@ export async function handleTopics(
       topics: result.topics,
       count: result.topics.length,
       timestamp: new Date().toISOString(),
-      execution_time_ms: executionTime,
+      executionTime: executionTime,
       message: undefined as string | undefined,
       path: undefined as string | undefined,
-      newscast_id: undefined as string | undefined
+      newscastID: undefined as string | undefined
     };
 
     if (saveToR2) {
@@ -56,10 +56,10 @@ export async function handleTopics(
       // Save JSON to R2
       const jsonKey = `${basePath}/topics.json`;
       const jsonData = {
-        timestamp: now.toISOString(),
+        timestamp: result.metrics?.timing.startedAt ?? now.toISOString(),
         count: result.topics.length,
-        execution_time_ms: executionTime,
-        topics: result.topics
+        topics: result.topics,
+        metrics: result.metrics
       };
       console.log(`[TOPICS R2] Saving topics JSON to: ${jsonKey}`);
       await env.AI_NEWSCAST_BUCKET.put(jsonKey, JSON.stringify(jsonData, null, 2));
@@ -79,10 +79,10 @@ export async function handleTopics(
 
         console.log(`[TOPICS R2] Saving topic ${topicIndex} news list: ${newsListKey} (${topic.news_ids.length} items)`);
         await env.AI_NEWSCAST_BUCKET.put(newsListKey, JSON.stringify({
-          topic_index: i + 1,
-          news_ids: topic.news_ids,
+          topicIndex: i + 1,
+          newsIDs: topic.news_ids,
           count: topic.news_ids.length,
-          timestamp: now.toISOString()
+          timestamp: result.metrics?.timing.startedAt ?? now.toISOString()
         }, null, 2));
       }
       console.log(`[TOPICS R2] All topic-specific news lists saved`);
@@ -96,7 +96,7 @@ export async function handleTopics(
 
         for (const newsID of topic.news_ids) {
           flattenedNewsEntries.push({
-            index: topicIndex,
+            topicIndex: topicIndex,
             newsID: newsID
           });
         }
@@ -115,7 +115,7 @@ export async function handleTopics(
       // Add R2 save info to response
       responseData.message = 'Topics and news lists saved to R2';
       responseData.path = basePath;
-      responseData.newscast_id = timestamp;
+      responseData.newscastID = timestamp;
 
       console.log(`[TOPICS R2] All R2 operations completed successfully`);
     }

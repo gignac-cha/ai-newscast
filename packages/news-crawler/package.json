@@ -5,15 +5,10 @@
   "main": "command.ts",
   "type": "module",
   "scripts": {
-    "postinstall": "uv venv && uv pip install -r requirements.txt",
-    "build": "tsc",
-    "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "crawl:news-topics": "uv run python news_crawler.py news-topics",
-    "crawl:news-list": "uv run python news_crawler.py news-list",
-    "crawl:news-details": "uv run python news_crawler.py news-details",
-    "crawl:ts-topics": "node --experimental-strip-types command.ts topics",
-    "crawl:ts-full": "node --experimental-strip-types command.ts full-crawl"
+    "crawl:topics": "node command.ts topics",
+    "crawl:detail": "node command.ts detail",
+    "crawl:details": "node command.ts details"
   },
   "keywords": [
     "news",

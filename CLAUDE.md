@@ -158,11 +158,96 @@ output/{ISO_TIMESTAMP}/
 
 ## 🎯 개발 가이드라인
 
+### ⚠️ 필수 코딩 컨벤션 (CRITICAL)
+
+**이 규칙들은 절대적으로 준수해야 합니다. 위반 시 코드 리뷰에서 반려됩니다.**
+
+#### 1. **camelCase 네이밍 규칙** (TypeScript/JavaScript 코드 내부)
+- ✅ `ID` - ~~Id~~, ~~id~~ (약어는 모두 대문자)
+- ✅ `HTML` - ~~Html~~, ~~html~~
+- ✅ `JSON` - ~~Json~~, ~~json~~
+- ✅ `URL` - ~~Url~~, ~~url~~
+- ✅ `API` - ~~Api~~, ~~api~~
+- ✅ `average` - ~~avg~~, ~~Avg~~ (약어 금지, 전체 단어 사용)
+- ✅ `maximum` - ~~max~~, ~~Max~~
+- ✅ `minimum` - ~~min~~, ~~Min~~
+
+**⚠️ 예외: Lambda/Python API 통신**
+- Lambda API 요청/응답은 **snake_case** 사용 (Python 컨벤션)
+- TypeScript → Lambda 요청: `{ newscast_id, topic_index, dry_run }`
+- Lambda → TypeScript 응답: `{ output_file_size, audio_base64, program_name }`
+- **이유**: Lambda는 Python으로 작성되어 snake_case가 표준
+
+**예시**:
+```typescript
+// ✅ CORRECT
+interface NewsMetrics {
+  newscastID: string;        // ID는 모두 대문자
+  topicsHTMLBytes: number;   // HTML은 모두 대문자
+  topicsJSONBytes: number;   // JSON은 모두 대문자
+  averageNewsPerTopic: number;  // average 전체 단어
+  maximumNewsPerTopic: number;  // maximum 전체 단어
+  minimumNewsPerTopic: number;  // minimum 전체 단어
+}
+
+// ❌ WRONG
+interface NewsMetrics {
+  newscastId: string;        // ❌ Id (소문자)
+  topicsHtmlBytes: number;   // ❌ Html (카멜케이스)
+  topicsJsonBytes: number;   // ❌ Json (카멜케이스)
+  avgNewsPerTopic: number;   // ❌ avg (약어)
+  maxNewsPerTopic: number;   // ❌ max (약어)
+  minNewsPerTopic: number;   // ❌ min (약어)
+}
+```
+
+#### 2. **시간 단위 규칙**
+- ✅ **기본 시간 단위는 밀리세컨드 (milliseconds)**
+- ✅ 밀리세컨드일 경우 **단위 표기를 생략**
+- ✅ 다른 단위일 경우만 명시 (예: `durationSeconds`, `durationMinutes`)
+
+**예시**:
+```typescript
+// ✅ CORRECT - 밀리세컨드는 단위 생략
+interface Timing {
+  duration: number;        // 밀리세컨드 (기본)
+  fetchTime: number;       // 밀리세컨드 (기본)
+  parseTime: number;       // 밀리세컨드 (기본)
+}
+
+// ✅ CORRECT - 다른 단위는 명시
+interface AudioInfo {
+  durationSeconds: number;  // 초 단위일 때만 명시
+  durationMinutes: number;  // 분 단위일 때만 명시
+}
+
+// ❌ WRONG
+interface Timing {
+  durationMS: number;           // ❌ MS 붙이지 말 것
+  durationMilliseconds: number; // ❌ Milliseconds 붙이지 말 것
+  fetchTimeMs: number;          // ❌ Ms 붙이지 말 것
+}
+```
+
+#### 3. **Nullish Coalescing 사용**
+- ✅ `??` 연산자 사용 (nullish coalescing)
+- ❌ `||` 연산자 **사용 금지** (falsy 값 처리 문제)
+
+**예시**:
+```typescript
+// ✅ CORRECT
+const value = data.count ?? 0;        // null/undefined만 체크
+const name = user.name ?? 'Unknown';  // null/undefined만 체크
+
+// ❌ WRONG
+const value = data.count || 0;        // ❌ 0도 falsy로 처리됨
+const name = user.name || 'Unknown';  // ❌ 빈 문자열도 falsy로 처리됨
+```
+
 ### 코드 작성 규칙
 - **크롤링**: `packages/news-crawler/CLAUDE.md` 참조 (Python + TypeScript)
 - **TypeScript**: Commander.js CLI, experimental type stripping, Zod 스키마
 - **React**: React 19 + ref as prop (forwardRef 제거), React.memo 메모이제이션
-- **공통**: Nullish coalescing (`??`) 사용, `||` 금지
 
 ### 패키지 간 의존성
 - **core**: 모든 패키지가 참조하는 공통 타입 정의

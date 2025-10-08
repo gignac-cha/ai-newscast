@@ -9,7 +9,7 @@ export function handleHelp(): Response {
     description: 'Cloudflare Worker for AI-powered news generation using Google Gemini',
     endpoints: {
       'GET /': 'Show this help message',
-      'POST /generate?newscast-id={id}&topic-index={n}': 'Generate integrated news content from crawled articles',
+      'POST /news?newscast-id={id}&topic-index={n}': 'Generate integrated news content from crawled articles',
       'GET /status?newscast-id={id}': 'Check generation status for a newscast'
     },
     parameters: {
@@ -18,7 +18,7 @@ export function handleHelp(): Response {
       'format': 'Optional - Response format (json|markdown), defaults to json'
     },
     examples: {
-      'Generate news for topic 1': 'POST /generate?newscast-id=2025-09-17T16-50-13-648Z&topic-index=1',
+      'Generate news for topic 1': 'POST /news?newscast-id=2025-09-17T16-50-13-648Z&topic-index=1',
       'Check status': 'GET /status?newscast-id=2025-09-17T16-50-13-648Z'
     }
   };

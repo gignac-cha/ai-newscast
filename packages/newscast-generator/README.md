@@ -61,20 +61,33 @@ pnpm run generate:newscast-audio
 - 각 음성에 고유한 한국어 이름 할당
 - 각 생성마다 다양성을 위한 랜덤 선택
 
-## 🎯 출력 구조
+## 🎯 출력 구조 (v3.7.3+)
 
 ```
 output/{newscast-id}/topic-{NN}/
-├── newscast-script.json       # TTS 메타데이터 포함 스크립트
+├── newscast-script.json       # TTS 메타데이터 + metrics 포함 스크립트
 ├── newscast-script.md         # 사람이 읽기 쉬운 스크립트
 ├── audio/
 │   ├── 001-music.mp3          # 오프닝 음악
 │   ├── 002-host1.mp3          # 호스트 1 대사
 │   ├── 003-host2.mp3          # 호스트 2 대사
-│   └── ...                    # 더 많은 세그먼트
+│   ├── ...                    # 더 많은 세그먼트
+│   └── audio-files.json       # 오디오 메타데이터 + metrics
 ├── newscast.mp3               # 최종 병합된 오디오
 └── newscast-audio-info.json   # 병합 메타데이터
 ```
+
+### Metrics 시스템
+모든 JSON 출력에는 `metrics` 필드가 포함됩니다:
+- **newscastID**: 뉴스캐스트 고유 ID (ISO timestamp)
+- **topicIndex**: 토픽 인덱스 (1-10)
+- **timing**: 시작/완료 시간, 소요 시간
+- **input/output**: 입출력 데이터 통계
+- **performance**: 성능 메트릭스
+
+### 명명 규칙
+- **camelCase**: 모든 필드명 (예: `programName`, `estimatedDuration`)
+- **특수 약어 대문자**: ID, HTML, JSON, URL (예: `newscastID`, `hostID`)
 
 ## 🔧 설정
 

@@ -3,6 +3,7 @@ import { handleHelp } from './handlers/help.ts';
 import { handleScript } from './handlers/script.ts';
 import { handleAudio } from './handlers/audio.ts';
 import { handleNewscast } from './handlers/newscast.ts';
+import { handleStatus } from './handlers/status.ts';
 import type { Env } from './types/env.ts';
 
 // Import utilities
@@ -25,6 +26,10 @@ export default {
         return handleHelp();
       }
 
+      if (request.method === 'GET' && url.pathname === '/status') {
+        return handleStatus(request, env);
+      }
+
       if (request.method === 'GET' && url.pathname === '/script') {
         return handleScript(request, env);
       }
@@ -37,7 +42,7 @@ export default {
         return handleNewscast(request, env);
       }
 
-      return response(cors(error('Not Found', 'Available endpoints: GET /, GET /script?newscast-id=X&topic-index=N, GET /audio?newscast-id=X&topic-index=N, GET /newscast?newscast-id=X&topic-index=N')));
+      return response(cors(error('Not Found', 'Available endpoints: GET /, GET /status, GET /script?newscast-id=X&topic-index=N, GET /audio?newscast-id=X&topic-index=N, GET /newscast?newscast-id=X&topic-index=N')));
 
     } catch (err) {
       console.error('Worker error:', err);

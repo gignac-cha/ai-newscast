@@ -7,10 +7,9 @@
   "types": "dist/worker.d.ts",
   "scripts": {
     "build": "node build.ts",
-    "dev": "node build.ts --watch",
+    "dev": "wrangler dev",
     "typecheck": "tsc --noEmit",
-    "deploy": "pnpm build && wrangler deploy",
-    "dev:worker": "pnpm build && wrangler dev"
+    "deploy": "pnpm build && wrangler deploy"
   },
   "keywords": [
     "cloudflare",

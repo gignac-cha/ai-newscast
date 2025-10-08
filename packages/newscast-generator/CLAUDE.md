@@ -137,22 +137,54 @@ const enhancedScript = parsed.script.map((line) => {
 });
 ```
 
-## 📊 출력 데이터 구조
+## 📊 출력 데이터 구조 (v3.7.3+)
 
 ### JSON 출력 (`newscast-script.json`)
+**주요 변경사항**: camelCase 전환 + metrics 필드 추가
+
 ```typescript
 interface NewscastOutput {
+  timestamp: string;                // 생성 타임스탬프 (ISO 8601)
   title: string;                    // 뉴스캐스트 제목
-  program_name: string;             // 프로그램명
+  programName: string;              // 프로그램명
   hosts: SelectedHosts;             // 선택된 호스트 정보
-  estimated_duration: string;       // 예상 진행시간
+  estimatedDuration: string;        // 예상 진행시간
   script: ScriptLine[];             // 스크립트 라인 배열
   metadata: {
-    total_articles: number;         // 참고 기사 수
-    sources_count: number;          // 참고 언론사 수
-    main_sources: string[];         // 주요 언론사 목록
-    generation_timestamp: string;   // 생성 시간
-    total_script_lines: number;     // 스크립트 라인 수
+    totalArticles: number;          // 참고 기사 수
+    sourcesCount: number;           // 참고 언론사 수
+    mainSources: string[];          // 주요 언론사 목록
+    generationTimestamp: string;    // 생성 시간
+    totalScriptLines: number;       // 스크립트 라인 수
+  };
+  metrics: NewscastScriptMetrics;   // 성능 메트릭스
+}
+```
+
+### Metrics 구조 (`NewscastScriptMetrics`)
+```typescript
+interface NewscastScriptMetrics {
+  newscastID: string;               // 뉴스캐스트 ID (ISO timestamp)
+  topicIndex: number;               // 토픽 인덱스 (1-10)
+  timing: {
+    startedAt: string;              // 시작 시간 (ISO)
+    completedAt: string;            // 완료 시간 (ISO)
+    duration: number;               // 총 소요 시간 (ms)
+    aiGenerationTime: number;       // AI 생성 시간 (ms)
+  };
+  input: {
+    newsTitle: string;              // 입력 뉴스 제목
+    newsSummaryLength: number;      // 요약 길이
+    newsContentLength: number;      // 본문 길이
+  };
+  output: {
+    totalScriptLines: number;       // 총 스크립트 라인 수
+    dialogueLines: number;          // 대화 라인 수
+    musicLines: number;             // 음악 라인 수
+    scriptSize: number;             // 스크립트 JSON 크기 (bytes)
+  };
+  performance: {
+    linesPerSecond: number;         // 생성 속도 (라인/초)
   };
 }
 ```
@@ -293,5 +325,50 @@ try {
 - [ ] 실시간 스크립트 생성 API
 - [ ] 다국어 지원 확장
 
+## 🎯 명명 규칙 (v3.7.3+)
+
+### camelCase 전환
+모든 필드명이 camelCase로 통일되었습니다:
+- `program_name` → `programName`
+- `estimated_duration` → `estimatedDuration`
+- `voice_model` → `voiceModel`
+
+### 특수 약어 규칙
+다음 약어는 모두 대문자로 유지:
+- **ID**: `newscastID`, `topicID`, `hostID`
+- **HTML**: `newsHTML`, `contentHTML`
+- **JSON**: `newsJSON`, `outputJSON`
+- **URL**: `newsURL`, `sourceURL`
+
+## 📋 CLI 명령어 업데이트 (v3.7.3+)
+
+### Script Command
+`newscastID`와 `topicIndex`는 입력 파일(news.json)의 metrics에서 자동으로 읽어옵니다:
+
+```bash
+# 기본 사용
+node --experimental-strip-types command.ts script \
+  -i output/2025-10-05T19-53-26-599Z/topic-01/news.json \
+  -o output/2025-10-05T19-53-26-599Z/topic-01/newscast-script.json
+
+# JSON 출력 형식
+node --experimental-strip-types command.ts script \
+  -i output/.../news.json \
+  -o output/.../newscast-script.json \
+  -f json
+```
+
+### Audio Command
+`newscastID`와 `topicIndex`는 입력 파일(newscast-script.json)의 metrics에서 자동으로 읽어옵니다:
+
+```bash
+# 기본 사용
+node --experimental-strip-types command.ts audio \
+  -i output/2025-10-05T19-53-26-599Z/topic-01/newscast-script.json \
+  -o output/2025-10-05T19-53-26-599Z/topic-01
+
+# 결과: audio/ 폴더에 개별 MP3 파일 + audio-files.json (metrics 포함)
+```
+
 ---
-*최종 업데이트: 2025-09-19 - 스크립트 생성 핵심 기능 완성*
+*최종 업데이트: 2025-10-06 v3.7.3 - Metrics 시스템 추가 + camelCase 전환*

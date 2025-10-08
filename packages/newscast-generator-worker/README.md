@@ -32,14 +32,17 @@ pnpm run deploy
 ### API 엔드포인트 테스트
 
 ```bash
+# 서비스 상태 확인 (v3.7.3+)
+curl "https://your-worker.workers.dev/status"
+
 # 토픽의 스크립트 생성
 curl "https://your-worker.workers.dev/script?newscast-id=2025-09-19T10-00-00-000Z&topic-index=1"
 
-# 오디오 생성 (플레이스홀더)
+# 오디오 생성
 curl "https://your-worker.workers.dev/audio?newscast-id=2025-09-19T10-00-00-000Z&topic-index=1"
 
-# 전체 파이프라인
-curl "https://your-worker.workers.dev/full?newscast-id=2025-09-19T10-00-00-000Z&topic-index=1"
+# 오디오 병합 (Lambda 경유)
+curl "https://your-worker.workers.dev/newscast?newscast-id=2025-09-19T10-00-00-000Z&topic-index=1"
 ```
 
 ## ⏰ 자동 스케줄
@@ -57,13 +60,26 @@ curl "https://your-worker.workers.dev/full?newscast-id=2025-09-19T10-00-00-000Z&
 3. **저장**: JSON 및 Markdown 출력을 R2에 저장
 4. **추적**: 메타데이터에 생성 상태 기록
 
-## 🎯 출력 구조
+## 🎯 출력 구조 (v3.7.3+)
 
 ```
 newscasts/{newscast-id}/topic-{01-10}/
-├── newscast-script.json       # TTS 메타데이터 포함 스크립트
-└── newscast-script.md         # 사람이 읽기 쉬운 스크립트
+├── newscast-script.json       # TTS 메타데이터 + metrics 포함 스크립트
+├── newscast-script.md         # 사람이 읽기 쉬운 스크립트
+└── audio/
+    ├── 001-music.mp3          # 오프닝 음악
+    ├── 002-host1.mp3          # 호스트 1 대사
+    ├── ...                    # 더 많은 세그먼트
+    └── audio-files.json       # 오디오 메타데이터 + metrics
 ```
+
+### Metrics 시스템
+모든 생성된 JSON 파일에는 `metrics` 필드가 자동으로 포함됩니다:
+- **newscastID**: 뉴스캐스트 고유 ID (URL 파라미터에서 전달)
+- **topicIndex**: 토픽 인덱스 (URL 파라미터에서 전달)
+- **timing**: 시작/완료 시간, 소요 시간
+- **input/output**: 입출력 데이터 통계
+- **performance**: 성능 메트릭스
 
 ## 📦 응답 예제
 

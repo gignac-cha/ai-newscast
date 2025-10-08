@@ -84,6 +84,34 @@ wrangler secret put GOOGLE_CLOUD_API_KEY
 ### GET /
 헬프 메시지 및 사용 가능한 엔드포인트 목록
 
+### GET /status (v3.7.3+)
+서비스 상태 및 환경 변수 확인
+
+```bash
+curl "https://ai-newscast-newscast-generator-worker.example.workers.dev/status"
+```
+
+**응답 예시:**
+```json
+{
+  "status": "healthy",
+  "service": "newscast-generator-worker",
+  "version": "1.0.0",
+  "timestamp": "2025-10-06T11:35:00.000Z",
+  "endpoints": {
+    "script": "GET /script?newscast-id={id}&topic-index={n}",
+    "audio": "GET /audio?newscast-id={id}&topic-index={n}",
+    "newscast": "GET /newscast?newscast-id={id}&topic-index={n}"
+  },
+  "environment": {
+    "hasGeminiAPIKey": true,
+    "hasTTSAPIKey": true,
+    "hasBucket": true,
+    "hasKV": true
+  }
+}
+```
+
 ### GET /script?newscast-id={id}&topic-index={n}
 ```bash
 curl "https://ai-newscast-newscast-generator-worker.example.workers.dev/script?newscast-id=2025-09-19T10-00-00-000Z&topic-index=1"
@@ -281,5 +309,50 @@ wrangler r2 object list ai-newscast --prefix="newscasts/"
 - [ ] 실시간 진행상황 추적
 - [ ] 음성 품질 최적화
 
+## 📊 Metrics 시스템 (v3.7.3+)
+
+### 자동 metrics 전달
+모든 핸들러는 `newscastID`와 `topicIndex`를 자동으로 전달합니다:
+
+**handlers/script.ts:**
+```typescript
+const result = await generateNewscastScript({
+  news: newsData,
+  promptTemplate: newscastScriptPrompt,
+  voices: defaultVoices,
+  apiKey,
+  newscastID,           // URL 파라미터에서 전달
+  topicIndex: topicIndexNumber,  // URL 파라미터에서 전달
+});
+```
+
+**handlers/audio.ts:**
+```typescript
+const result = await generateNewscastAudio({
+  newscastData,
+  apiKey,
+  newscastID,           // URL 파라미터에서 전달
+  topicIndex: topicIndexNumber,  // URL 파라미터에서 전달
+});
+```
+
+### 출력 JSON 구조
+생성된 모든 JSON 파일(`newscast-script.json`, `audio-files.json`)에는 `metrics` 필드가 자동으로 포함됩니다:
+
+```typescript
+{
+  timestamp: string;
+  // ... 데이터 필드들
+  metrics: {
+    newscastID: string;
+    topicIndex: number;
+    timing: { ... },
+    input: { ... },
+    output: { ... },
+    performance: { ... }
+  }
+}
+```
+
 ---
-*최종 업데이트: 2025-09-19 - 토픽별 분산 처리 및 스크립트 생성 완성*
+*최종 업데이트: 2025-10-06 v3.7.3 - Metrics 시스템 추가 + /status 엔드포인트 추가*

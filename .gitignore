@@ -431,6 +431,7 @@ pyrightconfig.json
 output/
 data/
 tests/claude-code/
+tests/codex/
 tests/manual/
 
 # AI News Cast - Security (API keys, credentials)

@@ -6,15 +6,15 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
-    "crawl:news-topics": {
+    "crawl:topics": {
       "outputs": ["output/**"],
       "env": ["PATH", "VIRTUAL_ENV"]
     },
-    "crawl:news-list": {
+    "crawl:detail": {
       "outputs": ["output/**"],
       "env": ["PATH", "VIRTUAL_ENV"]
     },
-    "crawl:news-details": {
+    "crawl:details": {
       "outputs": ["output/**"],
       "env": ["PATH", "VIRTUAL_ENV"]
     },
@@ -22,11 +22,11 @@
       "outputs": ["output/**"],
       "env": ["GOOGLE_GEN_AI_API_KEY", "PATH", "VIRTUAL_ENV"]
     },
-    "generate:newscast-script": {
+    "generate:script": {
       "outputs": ["output/**"],
       "env": ["GOOGLE_GEN_AI_API_KEY"]
     },
-    "generate:newscast-audio": {
+    "generate:audio": {
       "outputs": ["output/**"],
       "env": ["GOOGLE_CLOUD_API_KEY"]
     },

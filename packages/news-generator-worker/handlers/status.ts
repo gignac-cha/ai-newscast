@@ -45,17 +45,17 @@ export async function handleStatus(
       let articlesCount = 0;
       if (jsonExists) {
         const newsData = JSON.parse(await jsonExists.text());
-        generationTime = newsData.generation_timestamp;
-        articlesCount = newsData.input_articles_count || 0;
+        generationTime = newsData.generationTimestamp;
+        articlesCount = newsData.inputArticlesCount || 0;
       }
 
       topicStatus.push({
-        topic_index: i,
+        topicIndex: i,
         generated: !!jsonExists,
-        has_json: !!jsonExists,
-        has_markdown: !!markdownExists,
-        generation_timestamp: generationTime,
-        input_articles_count: articlesCount
+        hasJSON: !!jsonExists,
+        hasMarkdown: !!markdownExists,
+        generationTimestamp: generationTime,
+        inputArticlesCount: articlesCount
       });
     }
 
@@ -64,11 +64,11 @@ export async function handleStatus(
 
     const statusData = {
       success: true,
-      newscast_id: newscastID,
-      total_topics: totalTopics,
-      generated_topics: generatedCount,
-      completion_percentage: completionPercentage,
-      is_complete: generatedCount === totalTopics,
+      newscastID,
+      totalTopics,
+      generatedTopics: generatedCount,
+      completionPercentage,
+      isComplete: generatedCount === totalTopics,
       topics: topicStatus,
       timestamp: new Date().toISOString()
     };
