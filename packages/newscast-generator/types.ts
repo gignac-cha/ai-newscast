@@ -8,6 +8,7 @@ export type {
   ScriptLine,
   NewscastScript,
   NewscastOutput,
+  NewscastAudioMetrics,
   AudioFileInfo,
   AudioSegment,
   ProcessingStats
@@ -25,20 +26,21 @@ export interface TTSVoices {
 
 // Generator-specific AudioOutput with extended metadata
 export interface AudioOutput {
+  timestamp: string;
   title: string;
-  program_name: string;
-  generation_timestamp: string;
-  total_script_lines: number;
-  dialogue_lines: number;
-  music_lines: number;
-  generated_audio_files: number;
-  skipped_music_files: number;
-  failed_audio_files: number;
-  audio_files: AudioFileInfo[];
-  all_segments: AudioSegment[];
+  programName: string;
+  totalScriptLines: number;
+  dialogueLines: number;
+  musicLines: number;
+  generatedAudioFiles: number;
+  skippedMusicFiles: number;
+  failedAudioFiles: number;
+  audioFiles: AudioFileInfo[];
+  allSegments: AudioSegment[];
   metadata: {
-    audio_generation_time_ms: number;
-    success_rate: string;
-    estimated_total_duration: string;
+    audioGenerationTimeMs: number;
+    successRate: string;
+    estimatedTotalDuration: string;
   };
+  metrics: NewscastAudioMetrics;
 }

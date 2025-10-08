@@ -3,26 +3,54 @@
  */
 
 export interface AudioFileInfo {
-  file_path: string;
+  filePath: string;
   sequence: number;
   type: string;
-  host_id: string;
-  duration_seconds: number;
+  hostID: string;
+  durationSeconds: number;
 }
 
 export interface AudioInfo {
-  final_duration_formatted: string;
-  final_duration_seconds: number;
-  file_size_formatted: string;
+  finalDurationFormatted: string;
+  finalDurationSeconds: number;
+  fileSizeFormatted: string;
+}
+
+export interface AudioFilesMetrics {
+  newscastID: string;
+  topicIndex: number;
+  timing: {
+    startedAt: string;
+    completedAt: string;
+    duration: number;
+  };
+  processing: {
+    totalLines: number;
+    generatedFiles: number;
+    skippedFiles: number;
+    failedFiles: number;
+    successRate: number;
+  };
+  fileSizes: {
+    totalBytes: number;
+    averageBytes: number;
+    maximumBytes: number;
+    minimumBytes: number;
+  };
+  performance: {
+    filesPerSecond: number;
+    estimatedDuration: string;
+  };
 }
 
 export interface AudioOutput {
-  output_file: string;
-  total_files: number;
-  success_count: number;
-  failed_count: number;
-  audio_files: AudioFileInfo[];
-  generation_timestamp: string;
+  outputFile: string;
+  totalFiles: number;
+  successCount: number;
+  failedCount: number;
+  audioFiles: AudioFileInfo[];
+  generationTimestamp: string;
+  metrics?: AudioFilesMetrics;
 }
 
 export interface AudioSegment {
@@ -30,12 +58,13 @@ export interface AudioSegment {
   type: string;
   role: string;
   content: string;
-  has_audio: boolean;
+  hasAudio: boolean;
 }
 
 export interface AudioFiles {
-  audio_files: AudioFileInfo[];
-  all_segments: AudioSegment[];
+  audioFiles: AudioFileInfo[];
+  allSegments: AudioSegment[];
+  metrics?: AudioFilesMetrics;
 }
 
 export interface AudioState {

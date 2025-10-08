@@ -3,25 +3,25 @@
  */
 
 export interface GenerationMetadata {
-  generation_timestamp: string;
-  total_articles: number;
-  sources_count: number;
-  main_sources: string[];
+  generationTimestamp: string;
+  totalArticles: number;
+  sourcesCount: number;
+  mainSources: string[];
 }
 
 export interface NewscastMetadata extends GenerationMetadata {
-  total_script_lines: number;
+  totalScriptLines: number;
 }
 
 export interface ProcessingStats {
-  success_count: number;
-  failed_count: number;
-  total_files: number;
-  processing_time?: string;
+  successCount: number;
+  failedCount: number;
+  totalFiles: number;
+  processingTime?: string;
 }
 
 export interface TimestampInfo {
-  created_at: string;
-  updated_at: string;
-  generated_at: string;
+  createdAt: string;
+  updatedAt: string;
+  generatedAt: string;
 }

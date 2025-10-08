@@ -52,6 +52,8 @@ async function generateScriptToFiles({
     promptTemplate,
     voices,
     apiKey,
+    newscastID: newsData.metrics.newscastID,
+    topicIndex: newsData.metrics.topicIndex,
   });
 
   await mkdir(dirname(outputFile), { recursive: true });
@@ -135,6 +137,8 @@ export async function generateAudioToFiles({
   const result = await generateNewscastAudio({
     newscastData,
     apiKey,
+    newscastID: newscastData.metrics.newscastID,
+    topicIndex: newscastData.metrics.topicIndex,
   });
 
   // 오디오 폴더 생성
@@ -143,7 +147,7 @@ export async function generateAudioToFiles({
 
   console.log('🎙️ 뉴스캐스트 오디오 생성 시작...');
   console.log(`   📊 총 스크립트 라인: ${newscastData.script.length}개`);
-  console.log(`   👥 진행자: ${newscastData.hosts.host1.name} (${newscastData.hosts.host1.voice_model}), ${newscastData.hosts.host2.name} (${newscastData.hosts.host2.voice_model})`);
+  console.log(`   👥 진행자: ${newscastData.hosts.host1.name} (${newscastData.hosts.host1.voiceModel}), ${newscastData.hosts.host2.name} (${newscastData.hosts.host2.voiceModel})`);
 
   console.log('\n🎵 개별 스크립트 라인 오디오 저장 중...');
 
@@ -154,9 +158,9 @@ export async function generateAudioToFiles({
 
     // duration 측정 및 업데이트
     const duration = await getAudioDuration(audioFilePath);
-    const audioFileInfo = result.audioOutput.audio_files.find(f => f.sequence === audioFile.sequence);
+    const audioFileInfo = result.audioOutput.audioFiles.find(f => f.sequence === audioFile.sequence);
     if (audioFileInfo) {
-      audioFileInfo.duration_seconds = duration;
+      audioFileInfo.durationSeconds = duration;
     }
 
     console.log(`   ✅ 저장 완료: ${basename(audioFilePath)} (${duration.toFixed(2)}s)`);
@@ -188,7 +192,7 @@ export async function generateAudioToFiles({
     console.log(JSON.stringify(logOutput, null, 2));
   } else {
     console.log(`\n✅ 뉴스캐스트 오디오 생성 완료!`);
-    console.log(`   🎬 프로그램: ${newscastData.program_name}`);
+    console.log(`   🎬 프로그램: ${newscastData.programName}`);
     console.log(`   📊 대화 라인: ${result.stats.dialogueCount}개, 음악 구간: ${result.stats.musicCount}개`);
     console.log(`   🎤 TTS 생성: ${result.stats.successCount}개 성공, ${result.stats.failCount}개 실패`);
     console.log(`   🎵 음악 구간: ${result.stats.skipCount}개 스킵`);
