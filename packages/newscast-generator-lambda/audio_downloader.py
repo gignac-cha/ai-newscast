@@ -46,7 +46,7 @@ def download_audio_files(
     newscast_id: str,
     topic_str: str,
     temp_dir: str
-) -> List[str]:
+) -> tuple[List[str], List[Dict[str, Any]]]:
     """
     Download all audio files listed in audio-files.json.
 
@@ -58,35 +58,40 @@ def download_audio_files(
         temp_dir: Temporary directory path
 
     Returns:
-        List of downloaded file paths in correct order
+        Tuple of (downloaded file paths, download metrics for each file)
     """
     downloaded_files = []
+    download_metrics = []
 
     # Extract audio files list - adapt based on actual JSON structure
-    audio_files = audio_files_data.get('files', [])
+    audio_files = audio_files_data.get('audioFiles', [])
     if not audio_files:
-        # Try alternative structure
+        audio_files = audio_files_data.get('files', [])
+    if not audio_files:
         audio_files = audio_files_data.get('audio_files', [])
 
     logger.info(f"Found {len(audio_files)} audio files to download")
 
     for i, file_info in enumerate(audio_files):
+        import time
+        file_start_time = time.time()
+
         try:
             # Handle different possible JSON structures
             if isinstance(file_info, str):
                 filename = file_info
+                sequence = i + 1
+                file_size = 0
+                duration = 0
             elif isinstance(file_info, dict):
-                # Try different field names
-                filename = (
-                    file_info.get('filename') or
-                    file_info.get('file') or
-                    file_info.get('name') or
-                    file_info.get('file_path')  # Extract from full path
-                )
-
-                # If file_path contains directory, extract just the filename
-                if filename and '/' in filename:
+                # Extract from audioFiles structure (from audio-files.json)
+                filename = file_info.get('filePath', '')
+                if '/' in filename:
                     filename = filename.split('/')[-1]
+
+                sequence = file_info.get('sequence', i + 1)
+                file_size = 0  # Will be updated after download
+                duration = file_info.get('durationSeconds', 0)
             else:
                 logger.warning(f"Unexpected file info format: {file_info}")
                 continue
@@ -111,12 +116,63 @@ def download_audio_files(
                 if response.status == 200:
                     with open(local_path, 'wb') as f:
                         f.write(response.read())
+
+                    actual_file_size = os.path.getsize(local_path)
                     downloaded_files.append(local_path)
-                    logger.info(f"Downloaded {filename} ({os.path.getsize(local_path)} bytes)")
+
+                    file_end_time = time.time()
+                    file_duration_ms = int((file_end_time - file_start_time) * 1000)
+
+                    download_metrics.append({
+                        'sequence': sequence,
+                        'file_name': filename,
+                        'status': 'success',
+                        'file_size': actual_file_size,
+                        'duration_seconds': duration,
+                        'timing': {
+                            'started_at': time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime(file_start_time)),
+                            'completed_at': time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime(file_end_time)),
+                            'duration': file_duration_ms
+                        }
+                    })
+
+                    logger.info(f"Downloaded {filename} ({actual_file_size} bytes)")
                 else:
+                    file_end_time = time.time()
+                    file_duration_ms = int((file_end_time - file_start_time) * 1000)
+
+                    download_metrics.append({
+                        'sequence': sequence,
+                        'file_name': filename,
+                        'status': 'failed',
+                        'file_size': 0,
+                        'duration_seconds': 0,
+                        'timing': {
+                            'started_at': time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime(file_start_time)),
+                            'completed_at': time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime(file_end_time)),
+                            'duration': file_duration_ms
+                        }
+                    })
+
                     logger.error(f"HTTP {response.status} when downloading {filename}")
 
         except Exception as e:
+            file_end_time = time.time()
+            file_duration_ms = int((file_end_time - file_start_time) * 1000)
+
+            download_metrics.append({
+                'sequence': sequence if 'sequence' in locals() else i + 1,
+                'file_name': filename if 'filename' in locals() else f'unknown-{i}',
+                'status': 'failed',
+                'file_size': 0,
+                'duration_seconds': 0,
+                'timing': {
+                    'started_at': time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime(file_start_time)),
+                    'completed_at': time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime(file_end_time)),
+                    'duration': file_duration_ms
+                }
+            })
+
             logger.error(f"Failed to download {filename}: {str(e)}")
             continue
 
@@ -124,4 +180,4 @@ def download_audio_files(
     downloaded_files.sort()
 
     logger.info(f"Successfully downloaded {len(downloaded_files)} audio files")
-    return downloaded_files
+    return downloaded_files, download_metrics

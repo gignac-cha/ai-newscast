@@ -17,12 +17,12 @@ export interface NewscastTopic extends TopicInfo {
 export interface NewscastData {
   id: string;
   title: string;
-  generation_timestamp: string;
+  generationTimestamp: string;
   topics: NewscastTopic[];
   metadata: {
-    total_topics: number;
-    total_articles: number;
-    sources_count: number;
+    totalTopics: number;
+    totalArticles: number;
+    sourcesCount: number;
   };
 }
 

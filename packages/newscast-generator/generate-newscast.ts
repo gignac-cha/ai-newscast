@@ -1,4 +1,5 @@
 import type { AudioOutput } from './types.ts';
+import type { NewscastMergeMetrics } from '@ai-newscast/core';
 
 interface MergeResult {
   title: string;
@@ -12,6 +13,7 @@ interface MergeResult {
   fileSizeFormatted: string;
   originalMetadata: AudioOutput['metadata'];
   audioData: Uint8Array;
+  metrics: NewscastMergeMetrics;
 }
 
 interface GenerateNewscastOptions {
@@ -64,18 +66,49 @@ export async function generateNewscast(options: GenerateNewscastOptions): Promis
 
   const totalTime = performance.now() - totalStartTime;
 
+  // Convert snake_case metrics from Lambda to camelCase
+  const lambdaMetrics = result.metrics;
+  const metrics: NewscastMergeMetrics = {
+    newscastID: lambdaMetrics.newscast_id,
+    topicIndex: lambdaMetrics.topic_index,
+    timing: {
+      startedAt: lambdaMetrics.timing.started_at,
+      completedAt: lambdaMetrics.timing.completed_at,
+      duration: lambdaMetrics.timing.duration,
+      downloadTime: lambdaMetrics.timing.download_time,
+      mergeTime: lambdaMetrics.timing.merge_time
+    },
+    input: {
+      totalAudioFiles: lambdaMetrics.input.total_audio_files,
+      downloadedFiles: lambdaMetrics.input.downloaded_files,
+      failedDownloads: lambdaMetrics.input.failed_downloads,
+      totalInputSize: lambdaMetrics.input.total_input_size
+    },
+    output: {
+      mergedFileName: lambdaMetrics.output.merged_file_name,
+      mergedFileSize: lambdaMetrics.output.merged_file_size,
+      estimatedDuration: lambdaMetrics.output.estimated_duration
+    },
+    performance: {
+      filesPerSecond: lambdaMetrics.performance.files_per_second,
+      downloadSpeed: lambdaMetrics.performance.download_speed,
+      successRate: lambdaMetrics.performance.success_rate
+    }
+  };
+
   const mergeResult: MergeResult = {
     title: result.title ?? 'AI 뉴스캐스트',
     programName: result.program_name ?? 'AI 뉴스캐스트',
     mergeTimestamp: new Date().toISOString(),
     inputFiles: result.input_files ?? 0,
     outputFile: 'newscast.mp3',
-    finalDurationSeconds: 0, // Lambda doesn't return duration yet
-    finalDurationFormatted: '계산 불가',
+    finalDurationSeconds: metrics.output.estimatedDuration,
+    finalDurationFormatted: `${metrics.output.estimatedDuration.toFixed(1)}초`,
     fileSizeBytes: result.output_file_size ?? audioData.length,
     fileSizeFormatted: `${((result.output_file_size ?? audioData.length) / 1024 / 1024).toFixed(2)} MB`,
     originalMetadata: result.original_metadata ?? {},
     audioData: audioData,
+    metrics: metrics,
   };
 
   console.log(`\n✅ 뉴스캐스트 오디오 병합 완료!`);

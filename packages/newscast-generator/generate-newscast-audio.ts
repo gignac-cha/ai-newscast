@@ -8,14 +8,22 @@ export interface GeneratedAudioFile {
   audioContent: Uint8Array;
   sequence: number;
   type: 'dialogue' | 'music';
-  hostId?: string;
+  hostID?: string;
   scriptLine: ScriptLine;
   duration: number; // 계산된 duration (초)
+  timing: {
+    startedAt: string;
+    completedAt: string;
+    duration: number;
+  };
+  status: 'success' | 'failed' | 'skipped';
 }
 
 export interface GenerateNewscastAudioOptions {
   newscastData: NewscastOutput;
   apiKey: string;
+  newscastID: string;
+  topicIndex: number;
 }
 
 export interface GenerateNewscastAudioResult {
@@ -47,17 +55,17 @@ async function generateSingleAudioFile(
     return null;
   }
 
-  if (!scriptLine.voice_model) {
+  if (!scriptLine.voiceModel) {
     console.error(`[AUDIO_TTS ERROR] No voice model specified for role: ${scriptLine.role}`);
     throw new Error(`음성 모델이 지정되지 않았습니다: ${scriptLine.role}`);
   }
 
-  console.log(`[AUDIO_TTS] Generating TTS for sequence ${sequence}: "${scriptLine.content}" (voice: ${scriptLine.voice_model})`);
+  console.log(`[AUDIO_TTS] Generating TTS for sequence ${sequence}: "${scriptLine.content}" (voice: ${scriptLine.voiceModel})`);
 
   // REST API 클라이언트로 TTS 호출
   return await synthesizeText(
     scriptLine.content,
-    scriptLine.voice_model,
+    scriptLine.voiceModel,
     apiKey,
     {
       speakingRate: 1.0,
@@ -70,6 +78,8 @@ async function generateSingleAudioFile(
 export async function generateNewscastAudio({
   newscastData,
   apiKey,
+  newscastID,
+  topicIndex,
 }: GenerateNewscastAudioOptions): Promise<GenerateNewscastAudioResult> {
   const startTime = new Date();
   console.log(`[AUDIO_GEN START] ${startTime.toISOString()}`);
@@ -109,8 +119,11 @@ export async function generateNewscastAudio({
 
     console.log(`[AUDIO_GEN FILE] Processing ${i + 1}/${newscastData.script.length}: ${audioFileName}`);
 
+    const fileStartTime = new Date();
     try {
       const audioContent = await generateSingleAudioFile(scriptLine, sequence, apiKey);
+      const fileEndTime = new Date();
+      const fileDuration = fileEndTime.getTime() - fileStartTime.getTime();
 
       if (audioContent) {
         // MP3 duration 계산
@@ -123,9 +136,15 @@ export async function generateNewscastAudio({
           audioContent,
           sequence,
           type: scriptLine.type as 'dialogue' | 'music',
-          hostId: getHostIdFromRole(scriptLine.role),
+          hostID: getHostIdFromRole(scriptLine.role),
           scriptLine,
-          duration
+          duration,
+          timing: {
+            startedAt: fileStartTime.toISOString(),
+            completedAt: fileEndTime.toISOString(),
+            duration: fileDuration
+          },
+          status: 'success'
         });
         successCount++;
         console.log(`[AUDIO_GEN SUCCESS] ${audioFileName} generated successfully (${successCount}/${newscastData.script.length})`);
@@ -134,10 +153,43 @@ export async function generateNewscastAudio({
         await new Promise(resolve => setTimeout(resolve, 100));
       } else {
         // 음악 파일은 생성되지 않으므로 스킵 카운트
+        audioFiles.push({
+          fileName: audioFileName,
+          audioContent: new Uint8Array(0),
+          sequence,
+          type: scriptLine.type as 'dialogue' | 'music',
+          hostID: getHostIdFromRole(scriptLine.role),
+          scriptLine,
+          duration: 0,
+          timing: {
+            startedAt: fileStartTime.toISOString(),
+            completedAt: fileEndTime.toISOString(),
+            duration: fileDuration
+          },
+          status: 'skipped'
+        });
         skipCount++;
         console.log(`[AUDIO_GEN SKIP] ${audioFileName} skipped (${skipCount} total skips)`);
       }
     } catch (error) {
+      const fileEndTime = new Date();
+      const fileDuration = fileEndTime.getTime() - fileStartTime.getTime();
+
+      audioFiles.push({
+        fileName: audioFileName,
+        audioContent: new Uint8Array(0),
+        sequence,
+        type: scriptLine.type as 'dialogue' | 'music',
+        hostID: getHostIdFromRole(scriptLine.role),
+        scriptLine,
+        duration: 0,
+        timing: {
+          startedAt: fileStartTime.toISOString(),
+          completedAt: fileEndTime.toISOString(),
+          duration: fileDuration
+        },
+        status: 'failed'
+      });
       failCount++;
       console.error(`[AUDIO_GEN ERROR] Failed to generate ${audioFileName}:`, error);
       throw new Error(`스크립트 라인 ${sequence} 생성 실패: ${error}`);
@@ -153,42 +205,82 @@ export async function generateNewscastAudio({
   const musicCount = newscastData.script.filter(line => line.type !== 'dialogue').length;
   console.log(`[AUDIO_GEN STATS] Script analysis: ${dialogueCount} dialogue lines, ${musicCount} music lines`);
 
-  // AudioFileInfo 생성 (계산된 duration 사용)
+  // AudioFileInfo 생성 (계산된 duration 사용) - success 파일만
   console.log(`[AUDIO_GEN OUTPUT] Creating audio file info for ${audioFiles.length} generated files`);
-  const audioFileInfos: AudioFileInfo[] = audioFiles.map(file => ({
-    file_path: `audio/${file.fileName}`,
-    sequence: file.sequence,
-    type: file.type,
-    host_id: file.hostId ?? '',
-    duration_seconds: file.duration
-  }));
+  const audioFileInfos: AudioFileInfo[] = audioFiles
+    .filter(file => file.status === 'success')
+    .map(file => ({
+      filePath: `audio/${file.fileName}`,
+      sequence: file.sequence,
+      type: file.type,
+      hostID: file.hostID ?? '',
+      durationSeconds: file.duration
+    }));
+
+  const totalTime = completedAt.getTime() - startTime.getTime();
+  const totalAudioSize = audioFiles
+    .filter(file => file.status === 'success')
+    .reduce((sum, file) => sum + file.audioContent.length, 0);
+  const filesPerSecond = successCount / (totalTime / 1000);
 
   const audioOutput: AudioOutput = {
+    timestamp: completedAt.toISOString(),
     title: newscastData.title,
-    program_name: newscastData.program_name,
-    generation_timestamp: completedAt.toISOString(),
-    total_script_lines: newscastData.script.length,
-    dialogue_lines: dialogueCount,
-    music_lines: musicCount,
-    generated_audio_files: successCount,
-    skipped_music_files: skipCount,
-    failed_audio_files: failCount,
-    audio_files: audioFileInfos,
-    all_segments: newscastData.script.map((line, index) => ({
+    programName: newscastData.programName,
+    totalScriptLines: newscastData.script.length,
+    dialogueLines: dialogueCount,
+    musicLines: musicCount,
+    generatedAudioFiles: successCount,
+    skippedMusicFiles: skipCount,
+    failedAudioFiles: failCount,
+    audioFiles: audioFileInfos,
+    allSegments: newscastData.script.map((line, index) => ({
       sequence: index + 1,
       type: line.type,
       role: line.role,
       content: line.content,
-      has_audio: line.type === 'dialogue'
+      hasAudio: line.type === 'dialogue'
     })),
     metadata: {
-      audio_generation_time_ms: completedAt.getTime() - startTime.getTime(),
-      success_rate: `${((successCount / dialogueCount) * 100).toFixed(1)}%`,
-      estimated_total_duration: newscastData.estimated_duration
+      audioGenerationTimeMs: totalTime,
+      successRate: `${((successCount / dialogueCount) * 100).toFixed(1)}%`,
+      estimatedTotalDuration: newscastData.estimatedDuration
+    },
+    metrics: {
+      newscastID,
+      topicIndex,
+      timing: {
+        startedAt: startTime.toISOString(),
+        completedAt: completedAt.toISOString(),
+        duration: totalTime,
+        ttsGenerationTime: totalTime
+      },
+      input: {
+        totalScriptLines: newscastData.script.length,
+        dialogueLines: dialogueCount,
+        musicLines: musicCount
+      },
+      output: {
+        generatedAudioFiles: successCount,
+        skippedMusicFiles: skipCount,
+        failedAudioFiles: failCount,
+        totalAudioSize
+      },
+      performance: {
+        filesPerSecond,
+        successRate: `${((successCount / dialogueCount) * 100).toFixed(1)}%`
+      },
+      items: audioFiles.map(file => ({
+        sequence: file.sequence,
+        fileName: file.fileName,
+        status: file.status,
+        timing: file.timing,
+        fileSize: file.audioContent.length,
+        durationSeconds: file.duration
+      }))
     }
   };
 
-  const totalTime = completedAt.getTime() - startTime.getTime();
   console.log(`[AUDIO_GEN SUCCESS] Completed in ${totalTime}ms`);
   console.log(`[AUDIO_GEN SUCCESS] Generated ${successCount} audio files, skipped ${skipCount}, failed ${failCount}`);
   console.log(`[AUDIO_GEN SUCCESS] Success rate: ${((successCount / dialogueCount) * 100).toFixed(1)}%`);

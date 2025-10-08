@@ -1,10 +1,14 @@
 import { BigKindsDetailResponseSchema, type BigKindsDetailResponse, type NewsDetail } from './schemas.ts';
 
+interface CloudflareFetchOptions {
+  minTlsVersion?: string;
+}
+
 export interface NewsDetailMetadata {
   title: string;
   provider: string;
   byline: string;
-  published_date: string;
+  publishedDate: string;
   category: string;
   keywords: string;
   summary: string;
@@ -12,10 +16,10 @@ export interface NewsDetailMetadata {
 }
 
 export interface NewsDetailResult {
-  extraction_timestamp: string;
-  original_news_id: string;
-  api_news_id: string;
-  news_detail: NewsDetail | null;
+  extractionTimestamp: string;
+  originalNewsID: string;
+  apiNewsID: string;
+  newsDetail: NewsDetail | null;
   content: string | null;
   metadata: NewsDetailMetadata;
 }
@@ -46,10 +50,9 @@ export async function crawlNewsDetail(newsId: string): Promise<NewsDetailResult>
       headers,
       // Add Cloudflare-specific options to handle SSL issues
       cf: {
-        // Disable SSL verification for external requests
         minTlsVersion: "1.0"
-      }
-    });
+      } as CloudflareFetchOptions
+    } as RequestInit);
 
     const fetchTime = Date.now() - startTime;
     console.log(`[CRAWL_DETAIL FETCH] Response received in ${fetchTime}ms - Status: ${response.status}`);
@@ -81,16 +84,16 @@ export async function crawlNewsDetail(newsId: string): Promise<NewsDetailResult>
     // Extract data
     console.log(`[CRAWL_DETAIL EXTRACT] Creating result structure`);
     const extracted: NewsDetailResult = {
-      extraction_timestamp: new Date().toISOString(),
-      original_news_id: newsId,
-      api_news_id: apiNewsId,
-      news_detail: null,
+      extractionTimestamp: new Date().toISOString(),
+      originalNewsID: newsId,
+      apiNewsID: apiNewsId,
+      newsDetail: null,
       content: null,
       metadata: {
         title: '',
         provider: '',
         byline: '',
-        published_date: '',
+        publishedDate: '',
         category: '',
         keywords: '',
         summary: '',
@@ -101,7 +104,7 @@ export async function crawlNewsDetail(newsId: string): Promise<NewsDetailResult>
     if (responseData.detail) {
       console.log(`[CRAWL_DETAIL EXTRACT] Extracting news detail data`);
       const detail = responseData.detail;
-      extracted.news_detail = detail;
+      extracted.newsDetail = detail;
 
       // Extract main fields with proper fallbacks
       extracted.content = detail.CONTENT ?? '';
@@ -109,7 +112,7 @@ export async function crawlNewsDetail(newsId: string): Promise<NewsDetailResult>
         title: detail.TITLE ?? '',
         provider: detail.PROVIDER ?? detail.PROVIDER_NAME ?? '',
         byline: detail.BYLINE ?? '',
-        published_date: detail.PUBLISHED_DATE ?? detail.DATE ?? '',
+        publishedDate: detail.PUBLISHED_DATE ?? detail.DATE ?? '',
         category: detail.CATEGORY ?? detail.CATEGORY_MAIN ?? '',
         keywords: detail.KEYWORDS ?? '',
         summary: detail.SUMMARY ?? '',
@@ -138,37 +141,178 @@ export async function crawlNewsDetail(newsId: string): Promise<NewsDetailResult>
   }
 }
 
-export async function crawlNewsDetailsBatch(newsIds: string[]): Promise<{
+export interface NewsDetailsItem {
+  newsID: string;
+  status: 'success' | 'error';
+  timing: {
+    startedAt: string;
+    completedAt: string;
+    duration: number;
+  };
+  fileSize?: number;
+  error?: string;
+}
+
+export interface NewsDetailsMetrics {
+  newscastID: string;
+  topicIndex: number;
+  timing: {
+    startedAt: string;
+    completedAt: string;
+    duration: number;  // milliseconds
+  };
+  processing: {
+    totalNewsIDs: number;
+    successCount: number;
+    errorCount: number;
+    successRate: number;  // percentage
+  };
+  fileSizes: {
+    totalBytes: number;
+    averageBytes: number;
+    maximumBytes: number;
+    minimumBytes: number;
+  };
+  performance: {
+    averageTime: number;
+    maximumTime: number;
+    minimumTime: number;
+    totalTime: number;
+  };
+  items: NewsDetailsItem[];
+}
+
+export async function crawlNewsDetailsBatch(
+  newsIDs: string[],
+  newscastID: string,
+  topicIndex: number
+): Promise<{
   timestamp: string;
-  total_processed: number;
-  success_count: number;
-  error_count: number;
+  totalProcessed: number;
+  successCount: number;
+  errorCount: number;
   results: NewsDetailResult[];
-  errors: { newsId: string; error: string }[];
+  errors: { newsID: string; error: string }[];
+  metrics: NewsDetailsMetrics;
 }> {
+  const batchStartTime = Date.now();
+  const startedAt = new Date().toISOString();
+
   const results: NewsDetailResult[] = [];
-  const errors: { newsId: string; error: string }[] = [];
-  
-  for (let i = 0; i < newsIds.length; i++) {
-    const newsId = newsIds[i];
+  const errors: { newsID: string; error: string }[] = [];
+  const individualTimes: number[] = [];
+  const fileSizes: number[] = [];
+  const items: NewsDetailsItem[] = [];
+
+  for (let i = 0; i < newsIDs.length; i++) {
+    const newsID = newsIDs[i];
+    const itemStartTime = Date.now();
+    const itemStartedAt = new Date().toISOString();
+
     try {
-      console.log(`[BATCH] Processing ${i + 1}/${newsIds.length}: ${newsId}`);
-      const result = await crawlNewsDetail(newsId);
+      console.log(`[BATCH] Processing ${i + 1}/${newsIDs.length}: ${newsID}`);
+      const result = await crawlNewsDetail(newsID);
       results.push(result);
-      console.log(`[BATCH] Successfully processed ${newsId}`);
+
+      const itemCompletedAt = new Date().toISOString();
+      const itemTime = Date.now() - itemStartTime;
+      individualTimes.push(itemTime);
+
+      // Calculate file size from JSON stringification
+      const jsonSize = JSON.stringify(result).length;
+      fileSizes.push(jsonSize);
+
+      // Add item details
+      items.push({
+        newsID,
+        status: 'success',
+        timing: {
+          startedAt: itemStartedAt,
+          completedAt: itemCompletedAt,
+          duration: itemTime
+        },
+        fileSize: jsonSize
+      });
+
+      console.log(`[BATCH] Successfully processed ${newsID} in ${itemTime}ms (${jsonSize} bytes)`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`[BATCH] Error processing ${newsId}: ${errorMessage}`);
-      errors.push({ newsId, error: errorMessage });
+      console.error(`[BATCH] Error processing ${newsID}: ${errorMessage}`);
+      errors.push({ newsID: newsID, error: errorMessage });
+
+      const itemCompletedAt = new Date().toISOString();
+      const itemTime = Date.now() - itemStartTime;
+      individualTimes.push(itemTime);
+
+      // Add error item details
+      items.push({
+        newsID,
+        status: 'error',
+        timing: {
+          startedAt: itemStartedAt,
+          completedAt: itemCompletedAt,
+          duration: itemTime
+        },
+        error: errorMessage
+      });
     }
   }
-  
+
+  const completedAt = new Date().toISOString();
+  const duration = Date.now() - batchStartTime;
+
+  // Calculate metrics
+  const successCount = results.length;
+  const errorCount = errors.length;
+  const totalNewsIDs = newsIDs.length;
+  const successRate = totalNewsIDs > 0 ? (successCount / totalNewsIDs) * 100 : 0;
+
+  const totalBytes = fileSizes.reduce((sum, size) => sum + size, 0);
+  const averageBytes = fileSizes.length > 0 ? totalBytes / fileSizes.length : 0;
+  const maximumBytes = fileSizes.length > 0 ? Math.max(...fileSizes) : 0;
+  const minimumBytes = fileSizes.length > 0 ? Math.min(...fileSizes) : 0;
+
+  const totalTime = individualTimes.reduce((sum, time) => sum + time, 0);
+  const averageTime = individualTimes.length > 0 ? totalTime / individualTimes.length : 0;
+  const maximumTime = individualTimes.length > 0 ? Math.max(...individualTimes) : 0;
+  const minimumTime = individualTimes.length > 0 ? Math.min(...individualTimes) : 0;
+
+  const metrics: NewsDetailsMetrics = {
+    newscastID,
+    topicIndex,
+    timing: {
+      startedAt,
+      completedAt,
+      duration
+    },
+    processing: {
+      totalNewsIDs,
+      successCount,
+      errorCount,
+      successRate
+    },
+    fileSizes: {
+      totalBytes,
+      averageBytes,
+      maximumBytes,
+      minimumBytes
+    },
+    performance: {
+      averageTime,
+      maximumTime,
+      minimumTime,
+      totalTime
+    },
+    items
+  };
+
   return {
-    timestamp: new Date().toISOString(),
-    total_processed: newsIds.length,
-    success_count: results.length,
-    error_count: errors.length,
+    timestamp: completedAt,
+    totalProcessed: totalNewsIDs,
+    successCount: successCount,
+    errorCount: errorCount,
     results,
-    errors
+    errors,
+    metrics
   };
 }

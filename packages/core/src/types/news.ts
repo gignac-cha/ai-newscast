@@ -11,14 +11,40 @@ export interface NewsSources {
   [provider: string]: NewsSource[];
 }
 
+export interface NewsGeneratorMetrics {
+  newscastID: string;
+  topicIndex: number;
+  timing: {
+    startedAt: string;
+    completedAt: string;
+    duration: number;
+    aiGenerationTime: number;
+  };
+  input: {
+    totalArticles: number;
+    totalProviders: number;
+    inputDataSize: number;
+  };
+  output: {
+    titleLength: number;
+    summaryLength: number;
+    contentLength: number;
+    totalOutputSize: number;
+  };
+  performance: {
+    articlesPerSecond: number;
+  };
+}
+
 export interface GeneratedNews {
+  timestamp: string;
   title: string;
   summary: string;
   content: string;
-  sources_count: number;
+  sourcesCount: number;
   sources: NewsSources;
-  generation_timestamp: string;
-  input_articles_count: number;
+  inputArticlesCount: number;
+  metrics: NewsGeneratorMetrics;
 }
 
 export interface NewsArticle {
@@ -27,7 +53,7 @@ export interface NewsArticle {
   content: string;
   provider: string;
   url: string;
-  published_at: string;
+  publishedAt: string;
 }
 
 export interface TopicInfo {

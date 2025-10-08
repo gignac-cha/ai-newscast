@@ -8,6 +8,8 @@ export interface GenerateNewscastScriptOptions {
   promptTemplate: string;
   voices: TTSVoices;
   apiKey: string;
+  newscastID: string;
+  topicIndex: number;
   programName?: string;
   model?: string;
   selectHosts?: (voices: TTSVoices) => SelectedHosts;
@@ -36,13 +38,16 @@ export async function generateNewscastScript({
   promptTemplate,
   voices,
   apiKey,
+  newscastID,
+  topicIndex,
   programName = 'AI 뉴스캐스트',
   model = 'gemini-2.5-pro',
   selectHosts: selectHostsFn,
   now = () => new Date(),
 }: GenerateNewscastScriptOptions): Promise<GenerateNewscastScriptResult> {
   const startTime = Date.now();
-  console.log(`[NEWSCAST_SCRIPT START] ${new Date().toISOString()}`);
+  const startedAt = new Date().toISOString();
+  console.log(`[NEWSCAST_SCRIPT START] ${startedAt}`);
 
   if (!apiKey) {
     console.error(`[NEWSCAST_SCRIPT ERROR] Google AI API key is required`);
@@ -54,7 +59,7 @@ export async function generateNewscastScript({
     throw new Error('Generated news data is required');
   }
 
-  console.log(`[NEWSCAST_SCRIPT INPUT] News title: "${news.title}", sources: ${news.sources_count}, articles: ${news.input_articles_count}`);
+  console.log(`[NEWSCAST_SCRIPT INPUT] News title: "${news.title}", sources: ${news.sourcesCount}, articles: ${news.inputArticlesCount}`);
 
   if (!promptTemplate) {
     console.error(`[NEWSCAST_SCRIPT ERROR] Prompt template is required`);
@@ -86,8 +91,8 @@ export async function generateNewscastScript({
     .replace(/{host2_gender}/g, selectedHosts.host2.gender === 'male' ? '남성' : '여성')
     .replace('{topic}', news.title)
     .replace('{main_sources}', mainSources.join(', '))
-    .replace('{sources_count}', news.sources_count.toString())
-    .replace('{total_articles}', news.input_articles_count.toString())
+    .replace('{sources_count}', news.sourcesCount.toString())
+    .replace('{total_articles}', news.inputArticlesCount.toString())
     .replace('{consolidated_content}', news.content);
   console.log(`[NEWSCAST_SCRIPT PROMPT] Prompt built: ${prompt.length} characters`);
 
@@ -116,10 +121,10 @@ export async function generateNewscastScript({
   const enhancedScript = parsed.script.map((line) => {
     if (line.type === 'dialogue') {
       if (line.role === 'host1') {
-        return { ...line, voice_model: selectedHosts.host1.voice_model };
+        return { ...line, voiceModel: selectedHosts.host1.voiceModel };
       }
       if (line.role === 'host2') {
-        return { ...line, voice_model: selectedHosts.host2.voice_model };
+        return { ...line, voiceModel: selectedHosts.host2.voiceModel };
       }
     }
     return line;
@@ -127,26 +132,54 @@ export async function generateNewscastScript({
   console.log(`[NEWSCAST_SCRIPT ENHANCE] Enhanced ${enhancedScript.length} script lines with voice models`);
 
   const completedAt = now();
+  const totalTime = Date.now() - startTime;
+  const completedAtISO = completedAt.toISOString();
+
+  const linesPerSecond = enhancedScript.length / (totalTime / 1000);
+
   console.log(`[NEWSCAST_SCRIPT OUTPUT] Building final newscast output structure`);
   const newscastOutput: NewscastOutput = {
+    timestamp: completedAtISO,
     title: parsed.title,
-    program_name: parsed.program_name ?? programName,
+    programName: parsed.programName ?? programName,
     hosts: selectedHosts,
-    estimated_duration: parsed.estimated_duration,
+    estimatedDuration: parsed.estimatedDuration,
     script: enhancedScript,
     metadata: {
-      total_articles: news.input_articles_count,
-      sources_count: news.sources_count,
-      main_sources: mainSources,
-      generation_timestamp: completedAt.toISOString(),
-      total_script_lines: enhancedScript.length,
+      totalArticles: news.inputArticlesCount,
+      sourcesCount: news.sourcesCount,
+      mainSources: mainSources,
+      generationTimestamp: completedAtISO,
+      totalScriptLines: enhancedScript.length,
     },
+    metrics: {
+      newscastID,
+      topicIndex,
+      timing: {
+        startedAt,
+        completedAt: completedAtISO,
+        duration: totalTime,
+        aiGenerationTime: totalTime // AI 생성 시간 별도 추적 필요시 수정
+      },
+      input: {
+        newsTitle: news.title,
+        newsSummaryLength: news.summary.length,
+        newsContentLength: news.content.length
+      },
+      output: {
+        totalScriptLines: enhancedScript.length,
+        dialogueLines: enhancedScript.filter(l => l.type === 'dialogue').length,
+        musicLines: enhancedScript.filter(l => l.type === 'music').length,
+        scriptSize: JSON.stringify(enhancedScript).length
+      },
+      performance: {
+        linesPerSecond
+      }
+    }
   };
 
   console.log(`[NEWSCAST_SCRIPT MARKDOWN] Generating markdown format`);
   const markdown = formatAsMarkdown(newscastOutput);
-
-  const totalTime = Date.now() - startTime;
   console.log(`[NEWSCAST_SCRIPT SUCCESS] Completed in ${totalTime}ms`);
   console.log(`[NEWSCAST_SCRIPT SUCCESS] Generated ${enhancedScript.length} script lines`);
   console.log(`[NEWSCAST_SCRIPT SUCCESS] Hosts: ${selectedHosts.host1.name}, ${selectedHosts.host2.name}`);

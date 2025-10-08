@@ -2,23 +2,53 @@ import * as cheerio from 'cheerio';
 import { NewsTopicsArraySchema, type NewsTopic } from './schemas.ts';
 
 export interface CrawlTopicsOptions {
-  includeHtml?: boolean;
+  includeHTML?: boolean;
+}
+
+export interface CrawlTopicsMetrics {
+  newscastID: string;
+  date: string;
+  timing: {
+    startedAt: string;
+    completedAt: string;
+    duration: number;
+  };
+  fileSizes: {
+    topicsHTMLBytes: number;
+    topicsJSONBytes: number;
+    totalBytes: number;
+  };
+  content: {
+    topicsCount: number;
+    totalNewsIDs: number;
+    averageNewsPerTopic: number;
+    maximumNewsPerTopic: number;
+    minimumNewsPerTopic: number;
+  };
+  performance: {
+    fetchTime: number;
+    parseTime: number;
+    totalTime: number;
+  };
 }
 
 export interface CrawlTopicsResult {
   topics: NewsTopic[];
   html?: string;
+  metrics?: CrawlTopicsMetrics;
 }
 
 export async function crawlNewsTopics(options: CrawlTopicsOptions = {}): Promise<CrawlTopicsResult> {
   const url = 'https://www.bigkinds.or.kr/';
   const startTime = Date.now();
+  const startedAt = new Date().toISOString();
 
-  console.log(`[CRAWL_TOPICS START] ${new Date().toISOString()} - URL: ${url}`);
-  console.log(`[CRAWL_TOPICS OPTIONS] includeHtml: ${options.includeHtml}`);
+  console.log(`[CRAWL_TOPICS START] ${startedAt} - URL: ${url}`);
+  console.log(`[CRAWL_TOPICS OPTIONS] includeHTML: ${options.includeHTML}`);
 
   try {
     console.log(`[CRAWL_TOPICS FETCH] Starting fetch request to BigKinds`);
+    const fetchStartTime = Date.now();
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -30,7 +60,7 @@ export async function crawlNewsTopics(options: CrawlTopicsOptions = {}): Promise
       }
     });
 
-    const fetchTime = Date.now() - startTime;
+    const fetchTime = Date.now() - fetchStartTime;
     console.log(`[CRAWL_TOPICS FETCH] Response received in ${fetchTime}ms - Status: ${response.status}`);
 
     if (!response.ok) {
@@ -59,7 +89,7 @@ export async function crawlNewsTopics(options: CrawlTopicsOptions = {}): Promise
       const $element = $(element);
       const title = $element.attr('data-topic')?.trim() ?? '';
       const issueName = $element.attr('data-issue-name')?.trim() ?? '';
-      const newsIdsRaw = $element.attr('data-news-ids') ?? '';
+      const newsIDsRaw = $element.attr('data-news-ids') ?? '';
 
       console.log(`[CRAWL_TOPICS ELEMENT] Processing element ${index + 1}: "${title}"`);
 
@@ -77,21 +107,21 @@ export async function crawlNewsTopics(options: CrawlTopicsOptions = {}): Promise
 
       // Parse keywords and news IDs
       const keywords = issueName.split(' ').map(kw => kw.trim()).filter(Boolean);
-      const newsIds = newsIdsRaw.split(',').map(nid => nid.trim()).filter(Boolean);
+      const newsIDs = newsIDsRaw.split(',').map(nid => nid.trim()).filter(Boolean);
 
       // Construct href (URL encode the title for search)
       const encodedKeyword = encodeURIComponent(title);
       const href = `/v2/search/news?issueKeyword=${encodedKeyword}`;
 
-      console.log(`[CRAWL_TOPICS ELEMENT] Added topic ${topics.length + 1}: rank=${rank}, title="${title}", newsIds=${newsIds.length}`);
+      console.log(`[CRAWL_TOPICS ELEMENT] Added topic ${topics.length + 1}: rank=${rank}, title="${title}", newsIDs=${newsIDs.length}`);
 
       topics.push({
         rank,
         title,
         issue_name: issueName,
         keywords,
-        news_count: newsIds.length,
-        news_ids: newsIds,
+        news_count: newsIDs.length,
+        news_ids: newsIDs,
         href
       });
     });
@@ -116,17 +146,64 @@ export async function crawlNewsTopics(options: CrawlTopicsOptions = {}): Promise
 
     const validatedTopics = parseResult.success ? parseResult.data : topics;
 
+    const totalTime = Date.now() - startTime;
+    const parseTime = totalTime - fetchTime;
+    const completedAt = new Date().toISOString();
+
+    // Calculate content metrics
+    const newsCountsPerTopic = validatedTopics.map(t => t.news_ids.length);
+    const totalNewsIDs = newsCountsPerTopic.reduce((sum, count) => sum + count, 0);
+    const averageNewsPerTopic = totalNewsIDs / validatedTopics.length;
+    const maximumNewsPerTopic = Math.max(...newsCountsPerTopic);
+    const minimumNewsPerTopic = Math.min(...newsCountsPerTopic);
+
+    // Calculate file sizes
+    const htmlBytes = html.length;
+    const jsonBytes = JSON.stringify(validatedTopics).length;
+    const totalBytes = htmlBytes + jsonBytes;
+
+    // Generate newscast ID from timestamp
+    const newscastID = startedAt.replace(/[:.]/g, '-');
+    const date = startedAt.split('T')[0];
+
     // Return result based on options
     const result: CrawlTopicsResult = {
       topics: validatedTopics
     };
 
-    if (options.includeHtml) {
+    if (options.includeHTML) {
       console.log(`[CRAWL_TOPICS RESULT] Including HTML in result (${html.length} chars)`);
       result.html = html;
     }
 
-    const totalTime = Date.now() - startTime;
+    // Always include metrics
+    result.metrics = {
+      newscastID,
+      date,
+      timing: {
+        startedAt,
+        completedAt,
+        duration: totalTime
+      },
+      fileSizes: {
+        topicsHTMLBytes: htmlBytes,
+        topicsJSONBytes: jsonBytes,
+        totalBytes
+      },
+      content: {
+        topicsCount: validatedTopics.length,
+        totalNewsIDs,
+        averageNewsPerTopic: Math.round(averageNewsPerTopic * 10) / 10,
+        maximumNewsPerTopic,
+        minimumNewsPerTopic
+      },
+      performance: {
+        fetchTime,
+        parseTime,
+        totalTime
+      }
+    };
+
     console.log(`[CRAWL_TOPICS SUCCESS] Completed in ${totalTime}ms - Found ${validatedTopics.length} topics`);
 
     return result;

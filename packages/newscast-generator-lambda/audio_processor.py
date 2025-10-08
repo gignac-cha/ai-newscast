@@ -10,7 +10,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def merge_audio_files(input_files: List[str], output_file: str, ffmpeg_path: Optional[str] = None) -> bool:
+def merge_audio_files(input_files: List[str], output_file: str, ffmpeg_path: Optional[str] = None) -> tuple[bool, int]:
     """
     Merge multiple audio files into one using FFmpeg.
 
@@ -20,8 +20,10 @@ def merge_audio_files(input_files: List[str], output_file: str, ffmpeg_path: Opt
         ffmpeg_path: Optional custom FFmpeg binary path
 
     Returns:
-        True if successful, False otherwise
+        Tuple of (success status, merge duration in milliseconds)
     """
+    import time
+    merge_start_time = time.time()
     try:
         # Determine FFmpeg binary path
         if ffmpeg_path is None:
@@ -69,18 +71,25 @@ def merge_audio_files(input_files: List[str], output_file: str, ffmpeg_path: Opt
             timeout=300  # 5 minute timeout
         )
 
+        merge_end_time = time.time()
+        merge_duration_ms = int((merge_end_time - merge_start_time) * 1000)
+
         if result.returncode == 0:
             output_size = os.path.getsize(output_file)
             logger.info(f"FFmpeg succeeded. Output file size: {output_size} bytes")
-            return True
+            return True, merge_duration_ms
         else:
             logger.error(f"FFmpeg failed with return code {result.returncode}")
             logger.error(f"FFmpeg stderr: {result.stderr}")
-            return False
+            return False, merge_duration_ms
 
     except subprocess.TimeoutExpired:
+        merge_end_time = time.time()
+        merge_duration_ms = int((merge_end_time - merge_start_time) * 1000)
         logger.error("FFmpeg command timed out")
-        return False
+        return False, merge_duration_ms
     except Exception as e:
+        merge_end_time = time.time()
+        merge_duration_ms = int((merge_end_time - merge_start_time) * 1000)
         logger.error(f"FFmpeg execution failed: {str(e)}")
-        return False
+        return False, merge_duration_ms

@@ -1,23 +1,13 @@
 #!/usr/bin/env python3
 """
-AWS Lambda function for newscast audio generation and merging using FFmpeg.
-
-This Lambda function:
-1. Downloads audio files from R2 storage based on audio-files.json
-2. Merges them using FFmpeg into a single newscast MP3 file
-
-Environment Variables:
-- R2_PUBLIC_URL: R2 storage public URL (required)
-
-Input:
-- newscast_id: ID of the newscast (e.g., "2025-09-22T17-08-49-437Z")
-- topic_index: Topic index 1-10
+AWS Lambda function for newscast audio generation and merging using FFmpeg with metrics.
 """
 
 import json
 import os
 import tempfile
 import base64
+import time
 from typing import Dict, Any
 import logging
 
@@ -32,14 +22,7 @@ logger.setLevel(logging.INFO)
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
-    Main Lambda handler function.
-
-    Args:
-        event: Lambda event containing newscast_id and topic_index
-        context: Lambda context
-
-    Returns:
-        Response dictionary with success status and details
+    Main Lambda handler function with metrics tracking.
     """
     try:
         # Parse body if from API Gateway
@@ -48,7 +31,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         else:
             body = event
 
-        # Extract parameters from body
+        # Extract parameters
         newscast_id = body.get('newscast_id')
         topic_index = body.get('topic_index')
         dry_run = body.get('dry_run', False)
@@ -62,45 +45,33 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 })
             }
 
-        if dry_run:
-            logger.info("🏃‍♂️ DRY RUN MODE: Skipping actual downloads and uploads")
+        # Start timing
+        lambda_start_time = time.time()
+        started_at_iso = time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime(lambda_start_time))
 
         logger.info(f"Processing newscast generation for {newscast_id}, topic {topic_index}")
 
-        # Environment variables (required)
+        # Environment variables
         r2_public_url = os.environ.get('R2_PUBLIC_URL')
-
         if not r2_public_url:
             return {
                 'statusCode': 500,
-                'body': json.dumps({
-                    'success': False,
-                    'error': 'Missing required environment variable: R2_PUBLIC_URL'
-                })
+                'body': json.dumps({'success': False, 'error': 'Missing R2_PUBLIC_URL'})
             }
 
-        # Ensure URL ends with /
         if not r2_public_url.endswith('/'):
             r2_public_url += '/'
 
-        # Format topic index with zero padding
+        # Format topic index
         topic_str = f"{int(topic_index):02d}"
 
         # Step 1: Download audio-files.json
         audio_files_url = f"{r2_public_url}newscasts/{newscast_id}/topic-{topic_str}/audio/audio-files.json"
-        logger.info(f"Fetching audio files list from: {audio_files_url}")
+        logger.info(f"Fetching: {audio_files_url}")
 
         if dry_run:
-            # Mock audio files data for dry run
-            audio_files_data = {
-                'files': [
-                    '001-intro.mp3',
-                    '002-host1-segment1.mp3',
-                    '003-host2-segment1.mp3',
-                    '004-outro.mp3'
-                ]
-            }
-            logger.info("🏃‍♂️ DRY RUN: Using mock audio files data")
+            audio_files_data = {'audioFiles': []}
+            logger.info("DRY RUN: Using mock data")
         else:
             audio_files_data = download_json(audio_files_url)
             if not audio_files_data:
@@ -112,55 +83,104 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     })
                 }
 
-        # Step 2: Download all MP3 files to /tmp
+        # Step 2: Download audio files with metrics
         temp_dir = tempfile.mkdtemp(prefix='newscast_', dir='/tmp')
-        logger.info(f"Created temporary directory: {temp_dir}")
+        logger.info(f"Created temp dir: {temp_dir}")
+
+        download_start_time = time.time()
 
         if dry_run:
-            # Create mock audio files for dry run
             audio_file_paths = create_mock_audio_files(temp_dir)
-            logger.info("🏃‍♂️ DRY RUN: Created mock audio files")
+            download_metrics = []
         else:
-            audio_file_paths = download_audio_files(audio_files_data, r2_public_url, newscast_id, topic_str, temp_dir)
+            audio_file_paths, download_metrics = download_audio_files(
+                audio_files_data, r2_public_url, newscast_id, topic_str, temp_dir
+            )
 
             if not audio_file_paths:
                 return {
                     'statusCode': 500,
                     'body': json.dumps({
                         'success': False,
-                        'error': 'No audio files were successfully downloaded'
+                        'error': 'No audio files downloaded'
                     })
                 }
 
-        # Step 3: Merge audio files using FFmpeg
+        download_end_time = time.time()
+        download_duration_ms = int((download_end_time - download_start_time) * 1000)
+
+        # Step 3: Merge audio files with timing
         output_file = os.path.join(temp_dir, f'newscast-topic-{topic_str}.mp3')
+        merge_start_time = time.time()
 
         if dry_run:
-            # Create mock merged output file for dry run
             create_mock_output_file(output_file)
             merge_success = True
-            logger.info("🏃‍♂️ DRY RUN: Created mock merged output file")
+            merge_duration_ms = 0
         else:
-            # Get FFmpeg path from environment (optional)
             ffmpeg_path = os.environ.get('FFMPEG_PATH')
-            merge_success = merge_audio_files(audio_file_paths, output_file, ffmpeg_path)
+            merge_success, merge_duration_ms = merge_audio_files(audio_file_paths, output_file, ffmpeg_path)
 
             if not merge_success:
                 return {
                     'statusCode': 500,
                     'body': json.dumps({
                         'success': False,
-                        'error': 'Failed to merge audio files with FFmpeg'
+                        'error': 'Failed to merge audio files'
                     })
                 }
 
-        # Read and encode the merged file
+        # Read merged file
         with open(output_file, 'rb') as f:
             audio_data = f.read()
 
         audio_base64 = base64.b64encode(audio_data).decode('utf-8')
 
-        # Clean up temporary files
+        # Calculate metrics
+        lambda_end_time = time.time()
+        completed_at_iso = time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime(lambda_end_time))
+        total_duration_ms = int((lambda_end_time - lambda_start_time) * 1000)
+
+        total_input_size = sum(m['file_size'] for m in download_metrics)
+        downloaded_count = sum(1 for m in download_metrics if m['status'] == 'success')
+        failed_count = sum(1 for m in download_metrics if m['status'] == 'failed')
+        success_rate = f"{(downloaded_count / len(download_metrics) * 100):.1f}%" if download_metrics else "0.0%"
+
+        # Estimate duration from downloaded files
+        estimated_duration = sum(m.get('duration_seconds', 0) for m in download_metrics)
+
+        files_per_second = downloaded_count / (download_duration_ms / 1000) if download_duration_ms > 0 else 0
+        download_speed = total_input_size / (download_duration_ms / 1000) if download_duration_ms > 0 else 0
+
+        metrics = {
+            'newscast_id': newscast_id,
+            'topic_index': int(topic_index),
+            'timing': {
+                'started_at': started_at_iso,
+                'completed_at': completed_at_iso,
+                'duration': total_duration_ms,
+                'download_time': download_duration_ms,
+                'merge_time': merge_duration_ms
+            },
+            'input': {
+                'total_audio_files': len(download_metrics),
+                'downloaded_files': downloaded_count,
+                'failed_downloads': failed_count,
+                'total_input_size': total_input_size
+            },
+            'output': {
+                'merged_file_name': f'newscast-topic-{topic_str}.mp3',
+                'merged_file_size': len(audio_data),
+                'estimated_duration': estimated_duration
+            },
+            'performance': {
+                'files_per_second': round(files_per_second, 2),
+                'download_speed': int(download_speed),
+                'success_rate': success_rate
+            }
+        }
+
+        # Cleanup
         cleanup_temp_files(temp_dir)
 
         return {
@@ -170,9 +190,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'newscast_id': newscast_id,
                 'topic_index': topic_index,
                 'message': f'Successfully generated newscast for topic {topic_index}' + (' (DRY RUN)' if dry_run else ''),
-                'audio_files_processed': len(audio_file_paths),
-                'output_file_size': len(audio_data),
                 'audio_base64': audio_base64,
+                'metrics': metrics,
                 'dry_run': dry_run
             })
         }
