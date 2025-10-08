@@ -71,7 +71,7 @@ export async function handleAudio(
     console.log(`[AUDIO_HANDLER R2] Script file found, parsing JSON`);
     const newscastData = await scriptObject.json<NewscastOutput>();
     console.log(`[AUDIO_HANDLER SCRIPT] Raw newscast data type: ${typeof newscastData}`);
-    console.log(`[AUDIO_HANDLER SCRIPT] Raw newscast data keys: ${Object.keys(newscastData || {}).join(', ')}`);
+    console.log(`[AUDIO_HANDLER SCRIPT] Raw newscast data keys: ${Object.keys(newscastData ?? {}).join(', ')}`);
     console.log(`[AUDIO_HANDLER SCRIPT] newscastData.title: ${newscastData?.title}`);
     console.log(`[AUDIO_HANDLER SCRIPT] newscastData.script type: ${typeof newscastData?.script}`);
     console.log(`[AUDIO_HANDLER SCRIPT] newscastData.script is array: ${Array.isArray(newscastData?.script)}`);

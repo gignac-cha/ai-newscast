@@ -44,7 +44,7 @@ export async function handleNewsDetails(
     }
 
     // Get current queue index from KV
-    const currentIndexStr = await env.AI_NEWSCAST_KV.get('last-working-news-queue-index') || '0';
+    const currentIndexStr = await env.AI_NEWSCAST_KV.get('last-working-news-queue-index') ?? '0';
     const currentIndex = parseInt(currentIndexStr);
     console.log(`[NEWS_DETAILS KV] Current queue index: ${currentIndex}`);
 

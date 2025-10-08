@@ -29,7 +29,7 @@ export async function handleStatus(
 
     // Get topics data
     const topicsData = JSON.parse(await topicsFile.text());
-    const totalTopics = topicsData.count || 0;
+    const totalTopics = topicsData.count ?? 0;
 
     // Check generation status for each topic
     const topicStatus = [];
@@ -46,7 +46,7 @@ export async function handleStatus(
       if (jsonExists) {
         const newsData = JSON.parse(await jsonExists.text());
         generationTime = newsData.generationTimestamp;
-        articlesCount = newsData.inputArticlesCount || 0;
+        articlesCount = newsData.inputArticlesCount ?? 0;
       }
 
       topicStatus.push({

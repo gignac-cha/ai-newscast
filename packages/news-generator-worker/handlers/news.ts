@@ -20,7 +20,7 @@ export async function handleGenerateNews(
   const startTime = Date.now();
   const newscastID = url.searchParams.get('newscast-id');
   const topicIndex = url.searchParams.get('topic-index');
-  const format = url.searchParams.get('format') || 'json';
+  const format = url.searchParams.get('format') ?? 'json';
 
   console.log(`[GENERATE START] ${new Date().toISOString()} - newscastID: ${newscastID}, topicIndex: ${topicIndex}, format: ${format}`);
 

@@ -47,7 +47,7 @@ async function generateSingleAudioFile(
   sequence: number,
   apiKey: string
 ): Promise<Uint8Array | null> {
-  console.log(`[AUDIO_TTS] Processing sequence ${sequence}: ${scriptLine.type} - ${scriptLine.role || 'no role'}`);
+  console.log(`[AUDIO_TTS] Processing sequence ${sequence}: ${scriptLine.type} - ${scriptLine.role ?? 'no role'}`);
 
   // 음악 타입인 경우 TTS 생성하지 않고 null 반환
   if (scriptLine.type !== 'dialogue') {
