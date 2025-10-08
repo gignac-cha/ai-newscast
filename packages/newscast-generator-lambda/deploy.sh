@@ -131,7 +131,13 @@ printf "${YELLOW}🎬 Checking FFmpeg Layer...${NC}\n"
 
 # Try to find existing FFmpeg layer
 LAYER_ARN=""
-if aws lambda list-layers --query "Layers[?LayerName=='$LAYER_NAME'].LatestMatchingVersion.LayerVersionArn" --output text | grep -q arn; then
+
+# First, check if function already has a layer
+EXISTING_LAYER=$(aws lambda get-function-configuration --function-name $FUNCTION_NAME --query 'Layers[0].Arn' --output text 2>/dev/null || echo "")
+if [ -n "$EXISTING_LAYER" ] && [ "$EXISTING_LAYER" != "None" ]; then
+    LAYER_ARN="$EXISTING_LAYER"
+    printf "${GREEN}✅ Using existing function layer: $LAYER_ARN${NC}\n"
+elif aws lambda list-layers --query "Layers[?LayerName=='$LAYER_NAME'].LatestMatchingVersion.LayerVersionArn" --output text | grep -q arn; then
     LAYER_ARN=$(aws lambda list-layers --query "Layers[?LayerName=='$LAYER_NAME'].LatestMatchingVersion.LayerVersionArn" --output text)
     printf "${GREEN}✅ Found existing FFmpeg layer: $LAYER_ARN${NC}\n"
 else

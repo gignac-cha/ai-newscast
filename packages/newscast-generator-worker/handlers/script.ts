@@ -85,6 +85,8 @@ export async function handleScript(
       promptTemplate: newscastScriptPrompt,
       voices: defaultVoices,
       apiKey,
+      newscastID,
+      topicIndex: topicIndexNumber,
     });
     console.log(`[SCRIPT_HANDLER AI] Script generation completed: ${result.stats.dialogue_count} dialogue lines, ${result.stats.music_count} music lines`);
 

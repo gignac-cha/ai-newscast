@@ -98,6 +98,8 @@ export async function handleAudio(
     const result = await generateNewscastAudio({
       newscastData,
       apiKey,
+      newscastID,
+      topicIndex: topicIndexNumber,
     });
     console.log(`[AUDIO_HANDLER TTS] Audio generation completed: ${result.audioFiles.length} files generated, ${result.stats.successCount} successful`);
 
