@@ -1,7 +1,8 @@
 // Import handlers
 import { handleHelp } from './handlers/help.ts';
 import { handleTopics } from './handlers/topics.ts';
-import { handleNewsDetail, handleNewsDetails } from './handlers/news-detail.ts';
+import { handleNewsDetail, handleNewsDetails } from './handlers/details.ts';
+import { handleStatus } from './handlers/status.ts';
 
 // Import utilities
 import { createCORSPreflightResponse } from './utils/cors.ts';
@@ -27,15 +28,19 @@ export default {
         return handleTopics(url, env);
       }
 
-      if (request.method === 'GET' && url.pathname === '/news-detail') {
+      if (request.method === 'GET' && url.pathname === '/detail') {
         return handleNewsDetail(url, env);
       }
 
-      if (request.method === 'GET' && url.pathname === '/news-details') {
+      if (request.method === 'GET' && url.pathname === '/details') {
         return handleNewsDetails(url, env);
       }
 
-      return response(cors(error('Not Found', 'Available endpoints: GET /, GET /topics, GET /news-detail?news-id=Z, GET /news-details?news-id=Z&news-id=Y&newscast-id=Z')));
+      if (request.method === 'GET' && url.pathname === '/status') {
+        return handleStatus(url, env);
+      }
+
+      return response(cors(error('Not Found', 'Available endpoints: GET /, GET /topics, GET /detail?news-id=Z, GET /details?newscast-id=Z, GET /status?newscast-id=Z')));
 
     } catch (err) {
       console.error('Worker error:', err);
@@ -74,23 +79,23 @@ export default {
           }
 
           case "11-40 9 * * *": {
-            console.log(`[SCHEDULED NEWS] Starting news details collection at ${new Date().toISOString()}`);
+            console.log(`[SCHEDULED DETAILS] Starting details collection at ${new Date().toISOString()}`);
 
             if (workingNewscastID) {
-              const newsDetailsURL = new URL(`http://www.example.com/news-details?newscast-id=${workingNewscastID}`);
-              console.log(`[SCHEDULED NEWS] Calling handleNewsDetails with URL: ${newsDetailsURL.toString()}`);
+              const detailsURL = new URL(`http://www.example.com/details?newscast-id=${workingNewscastID}`);
+              console.log(`[SCHEDULED DETAILS] Calling handleDetails with URL: ${detailsURL.toString()}`);
 
-              const result = await handleNewsDetails(newsDetailsURL, env);
-              console.log(`[SCHEDULED NEWS] News details collection completed. Status: ${result.status}`);
+              const result = await handleNewsDetails(detailsURL, env);
+              console.log(`[SCHEDULED DETAILS] Details collection completed. Status: ${result.status}`);
 
               if (result.status === 200) {
                 const responseText = await result.text();
-                console.log(`[SCHEDULED NEWS] Response: ${responseText.substring(0, 500)}...`);
+                console.log(`[SCHEDULED DETAILS] Response: ${responseText.substring(0, 500)}...`);
               } else {
-                console.error(`[SCHEDULED NEWS] Failed with status ${result.status}`);
+                console.error(`[SCHEDULED DETAILS] Failed with status ${result.status}`);
               }
             } else {
-              console.warn(`[SCHEDULED NEWS] No working newscast ID found in KV. Skipping news details collection.`);
+              console.warn(`[SCHEDULED DETAILS] No working newscast ID found in KV. Skipping details collection.`);
             }
             break;
           }

@@ -18,7 +18,7 @@ export async function handleCrawlNewsDetails(request: Request, env: Env): Promis
 		}
 
 		// Service Binding을 통한 내부 호출
-		const response = await env.NEWS_CRAWLER_WORKER.fetch(`http://internal/news-details?newscast-id=${newscastID}`, {
+		const response = await env.NEWS_CRAWLER_WORKER.fetch(`http://www.example.com/details?newscast-id=${newscastID}`, {
 			method: 'GET',
 		});
 

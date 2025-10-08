@@ -11,13 +11,13 @@ binding = "AI_NEWSCAST_KV"
 id = "1a002997dc124ce9a4ff5080a7e2b5e6"
 
 # Cron Triggers (통합 스케줄 - 1개로 통합)
-# 전체 파이프라인: 09:05-10:20 (매분 실행, 시간 기반 작업 분기)
-# - 09:05: Crawl Topics
-# - 09:11-09:40: Crawl News Details
-# - 09:41-09:50: Generate News (topics 1-10)
-# - 09:51-10:00: Generate Script (topics 1-10)
-# - 10:01-10:10: Generate Audio (topics 1-10)
-# - 10:11-10:20: Merge Newscast (topics 1-10)
+# 전체 파이프라인: 09:05-10:20 UTC (매분 실행, 시간 기반 작업 분기)
+# - 09:05 UTC (18:05 KST): Crawl Topics
+# - 09:11-09:40 UTC (18:11-18:40 KST): Crawl News Details
+# - 09:41-09:50 UTC (18:41-18:50 KST): Generate News (topics 1-10)
+# - 09:51-10:00 UTC (18:51-19:00 KST): Generate Script (topics 1-10)
+# - 10:01-10:10 UTC (19:01-19:10 KST): Generate Audio (topics 1-10)
+# - 10:11-10:20 UTC (19:11-19:20 KST): Merge Newscast (topics 1-10)
 [triggers]
 crons = [
   "* 9-10 * * *"  # 09:00-10:59 UTC (KST 18:00-19:59) 매분 실행

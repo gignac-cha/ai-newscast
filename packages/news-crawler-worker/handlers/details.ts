@@ -1,4 +1,4 @@
-import { crawlNewsDetail } from '@ai-newscast/news-crawler/crawl-news-detail.ts';
+import { crawlNewsDetail, type NewsDetailsMetrics, type NewsDetailsItem } from '@ai-newscast/news-crawler/crawl-news-detail.ts';
 import { response } from '../utils/response.ts';
 import { cors } from '../utils/cors.ts';
 import { json } from '../utils/json.ts';
@@ -34,8 +34,14 @@ export async function handleNewsDetails(
       return response(cors(error('Not Found', `News list not found for newscast ${newscastID}`)));
     }
 
-    const newsList: Array<{ index: number; newsID: string }> = JSON.parse(await newsListData.text());
+    const newsList: Array<{ topicIndex: number; newsID: string }> = JSON.parse(await newsListData.text());
     console.log(`[NEWS_DETAILS R2] Loaded news list with ${newsList.length} total items`);
+
+    const invalidItems = newsList.filter((item) => typeof item.topicIndex !== 'number' || Number.isNaN(item.topicIndex));
+    if (invalidItems.length > 0) {
+      console.error(`[NEWS_DETAILS ERROR] Invalid topicIndex detected in news list`, invalidItems.slice(0, 5));
+      return response(cors(error('Internal Server Error', 'Invalid news list format: topicIndex missing or not a number')));
+    }
 
     // Get current queue index from KV
     const currentIndexStr = await env.AI_NEWSCAST_KV.get('last-working-news-queue-index') || '0';
@@ -62,6 +68,9 @@ export async function handleNewsDetails(
     // Process news details in batches to avoid subrequest limits (max 10 per batch)
     const subrequestBatchSize = 10;
     const responses: Response[] = [];
+    const items: NewsDetailsItem[] = [];
+    const fileSizes: number[] = [];
+    const individualTimes: number[] = [];
     console.log(`[NEWS_DETAILS PROCESS] Processing in sub-batches of ${subrequestBatchSize}`);
 
     for (let i = 0; i < itemsToProcess.length; i += subrequestBatchSize) {
@@ -69,14 +78,58 @@ export async function handleNewsDetails(
       console.log(`[NEWS_DETAILS SUB_BATCH] Processing sub-batch ${Math.floor(i/subrequestBatchSize) + 1}: ${batch.length} items`);
 
       const batchPromises = batch.map(async (item, itemIndex) => {
+        const itemStartTime = Date.now();
+        const itemStartedAt = new Date().toISOString();
+
         try {
-          const newsDetailURL = new URL(`http://www.example.com/news-detail?news-id=${item.newsID}&newscast-id=${newscastID}&topic-index=${item.index}`);
+          const topicIndex = item.topicIndex;
+          const newsDetailURL = new URL(`http://www.example.com/news-detail?news-id=${item.newsID}&newscast-id=${newscastID}&topic-index=${topicIndex}`);
           console.log(`[NEWS_DETAILS ITEM] Processing item ${i + itemIndex + 1}/${itemsToProcess.length}: ${item.newsID}`);
           const result = await handleNewsDetail(newsDetailURL, env);
           console.log(`[NEWS_DETAILS ITEM] Completed item ${i + itemIndex + 1}: ${result.status}`);
+
+          const itemCompletedAt = new Date().toISOString();
+          const itemTime = Date.now() - itemStartTime;
+          individualTimes.push(itemTime);
+
+          // Try to extract file size from response
+          const resultData = await result.clone().json() as any;
+          const fileSize = resultData?.data ? JSON.stringify(resultData.data).length : 0;
+          fileSizes.push(fileSize);
+
+          items.push({
+            newsID: item.newsID,
+            topicIndex: item.topicIndex,
+            status: 'success',
+            timing: {
+              startedAt: itemStartedAt,
+              completedAt: itemCompletedAt,
+              duration: itemTime
+            },
+            fileSize
+          });
+
           return result;
         } catch (err) {
           console.error(`[NEWS_DETAILS ITEM] Failed item ${i + itemIndex + 1}: ${item.newsID}`, err);
+
+          const itemCompletedAt = new Date().toISOString();
+          const itemTime = Date.now() - itemStartTime;
+          individualTimes.push(itemTime);
+
+          const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+          items.push({
+            newsID: item.newsID,
+            topicIndex: item.topicIndex,
+            status: 'error',
+            timing: {
+              startedAt: itemStartedAt,
+              completedAt: itemCompletedAt,
+              duration: itemTime
+            },
+            error: errorMessage
+          });
+
           return response(cors(error(err instanceof Error ? err : 'Unknown error')));
         }
       });
@@ -92,26 +145,85 @@ export async function handleNewsDetails(
     await env.AI_NEWSCAST_KV.put('last-working-news-queue-index', newIndex.toString());
     console.log(`[NEWS_DETAILS KV] Queue index updated successfully`);
 
+    const completedAt = new Date().toISOString();
     const endTime = Date.now();
-    const executionTime = endTime - startTime;
+    const duration = endTime - startTime;
 
     // Count successful and failed responses
     const successCount = responses.filter(response => response.ok).length;
-    const failureCount = responses.length - successCount;
-    console.log(`[NEWS_DETAILS RESULT] Processed ${responses.length} items: ${successCount} success, ${failureCount} failures`);
-    console.log(`[NEWS_DETAILS RESULT] Execution time: ${executionTime}ms`);
+    const errorCount = responses.length - successCount;
+    const totalNewsIDs = itemsToProcess.length;
+    const successRate = totalNewsIDs > 0 ? (successCount / totalNewsIDs) * 100 : 0;
+
+    // Calculate file size metrics
+    const totalBytes = fileSizes.reduce((sum, size) => sum + size, 0);
+    const averageBytes = fileSizes.length > 0 ? totalBytes / fileSizes.length : 0;
+    const maximumBytes = fileSizes.length > 0 ? Math.max(...fileSizes) : 0;
+    const minimumBytes = fileSizes.length > 0 ? Math.min(...fileSizes) : 0;
+
+    // Calculate performance metrics
+    const totalTime = individualTimes.reduce((sum, time) => sum + time, 0);
+    const averageTime = individualTimes.length > 0 ? totalTime / individualTimes.length : 0;
+    const maximumTime = individualTimes.length > 0 ? Math.max(...individualTimes) : 0;
+    const minimumTime = individualTimes.length > 0 ? Math.min(...individualTimes) : 0;
+
+    console.log(`[NEWS_DETAILS RESULT] Processed ${responses.length} items: ${successCount} success, ${errorCount} failures`);
+    console.log(`[NEWS_DETAILS RESULT] Execution time: ${duration}ms`);
+
+    // Save metrics to R2
+    const batchNumber = Math.floor(currentIndex / batchSize) + 1;
+    const metricsKey = `newscasts/${newscastID}/news-details-${batchNumber.toString().padStart(3, '0')}.json`;
+
+    const metrics = {
+      newscastID,
+      batchNumber,
+      batchRange: {
+        startIndex: currentIndex,
+        endIndex: newIndex - 1,
+        totalItems: totalNewsIDs
+      },
+      timing: {
+        startedAt: new Date(startTime).toISOString(),
+        completedAt,
+        duration
+      },
+      processing: {
+        totalNewsIDs,
+        successCount,
+        errorCount,
+        successRate
+      },
+      fileSizes: {
+        totalBytes,
+        averageBytes,
+        maximumBytes,
+        minimumBytes
+      },
+      performance: {
+        averageTime,
+        maximumTime,
+        minimumTime,
+        totalTime
+      },
+      items
+    };
+
+    console.log(`[NEWS_DETAILS R2] Saving metrics to: ${metricsKey}`);
+    await env.AI_NEWSCAST_BUCKET.put(metricsKey, JSON.stringify(metrics, null, 2));
+    console.log(`[NEWS_DETAILS R2] Metrics saved successfully`);
 
     const responseData = {
       success: true,
-      newscast_id: newscastID,
-      total_items: newsList.length,
-      processed_batch_size: itemsToProcess.length,
-      current_index: currentIndex,
-      new_index: newIndex,
-      success_count: successCount,
-      failure_count: failureCount,
-      execution_time_ms: executionTime,
-      timestamp: new Date().toISOString(),
+      newscastID: newscastID,
+      totalItems: newsList.length,
+      processedBatchSize: itemsToProcess.length,
+      currentIndex: currentIndex,
+      newIndex: newIndex,
+      successCount: successCount,
+      errorCount: errorCount,
+      executionTime: duration,
+      timestamp: completedAt,
+      metricsPath: metricsKey,
       message: `Successfully processed ${successCount}/${itemsToProcess.length} news items (index ${currentIndex}-${endIndex-1})`
     };
 

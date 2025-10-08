@@ -27,7 +27,7 @@ export async function handleGenerateNews(request: Request, env: Env, topicIndex?
 		}
 
 		// Service Binding을 통한 내부 호출
-		const response = await env.NEWS_GENERATOR_WORKER.fetch(`http://internal/generate?newscast-id=${newscastID}&topic-index=${topic}`, {
+		const response = await env.NEWS_GENERATOR_WORKER.fetch(`http://www.example.com/news?newscast-id=${newscastID}&topic-index=${topic}`, {
 			method: 'POST',
 		});
 

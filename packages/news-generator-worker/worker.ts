@@ -1,6 +1,6 @@
 // Import handlers
 import { handleHelp } from './handlers/help.ts';
-import { handleGenerate } from './handlers/generate.ts';
+import { handleGenerateNews } from './handlers/news.ts';
 import { handleStatus } from './handlers/status.ts';
 
 // Import utilities
@@ -23,15 +23,15 @@ export default {
         return handleHelp();
       }
 
-      if (request.method === 'POST' && url.pathname === '/generate') {
-        return handleGenerate(url, env);
+      if (request.method === 'POST' && url.pathname === '/news') {
+        return handleGenerateNews(url, env);
       }
 
       if (request.method === 'GET' && url.pathname === '/status') {
         return handleStatus(url, env);
       }
 
-      return response(cors(error('Not Found', 'Available endpoints: GET /, POST /generate?newscast-id=Z&topic-index=N, GET /status?newscast-id=Z')));
+      return response(cors(error('Not Found', 'Available endpoints: GET /, POST /news?newscast-id=Z&topic-index=N, GET /status?newscast-id=Z')));
 
     } catch (err) {
       console.error('Worker error:', err);
@@ -67,10 +67,10 @@ export default {
 
               try {
                 console.log(`[NEWS_GENERATOR_SCHEDULED GENERATE] Starting news generation for topic ${topicIndex} in newscast: ${workingNewscastID}`);
-                const generateURL = new URL(`http://www.example.com/generate?newscast-id=${workingNewscastID}&topic-index=${topicIndex}`);
-                console.log(`[NEWS_GENERATOR_SCHEDULED GENERATE] Calling handleGenerate with URL: ${generateURL.toString()}`);
+                const generateURL = new URL(`http://www.example.com/news?newscast-id=${workingNewscastID}&topic-index=${topicIndex}`);
+                console.log(`[NEWS_GENERATOR_SCHEDULED GENERATE] Calling handleGenerateNews with URL: ${generateURL.toString()}`);
 
-                const result = await handleGenerate(generateURL, env);
+                const result = await handleGenerateNews(generateURL, env);
                 console.log(`[NEWS_GENERATOR_SCHEDULED GENERATE] Generate request completed. Status: ${result.status}`);
 
                 if (result.status === 200) {

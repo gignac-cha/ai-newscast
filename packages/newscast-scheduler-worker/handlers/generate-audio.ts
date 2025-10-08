@@ -27,7 +27,7 @@ export async function handleGenerateAudio(request: Request, env: Env, topicIndex
 		}
 
 		// Service Binding을 통한 내부 호출
-		const response = await env.NEWSCAST_GENERATOR_WORKER.fetch(`http://internal/audio?newscast-id=${newscastID}&topic-index=${topic}`, {
+		const response = await env.NEWSCAST_GENERATOR_WORKER.fetch(`http://www.example.com/audio?newscast-id=${newscastID}&topic-index=${topic}`, {
 			method: 'GET',
 		});
 
