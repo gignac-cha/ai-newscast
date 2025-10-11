@@ -82,22 +82,37 @@ export const ScrollingTitle: React.FC<ScrollingTitleProps> = ({
   const textRef = useRef<HTMLSpanElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Check if text should scroll when title changes
+  // Check if text should scroll when title or container size changes
   useEffect(() => {
-    if (textRef.current && containerRef.current && title) {
-      const textWidth = textRef.current.scrollWidth;
-      const containerWidth = containerRef.current.clientWidth;
-      setShouldScroll(textWidth > containerWidth);
-    }
+    const checkOverflow = () => {
+      if (textRef.current && containerRef.current && title) {
+        const textWidth = textRef.current.scrollWidth;
+        const containerWidth = containerRef.current.clientWidth;
+        setShouldScroll(textWidth > containerWidth);
+      }
+    };
+
+    checkOverflow();
+
+    // Re-check on window resize
+    window.addEventListener('resize', checkOverflow);
+    return () => window.removeEventListener('resize', checkOverflow);
   }, [title]);
 
   const getTextStyles = () => {
-    // 항상 스크롤링 애니메이션 적용 (테스트용)
+    // Only apply scrolling animation if text overflows container
+    if (shouldScroll && isPlaying) {
+      return css`
+        ${scrollingTextStyles}
+        ${marqueeAnimation}
+        animation-play-state: running;
+      `;
+    }
+
+    // Show ellipsis when not playing or text doesn't overflow
     return css`
       ${scrollingTextStyles}
-      ${marqueeAnimation}
-      animation-play-state: ${isPlaying ? 'running' : 'paused'};
-      ${!isPlaying ? ellipsisStyles : ''}
+      ${ellipsisStyles}
     `;
   };
 
