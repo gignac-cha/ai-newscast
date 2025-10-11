@@ -1,26 +1,26 @@
 import { useState, useEffect, useMemo } from 'react';
 
-export const useSimpleScrollSpy = (elementIds: string[]) => {
-  const [activeId, setActiveId] = useState<string>('');
+export const useSimpleScrollSpy = (elementIDs: string[]) => {
+  const [activeID, setActiveID] = useState<string>('');
 
-  // elementIds를 안정된 참조로 메모화 (깊은 비교 대신 문자열 비교)
-  const stableElementIds = useMemo(() => elementIds, [elementIds.join(',')]);
+  // elementIDs를 안정된 참조로 메모화 (깊은 비교 대신 문자열 비교)
+  const stableElementIDs = useMemo(() => elementIDs, [elementIDs.join(',')]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         let maxRatio = 0;
-        let mostVisibleId = '';
+        let mostVisibleID = '';
 
         entries.forEach((entry) => {
           if (entry.isIntersecting && entry.intersectionRatio > maxRatio) {
             maxRatio = entry.intersectionRatio;
-            mostVisibleId = entry.target.id;
+            mostVisibleID = entry.target.id;
           }
         });
 
-        if (mostVisibleId) {
-          setActiveId(mostVisibleId);
+        if (mostVisibleID) {
+          setActiveID(mostVisibleID);
         }
       },
       {
@@ -30,7 +30,7 @@ export const useSimpleScrollSpy = (elementIds: string[]) => {
     );
 
     // 모든 요소 관찰
-    stableElementIds.forEach((id) => {
+    stableElementIDs.forEach((id) => {
       const element = document.getElementById(id);
       if (element) {
         observer.observe(element);
@@ -40,7 +40,7 @@ export const useSimpleScrollSpy = (elementIds: string[]) => {
     return () => {
       observer.disconnect();
     };
-  }, [stableElementIds]);
+  }, [stableElementIDs]);
 
-  return activeId;
+  return activeID;
 };

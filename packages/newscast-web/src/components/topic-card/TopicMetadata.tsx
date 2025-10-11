@@ -26,10 +26,10 @@ export const TopicMetadata: React.FC<TopicMetadataProps> = React.memo(({ topic, 
             {sourcesCount} Sources
           </Badge>
         )}
-        {topic.audioInfo?.final_duration_formatted && (
+        {topic.audioInfo?.finalDurationFormatted && (
           <Badge color="gray" variant="soft" size="1">
             <ClockIcon width="10" height="10" style={{ marginRight: '4px' }} />
-            {topic.audioInfo.final_duration_formatted}
+            {topic.audioInfo.finalDurationFormatted}
           </Badge>
         )}
       </Flex>

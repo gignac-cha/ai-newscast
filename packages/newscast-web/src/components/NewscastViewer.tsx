@@ -58,16 +58,16 @@ export const NewscastViewer: React.FC<NewscastViewerProps> = React.memo(({ newsc
   }, []);
 
   // 토픽 ID 목록 생성 (안정된 참조)
-  const topicIds = useMemo(
+  const topicIDs = useMemo(
     () => newscastData.topics.map((topic) => `topic-${topic.id}`),
     [newscastData.topics]
   );
 
   // 활성 토픽 감지
-  const activeTopicId = useSimpleScrollSpy(topicIds);
+  const activeTopicID = useSimpleScrollSpy(topicIDs);
   const activeTopicIndex = useMemo(
-    () => activeTopicId ? topicIds.findIndex(id => id === activeTopicId) : -1,
-    [activeTopicId, topicIds]
+    () => activeTopicID ? topicIDs.findIndex(id => id === activeTopicID) : -1,
+    [activeTopicID, topicIDs]
   );
 
   // 토픽 토글 핸들러 (메모화)

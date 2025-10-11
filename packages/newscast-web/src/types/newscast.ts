@@ -41,7 +41,7 @@ export interface AudioActions {
   setVolume: (volume: number) => void;
   stop: () => void;
   setCurrentTopicIndex: (index: number) => void;
-  playWithUrl: (url: string) => Promise<void>;
+  playWithURL: (url: string) => Promise<void>;
 }
 
 // Backwards compatibility - transform NewscastData for web usage

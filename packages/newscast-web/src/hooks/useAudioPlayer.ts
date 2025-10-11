@@ -13,7 +13,7 @@ export const useAudioPlayer = () => {
   const [state, setState] = useState<AudioState>(initialState);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
+  const [currentAudioURL, setCurrentAudioURL] = useState<string | null>(null);
 
   const cleanupAudio = useCallback((audio: HTMLAudioElement) => {
     audio.pause();
@@ -66,17 +66,17 @@ export const useAudioPlayer = () => {
     return audio;
   }, []);
 
-  const playWithUrl = useCallback(async (url: string) => {
+  const playWithURL = useCallback(async (url: string) => {
     try {
       // URL이 바뀌었거나 오디오가 없으면 새로 생성
-      if (!audioRef.current || currentAudioUrl !== url) {
+      if (!audioRef.current || currentAudioURL !== url) {
         if (audioRef.current) {
           cleanupAudio(audioRef.current);
         }
         audioRef.current = createAudio(url);
-        setCurrentAudioUrl(url);
+        setCurrentAudioURL(url);
       }
-      
+
       if (audioRef.current) {
         await audioRef.current.play();
         setState(prev => ({ ...prev, isPlaying: true }));
@@ -85,7 +85,7 @@ export const useAudioPlayer = () => {
       console.error('❌ Audio play error:', error);
       setIsLoading(false);
     }
-  }, [createAudio, currentAudioUrl, cleanupAudio]);
+  }, [createAudio, currentAudioURL, cleanupAudio]);
 
   const play = useCallback(() => {
     if (audioRef.current && !audioRef.current.paused) {
@@ -132,7 +132,7 @@ export const useAudioPlayer = () => {
         currentTime: 0,
         currentTopicIndex: -1
       }));
-      setCurrentAudioUrl(null);
+      setCurrentAudioURL(null);
       setIsLoading(false);
     }
   }, [cleanupAudio]);
@@ -144,7 +144,7 @@ export const useAudioPlayer = () => {
     setVolume,
     setCurrentTopicIndex,
     stop,
-    playWithUrl, // 새로운 함수 추가
+    playWithURL, // 새로운 함수 추가
   };
 
   return {

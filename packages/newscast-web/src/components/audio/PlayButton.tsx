@@ -5,7 +5,7 @@ import { PlayIcon, PauseIcon } from '@radix-ui/react-icons';
 interface PlayButtonProps {
   isPlaying: boolean;
   isLoading: boolean;
-  hasAudioUrl: boolean;
+  hasAudioURL: boolean;
   onPlayPause: () => void;
   size?: "1" | "2" | "3" | "4";
   compact?: boolean;
@@ -35,7 +35,7 @@ const regularButtonStyles = css`
 export const PlayButton: React.FC<PlayButtonProps> = ({
   isPlaying,
   isLoading,
-  hasAudioUrl,
+  hasAudioURL,
   onPlayPause,
   size = "2",
   compact = false
@@ -53,11 +53,11 @@ export const PlayButton: React.FC<PlayButtonProps> = ({
   const iconSize = getIconSize();
 
   return (
-    <Button 
-      size={size} 
-      variant="soft" 
+    <Button
+      size={size}
+      variant="soft"
       onClick={onPlayPause}
-      disabled={!hasAudioUrl || isLoading}
+      disabled={!hasAudioURL || isLoading}
       css={compact ? compactButtonStyles : regularButtonStyles}
     >
       {isLoading ? (

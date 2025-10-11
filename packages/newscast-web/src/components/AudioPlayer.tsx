@@ -36,14 +36,14 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({
   const { state: audioState, actions: audioActions, isLoading } = useAudioContext();
   
   const handlePlayPause = useCallback(async () => {
-    if (!currentTopic?.audioUrl) return;
-    
+    if (!currentTopic?.audioURL) return;
+
     if (audioState.isPlaying) {
       audioActions.pause();
     } else {
-      await audioActions.playWithUrl(currentTopic.audioUrl);
+      await audioActions.playWithURL(currentTopic.audioURL);
     }
-  }, [currentTopic?.audioUrl, audioState.isPlaying, audioActions]);
+  }, [currentTopic?.audioURL, audioState.isPlaying, audioActions]);
 
   const handleSeek = useCallback((value: number[]) => {
     if (value.length > 0 && audioState.duration > 0) {
@@ -76,7 +76,7 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({
           <PlayButton
             isPlaying={audioState.isPlaying}
             isLoading={isLoading}
-            hasAudioUrl={!!currentTopic.audioUrl}
+            hasAudioURL={!!currentTopic.audioURL}
             onPlayPause={handlePlayPause}
             size="3"
             compact

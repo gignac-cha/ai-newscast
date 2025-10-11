@@ -32,19 +32,19 @@ export function useCurrentScript(
       duration: number;
     }> = [];
 
-    // audio_files는 이미 sequence 순서대로 정렬되어 있다고 가정
-    topic.audioFiles.audio_files.forEach((audioFile) => {
+    // audioFiles는 이미 sequence 순서대로 정렬되어 있다고 가정
+    topic.audioFiles.audioFiles.forEach((audioFile) => {
       const startTime = accumulatedTime;
-      const endTime = accumulatedTime + audioFile.duration_seconds;
-      
+      const endTime = accumulatedTime + audioFile.durationSeconds;
+
       timeMap.push({
         startTime,
         endTime,
         sequence: audioFile.sequence,
-        duration: audioFile.duration_seconds,
+        duration: audioFile.durationSeconds,
       });
-      
-      
+
+
       accumulatedTime = endTime;
     });
 
@@ -67,15 +67,15 @@ export function useCurrentScript(
 
     // 스크립트에서 해당 sequence의 대화 찾기
     const scriptLine = topic.script.script.find(
-      (line) => 
-        line.type === 'dialogue' && 
-        topic.audioFiles!.all_segments.find(
+      (line) =>
+        line.type === 'dialogue' &&
+        topic.audioFiles!.allSegments.find(
           (seg) => seg.sequence === currentSegment.sequence && seg.content === line.content
         )
     );
 
-    // all_segments에서 직접 해당 sequence의 대화 찾기
-    const segment = topic.audioFiles!.all_segments.find(
+    // allSegments에서 직접 해당 sequence의 대화 찾기
+    const segment = topic.audioFiles!.allSegments.find(
       (seg: any) => seg.sequence === currentSegment.sequence && seg.type === 'dialogue'
     );
 

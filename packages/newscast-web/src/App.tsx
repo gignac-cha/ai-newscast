@@ -5,7 +5,7 @@ import { Theme } from '@radix-ui/themes';
 import { Box, Container, Flex, Text, Spinner, Button } from '@radix-ui/themes';
 import { MoonIcon, SunIcon } from '@radix-ui/react-icons';
 import { NewscastViewer } from './components/NewscastViewer';
-import { useLatestNewscastId, useNewscastData } from './hooks/useNewscast';
+import { useLatestNewscastID, useNewscastData } from './hooks/useNewscast';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { AudioProvider } from './contexts/AudioContext';
 // Radix UI CSS는 별도 엔트리 포인트로 분리됨
@@ -40,13 +40,13 @@ const themeToggleStyles = css`
 `;
 
 const NewscastApp: React.FC = React.memo(() => {
-  const { data: latestId, isLoading: isLoadingId } = useLatestNewscastId();
-  
-  if (isLoadingId) {
+  const { data: latestID, isLoading: isLoadingID } = useLatestNewscastID();
+
+  if (isLoadingID) {
     return <LoadingFallback />;
   }
 
-  if (!latestId) {
+  if (!latestID) {
     return (
       <Box css={fullHeightStyles}>
         <Container size="2">
@@ -61,11 +61,11 @@ const NewscastApp: React.FC = React.memo(() => {
     );
   }
 
-  return <NewscastDataLoader newscastId={latestId} />;
+  return <NewscastDataLoader newscastID={latestID} />;
 });
 
-const NewscastDataLoader: React.FC<{ newscastId: string }> = React.memo(({ newscastId }) => {
-  const { data: newscastData, isLoading, error } = useNewscastData(newscastId);
+const NewscastDataLoader: React.FC<{ newscastID: string }> = React.memo(({ newscastID }) => {
+  const { data: newscastData, isLoading, error } = useNewscastData(newscastID);
   
   if (isLoading) {
     return <LoadingFallback />;
@@ -80,7 +80,7 @@ const NewscastDataLoader: React.FC<{ newscastId: string }> = React.memo(({ newsc
             <Text size="2" color="gray" css={centerTextStyles}>
               Could not load the newscast content. Please make sure the output files are available.
             </Text>
-            <Text size="1" color="gray">Newscast ID: {newscastId}</Text>
+            <Text size="1" color="gray">Newscast ID: {newscastID}</Text>
           </Flex>
         </Container>
       </Box>
