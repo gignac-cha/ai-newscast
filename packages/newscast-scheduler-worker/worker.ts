@@ -12,6 +12,7 @@ import { handleGenerateNews } from './handlers/generate-news';
 import { handleGenerateScript } from './handlers/generate-script';
 import { handleGenerateAudio } from './handlers/generate-audio';
 import { handleMergeNewscast } from './handlers/merge-newscast';
+import { handleComplete } from './handlers/complete';
 import { handleHelp } from './handlers/help';
 import type { Env } from './types/env';
 
@@ -105,6 +106,12 @@ export default {
 				const topicIndex = minute - 10; // 11분 → 토픽 1, 20분 → 토픽 10
 				console.log(`[Scheduler] Executing: Merge Newscast (topic ${topicIndex})`);
 				await handleMergeNewscast(new Request('http://www.example.com/scheduled'), env, topicIndex);
+			}
+
+			// 10:30 UTC (19:30 KST) - Complete Pipeline (모든 토픽 검증 후 latest-newscast-id 업데이트)
+			if (hour === 10 && minute === 30) {
+				console.log('[Scheduler] Executing: Complete Pipeline');
+				await handleComplete(new Request('http://www.example.com/scheduled'), env);
 			}
 		} catch (error) {
 			console.error('[Scheduler] Error:', error);
