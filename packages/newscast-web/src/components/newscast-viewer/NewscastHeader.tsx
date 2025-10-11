@@ -37,9 +37,17 @@ const timestampContainerStyles = css`
 // Format timestamp to readable date
 const formatTimestamp = (timestamp: string): string => {
   try {
-    // Convert ISO timestamp format: 2025-06-29T01-43-09-804026 -> 2025-06-29T01:43:09.804026Z
-    const isoTimestamp = timestamp.replace(/T(\d{2})-(\d{2})-(\d{2})-(\d+)/, 'T$1:$2:$3.$4Z');
-    return dayjs(isoTimestamp).format('YYYY년 M월 D일 HH시 mm분');
+    // Convert ISO timestamp format: 2025-10-11T09-05-19-485Z -> 2025-10-11T09:05:19.485Z
+    // Remove trailing Z first if exists, then add it back after conversion
+    const cleanTimestamp = timestamp.replace(/Z$/, '');
+    const isoTimestamp = cleanTimestamp.replace(/T(\d{2})-(\d{2})-(\d{2})-(\d+)/, 'T$1:$2:$3.$4') + 'Z';
+
+    const parsed = dayjs(isoTimestamp);
+    if (!parsed.isValid()) {
+      return timestamp;
+    }
+
+    return parsed.format('YYYY년 M월 D일 HH시 mm분');
   } catch {
     return timestamp;
   }
