@@ -2,7 +2,6 @@ import React, { useState, useCallback } from 'react';
 import { css } from '@emotion/react';
 import { Box, Flex, Button } from '@radix-ui/themes';
 import { ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons';
-import * as Collapsible from '@radix-ui/react-collapsible';
 import ReactMarkdown from 'react-markdown';
 import type { NewscastTopic } from '../../types/newscast';
 
@@ -16,67 +15,62 @@ const newsContentStyles = css`
   margin-bottom: 12px;
 `;
 
-const collapsibleNewsContentStyles = css`
-  overflow: hidden;
-  
-  &[data-state='open'] {
-    animation: slideDown 300ms cubic-bezier(0.87, 0, 0.13, 1);
-  }
-  
-  &[data-state='closed'] {
-    animation: slideUp 300ms cubic-bezier(0.87, 0, 0.13, 1);
-  }
-  
-  @keyframes slideDown {
-    from { height: 0; }
-    to { height: var(--radix-collapsible-content-height); }
-  }
-  
-  @keyframes slideUp {
-    from { height: var(--radix-collapsible-content-height); }
-    to { height: 0; }
-  }
-`;
-
-const contentStyles = css`
+const contentStyles = (isExpanded: boolean) => css`
   font-size: var(--font-size-2);
   line-height: 1.6;
   color: var(--gray-12);
-  
+
+  ${!isExpanded && css`
+    max-height: 150px;
+    overflow: hidden;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 40px;
+      background: linear-gradient(to bottom, transparent, var(--gray-3));
+      pointer-events: none;
+    }
+  `}
+
   /* Markdown content styling */
   h1, h2, h3, h4, h5, h6 {
     margin: 16px 0 8px 0;
     font-weight: 600;
   }
-  
+
   h1 { font-size: 1.5em; }
   h2 { font-size: 1.3em; }
   h3 { font-size: 1.1em; }
-  
+
   p {
     margin: 8px 0;
     line-height: 1.6;
   }
-  
+
   ul, ol {
     margin: 8px 0;
     padding-left: 20px;
   }
-  
+
   li {
     margin: 4px 0;
   }
-  
+
   strong {
     font-weight: 600;
     color: var(--gray-12);
   }
-  
+
   em {
     font-style: italic;
     color: var(--gray-11);
   }
-  
+
   code {
     background-color: var(--gray-4);
     padding: 2px 4px;
@@ -101,40 +95,30 @@ export const NewsContent: React.FC<NewsContentProps> = React.memo(({ topic }) =>
     setIsNewsExpanded(prev => !prev);
   }, []);
 
-  const shouldTruncate = topic.news.content.length > 200;
-  const truncatedContent = topic.news.content.substring(0, 200);
-  const remainingContent = topic.news.content.substring(200);
+  // Calculate content height to determine if truncation is needed
+  const contentLength = topic.news.content.length;
+  const shouldShowToggle = contentLength > 300; // Show toggle if content is long enough
 
   return (
     <Box p="3" css={newsContentStyles}>
-      <Collapsible.Root open={isNewsExpanded} onOpenChange={setIsNewsExpanded}>
-        <Box css={contentStyles}>
-          <ReactMarkdown>{shouldTruncate ? truncatedContent : topic.news.content}</ReactMarkdown>
-          
-          {shouldTruncate && (
-            <Collapsible.Content css={collapsibleNewsContentStyles}>
-              <ReactMarkdown>{remainingContent}</ReactMarkdown>
-            </Collapsible.Content>
-          )}
-        </Box>
-        
-        {shouldTruncate && (
-          <Flex justify="center" css={showMoreButtonStyles}>
-            <Collapsible.Trigger asChild>
-              <Button 
-                variant="ghost" 
-                size="1" 
-                onClick={toggleNewsExpansion}
-              >
-                <Flex align="center" gap="1">
-                  {isNewsExpanded ? 'Show Less' : 'Show More'}
-                  {isNewsExpanded ? <ChevronUpIcon width="12" height="12" /> : <ChevronDownIcon width="12" height="12" />}
-                </Flex>
-              </Button>
-            </Collapsible.Trigger>
-          </Flex>
-        )}
-      </Collapsible.Root>
+      <Box css={contentStyles(isNewsExpanded)}>
+        <ReactMarkdown>{topic.news.content}</ReactMarkdown>
+      </Box>
+
+      {shouldShowToggle && (
+        <Flex justify="center" css={showMoreButtonStyles}>
+          <Button
+            variant="ghost"
+            size="1"
+            onClick={toggleNewsExpansion}
+          >
+            <Flex align="center" gap="1">
+              {isNewsExpanded ? 'Show Less' : 'Show More'}
+              {isNewsExpanded ? <ChevronUpIcon width="12" height="12" /> : <ChevronDownIcon width="12" height="12" />}
+            </Flex>
+          </Button>
+        </Flex>
+      )}
     </Box>
   );
 });
