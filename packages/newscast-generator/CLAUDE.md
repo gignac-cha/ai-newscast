@@ -1,374 +1,497 @@
 # Newscast Generator Package - AI Development Guide
 
-Claude에게: 이 패키지는 뉴스캐스트 스크립트 생성 및 오디오 처리를 담당합니다. 사용자 친화적 정보는 README.md를 참조하세요. 이 문서는 스크립트 생성 로직, TTS 통합, 오디오 병합 아키텍처에 집중합니다.
+## 📋 패키지 역할 및 책임
 
-## 🏗️ 아키텍처 및 파일 구조
+### 핵심 역할
+1. 통합 뉴스를 듀얼 호스트 대화형 스크립트로 변환 (Google Gemini 2.5 Pro)
+2. TTS API로 스크립트를 고품질 오디오 파일로 합성 (Google Cloud TTS Chirp HD)
+3. Lambda API 호출하여 개별 오디오 파일을 최종 뉴스캐스트로 병합 (FFmpeg)
+4. JSON/Markdown 듀얼 포맷 출력
 
-**핵심 파일 역할:**
-- `generate-newscast-script.ts`: 스크립트 생성 순수 함수 (Gemini AI 호출)
-- `generate-audio.ts`: TTS 오디오 생성 (Google Cloud TTS API)
-- `generate-newscast.ts`: Lambda API 호출로 오디오 병합
-- `command.ts`: CLI 인터페이스 (Commander.js)
-- `newscast-generator.ts`: 메인 진입점
+### 구현 상태
+- ✅ **완성** - TypeScript 구현
+- ✅ 스크립트 생성 (`generate-newscast-script.ts`)
+- ✅ 오디오 합성 (`generate-newscast-audio.ts`)
+- ✅ 오디오 병합 (`generate-newscast.ts` → Lambda API)
+- ✅ Commander.js CLI (`command.ts`)
+- ✅ 30개 한국어 음성 시스템 (`config/tts-hosts.json`)
 
-**의존성 체인:**
-1. 스크립트 생성: Gemini 2.5 Pro → NewscastScript JSON
-2. 오디오 생성: TTS API → 개별 MP3 파일들
-3. 오디오 병합: Lambda API (FFmpeg) → 최종 newscast.mp3
+---
 
-## 🛠️ 기술 스택
+## 🏗️ 파일 구조 및 역할
 
-### Core Dependencies
-- **@google/genai**: Google Gemini 2.5 Pro API 클라이언트
-- **commander**: CLI 프레임워크
-- **@ai-newscast/core**: 공통 타입 정의
-
-### TypeScript Features
-- **Node.js 24+**: experimental type stripping 활용
-- **ES Modules**: type: "module" 기반
-- **Import Maps**: workspace 프로토콜 사용
-
-## 🚀 주요 파일 구조
-
-### Core Files
+### 핵심 파일
 ```
 packages/newscast-generator/
-├── command.ts                    # CLI 엔트리포인트 및 명령어 정의
-├── generate-newscast-script.ts   # 핵심 스크립트 생성 로직
-├── runtime-utils.ts             # 런타임 유틸리티 함수들
-├── utils.ts                     # 파일 I/O 및 설정 로딩
-├── types.ts                     # 타입 정의 (core 재수출 + 로컬 타입)
-└── newscast-generator.ts        # 메인 CLI 진입점
+├── command.ts                      # CLI 엔트리포인트 (Commander.js)
+├── generate-newscast-script.ts     # 스크립트 생성 (Gemini API)
+├── generate-newscast-audio.ts      # 오디오 합성 (TTS API)
+├── generate-newscast.ts            # 오디오 병합 (Lambda API)
+├── newscast-generator.ts           # 메인 CLI 진입점
+├── runtime-utils.ts                # 런타임 유틸리티 함수
+├── types.ts                        # 로컬 타입 정의
+└── package.json                    # 의존성 및 scripts
 ```
 
-### Configuration & Resources
+### 설정 및 리소스
 ```
 ├── config/
-│   └── tts-hosts.json           # TTS 음성 모델 설정 (30개 한국어 음성)
+│   └── tts-hosts.json             # TTS 음성 모델 설정 (30개)
 ├── prompts/
-│   └── newscast-script.md       # Gemini AI 프롬프트 템플릿
-└── package.json                 # 의존성 및 스크립트 설정
+│   └── newscast-script.md         # Gemini AI 프롬프트 템플릿
 ```
 
-## 📋 CLI 명령어
+---
 
-### Script Generation
-```bash
-# 기본 스크립트 생성
-node --experimental-strip-types command.ts script \
-  -i input/news.json \
-  -o output/newscast-script.json
+## 🔧 API 및 함수 시그니처
 
-# 출력 형식 지정
-node --experimental-strip-types command.ts script \
-  -i input/news.json \
-  -o output/newscast-script.json \
-  -f json \
-  -l logs/generation.json
-```
+### 스크립트 생성 (generate-newscast-script.ts)
 
-### Package Scripts
-```bash
-# 스크립트 생성만
-pnpm run generate:newscast-script
-
-# 개발 모드 (watch)
-pnpm run dev
-```
-
-## 🤖 AI 스크립트 생성 프로세스
-
-### 1. 입력 데이터 처리
-`command.ts`에서 다음 데이터를 로딩:
+#### generateNewscastScript()
 ```typescript
-const [newsContent, promptTemplate, voices] = await Promise.all([
-  readFile(inputFile, 'utf-8'),        // 통합 뉴스 JSON
-  loadPrompt(),                        // AI 프롬프트 템플릿
-  loadTTSHosts(),                      // TTS 음성 설정
-]);
-```
+export async function generateNewscastScript(
+  options: GenerateNewscastScriptOptions
+): Promise<GenerateNewscastScriptResult>
 
-### 2. 호스트 선택 및 프롬프트 생성
-`generate-newscast-script.ts`의 핵심 로직:
-```typescript
-// 랜덤 호스트 선택 (남성 1명 + 여성 1명)
-const selectedHosts = selectRandomHosts(voices);
-
-// 프롬프트 템플릿에 데이터 치환
-const prompt = promptTemplate
-  .replace('{program_name}', programName)
-  .replace(/{host1_name}/g, selectedHosts.host1.name)
-  .replace(/{host1_gender}/g, selectedHosts.host1.gender === 'male' ? '남성' : '여성')
-  .replace(/{host2_name}/g, selectedHosts.host2.name)
-  .replace(/{host2_gender}/g, selectedHosts.host2.gender === 'male' ? '남성' : '여성')
-  .replace('{topic}', news.title)
-  .replace('{main_sources}', mainSources.join(', '))
-  .replace('{sources_count}', news.sources_count.toString())
-  .replace('{total_articles}', news.input_articles_count.toString())
-  .replace('{consolidated_content}', news.content);
-```
-
-### 3. Google Gemini API 호출
-```typescript
-const genAI = new GoogleGenAI({ apiKey });
-const response = await genAI.models.generateContent({
-  model: 'gemini-2.5-pro',
-  contents: prompt,
-});
-```
-
-### 4. 응답 파싱 및 후처리
-```typescript
-// JSON 추출 (```json 블록 또는 순수 JSON)
-const jsonMatch = text.match(/```json\s*(\{[\s\S]*?\})\s*```/) ?? text.match(/\{[\s\S]*\}/);
-const parsed: NewscastScript = JSON.parse(jsonMatch[1] ?? jsonMatch[0]);
-
-// 음성 모델 정보 추가
-const enhancedScript = parsed.script.map((line) => {
-  if (line.type === 'dialogue') {
-    if (line.role === 'host1') {
-      return { ...line, voice_model: selectedHosts.host1.voice_model };
-    }
-    if (line.role === 'host2') {
-      return { ...line, voice_model: selectedHosts.host2.voice_model };
-    }
-  }
-  return line;
-});
-```
-
-## 📊 출력 데이터 구조 (v3.7.3+)
-
-### JSON 출력 (`newscast-script.json`)
-**주요 변경사항**: camelCase 전환 + metrics 필드 추가
-
-```typescript
-interface NewscastOutput {
-  timestamp: string;                // 생성 타임스탬프 (ISO 8601)
-  title: string;                    // 뉴스캐스트 제목
-  programName: string;              // 프로그램명
-  hosts: SelectedHosts;             // 선택된 호스트 정보
-  estimatedDuration: string;        // 예상 진행시간
-  script: ScriptLine[];             // 스크립트 라인 배열
-  metadata: {
-    totalArticles: number;          // 참고 기사 수
-    sourcesCount: number;           // 참고 언론사 수
-    mainSources: string[];          // 주요 언론사 목록
-    generationTimestamp: string;    // 생성 시간
-    totalScriptLines: number;       // 스크립트 라인 수
-  };
-  metrics: NewscastScriptMetrics;   // 성능 메트릭스
+interface GenerateNewscastScriptOptions {
+  newsContent: string;              // 통합 뉴스 JSON 문자열
+  promptTemplate: string;           // AI 프롬프트 템플릿
+  voices: TTSVoices;                // TTS 음성 설정
+  apiKey: string;                   // Google Gemini API 키
+  programName?: string;             // 프로그램명 (기본: "AI 뉴스캐스트")
+  selectHosts?: (voices: TTSVoices) => SelectedHosts;  // 커스텀 호스트 선택
 }
-```
 
-### Metrics 구조 (`NewscastScriptMetrics`)
-```typescript
-interface NewscastScriptMetrics {
-  newscastID: string;               // 뉴스캐스트 ID (ISO timestamp)
-  topicIndex: number;               // 토픽 인덱스 (1-10)
-  timing: {
-    startedAt: string;              // 시작 시간 (ISO)
-    completedAt: string;            // 완료 시간 (ISO)
-    duration: number;               // 총 소요 시간 (ms)
-    aiGenerationTime: number;       // AI 생성 시간 (ms)
-  };
-  input: {
-    newsTitle: string;              // 입력 뉴스 제목
-    newsSummaryLength: number;      // 요약 길이
-    newsContentLength: number;      // 본문 길이
-  };
-  output: {
-    totalScriptLines: number;       // 총 스크립트 라인 수
-    dialogueLines: number;          // 대화 라인 수
-    musicLines: number;             // 음악 라인 수
-    scriptSize: number;             // 스크립트 JSON 크기 (bytes)
-  };
-  performance: {
-    linesPerSecond: number;         // 생성 속도 (라인/초)
-  };
-}
-```
-
-### Markdown 출력 (`newscast-script.md`)
-`runtime-utils.ts`의 `formatAsMarkdown()` 함수로 생성:
-- 📋 메타데이터 테이블
-- 👥 진행자 정보
-- 🎬 스크립트 (번호 + 이모지 + 내용)
-
-## 🎙️ TTS 음성 모델 관리
-
-### `config/tts-hosts.json` 구조
-```json
-{
-  "voices": {
-    "ko-KR-Chirp3-HD-Achernar": {
-      "name": "김서연",
-      "gender": "female",
-      "voice_type": "premium_chirp"
-    }
-  }
-}
-```
-
-**특징:**
-- **30개 한국어 음성**: Google Cloud TTS Chirp HD 프리미엄 모델
-- **알파벳 순 정렬**: 천체 이름 기준 정렬
-- **성별 구분**: 남성/여성 균등 분배
-- **고유 이름**: 중복 없는 한국식 이름 할당
-
-### 호스트 선택 알고리즘
-`runtime-utils.ts`의 `selectRandomHosts()`:
-1. 성별별 음성 모델 분류
-2. 각 성별에서 1명씩 랜덤 선택
-3. 호스트 순서 랜덤 결정 (남성 먼저 vs 여성 먼저)
-
-## 🔧 개발 가이드
-
-### 환경 설정
-```bash
-# 환경변수 설정
-export GOOGLE_GEN_AI_API_KEY="your_gemini_api_key"
-
-# 의존성 설치
-pnpm install
-
-# 개발 모드 실행
-pnpm run dev
-```
-
-### 주요 함수들
-
-#### `generateNewscastScript()`
-**위치**: `generate-newscast-script.ts`
-- **입력**: `GenerateNewscastScriptOptions`
-- **출력**: `GenerateNewscastScriptResult`
-- **기능**: 전체 스크립트 생성 프로세스 관리
-
-#### `selectRandomHosts()`
-**위치**: `runtime-utils.ts`
-- **입력**: `TTSVoices`
-- **출력**: `SelectedHosts`
-- **기능**: 남성 1명 + 여성 1명 랜덤 선택
-
-#### `formatAsMarkdown()`
-**위치**: `runtime-utils.ts`
-- **입력**: `NewscastOutput`
-- **출력**: `string` (Markdown)
-- **기능**: JSON을 읽기 쉬운 마크다운으로 변환
-
-### 커스터마이징 포인트
-
-#### 1. 프롬프트 수정
-`prompts/newscast-script.md` 파일 편집으로 AI 생성 스타일 변경
-
-#### 2. 음성 모델 추가/변경
-`config/tts-hosts.json`에서 음성 모델 설정 수정
-
-#### 3. 호스트 선택 로직 변경
-`selectRandomHosts()` 함수 또는 `selectHosts` 옵션 커스터마이징
-
-## 📊 성능 및 통계
-
-### 실행 통계 추적
-```typescript
 interface GenerateNewscastScriptResult {
+  newscastScript: NewscastOutput;   // 생성된 스크립트
   stats: {
-    startedAt: string;              // 시작 시간
-    completedAt: string;            // 완료 시간
-    elapsedMs: number;              // 소요 시간 (ms)
-    scriptLines: number;            // 생성된 스크립트 라인 수
-    hosts: {                        // 선택된 호스트 이름
-      host1: string;
-      host2: string;
-    };
+    startedAt: string;
+    completedAt: string;
+    elapsedMs: number;
+    scriptLines: number;
+    hosts: { host1: string; host2: string };
   };
   prompt: string;                   // 사용된 프롬프트
   rawText: string;                  // AI 원본 응답
 }
 ```
 
-### 로그 출력 예시
-```bash
-✅ Generated newscast script: output/newscast-script.json
-📝 Script lines: 15
-🎙️ Hosts: 김서연, 박진호
-⏱️ Elapsed: 12.34s
+### 오디오 합성 (generate-newscast-audio.ts)
+
+#### generateNewscastAudio()
+```typescript
+export async function generateNewscastAudio(
+  scriptFilePath: string,
+  outputFolder: string,
+  apiKey: string
+): Promise<void>
 ```
 
-## 🚨 에러 처리
+**역할**: 스크립트 JSON을 읽어 개별 TTS 오디오 파일 생성
 
-### 일반적인 에러 상황
-1. **API 키 누락**: `GOOGLE_GEN_AI_API_KEY` 환경변수 필요
-2. **잘못된 JSON**: AI 응답에서 유효한 JSON 추출 실패
-3. **파일 I/O 오류**: 입력 파일 없음 또는 출력 경로 문제
-4. **음성 모델 부족**: 남성 또는 여성 음성 모델 부족
+**출력**: `audio/` 폴더에 개별 MP3 파일들 + `audio-files.json`
 
-### 에러 처리 패턴
+### 오디오 병합 (generate-newscast.ts)
+
+#### generateNewscast()
 ```typescript
-try {
-  await generateScriptToFiles({ inputFile, outputFile, printFormat, printLogFile });
-} catch (error) {
-  console.error('❌ Error generating script:', error instanceof Error ? error.message : error);
-  process.exit(1);
+export async function generateNewscast(
+  audioFolder: string,
+  outputFile: string,
+  apiKey: string
+): Promise<void>
+```
+
+**역할**: Lambda API 호출하여 개별 오디오 파일을 최종 MP3로 병합
+
+**출력**: `newscast.mp3` + `newscast-audio-info.json`
+
+### 유틸리티 함수 (runtime-utils.ts)
+
+#### selectRandomHosts()
+```typescript
+export function selectRandomHosts(voices: TTSVoices): SelectedHosts
+```
+
+**역할**: 남성 1명 + 여성 1명 랜덤 선택
+
+#### formatAsMarkdown()
+```typescript
+export function formatAsMarkdown(newscastOutput: NewscastOutput): string
+```
+
+**역할**: 스크립트 JSON을 Markdown 형식으로 변환
+
+---
+
+## 🎨 코딩 규칙 (패키지 특화)
+
+### 필수 규칙 (루트 CLAUDE.md 공통 규칙 준수)
+- **camelCase**: `newscastID`, `voiceModel` (루트 CLAUDE.md 참조)
+- **시간 단위**: 밀리세컨드 기본, 단위 생략 (루트 CLAUDE.md 참조)
+- **Nullish Coalescing**: `??` 사용, `||` 금지 (루트 CLAUDE.md 참조)
+
+### 스크립트 생성 규칙
+
+#### MUST: 프롬프트 변수 치환
+```typescript
+// ✅ CORRECT
+const prompt = promptTemplate
+  .replace('{program_name}', programName)
+  .replace(/{host1_name}/g, selectedHosts.host1.name)
+  .replace(/{host1_gender}/g, selectedHosts.host1.gender === 'male' ? '남성' : '여성')
+  .replace('{topic}', news.title)
+  .replace('{consolidated_content}', news.content);
+
+// ❌ WRONG
+const prompt = promptTemplate;  // ❌ 변수 치환 없음
+```
+
+#### MUST: JSON 파싱 에러 처리
+```typescript
+// ✅ CORRECT
+const jsonMatch = text.match(/```json\s*(\{[\s\S]*?\})\s*```/) ?? text.match(/\{[\s\S]*\}/);
+
+if (!jsonMatch) {
+  throw new Error('No valid JSON found in AI response');
+}
+
+const parsed: NewscastScript = JSON.parse(jsonMatch[1] ?? jsonMatch[0]);
+
+// ❌ WRONG
+const parsed = JSON.parse(response.text());  // ❌ 에러 처리 없음
+```
+
+#### MUST: 음성 모델 정보 추가
+```typescript
+// ✅ CORRECT
+const enhancedScript = parsed.script.map((line) => {
+  if (line.type === 'dialogue') {
+    if (line.role === 'host1') {
+      return { ...line, voiceModel: selectedHosts.host1.voiceModel };
+    }
+    if (line.role === 'host2') {
+      return { ...line, voiceModel: selectedHosts.host2.voiceModel };
+    }
+  }
+  return line;
+});
+
+// ❌ WRONG
+const enhancedScript = parsed.script;  // ❌ 음성 모델 정보 없음
+```
+
+### TTS 오디오 생성 규칙
+
+#### MUST: 음악 라인 스킵
+```typescript
+// ✅ CORRECT
+for (const line of script) {
+  if (line.type === 'music') {
+    console.log(`⏭️ Skipping music line: ${line.content}`);
+    continue;  // 음악 라인은 스킵
+  }
+
+  // dialogue 라인만 TTS 생성
+  await generateTTS(line);
+}
+
+// ❌ WRONG
+for (const line of script) {
+  await generateTTS(line);  // ❌ 음악 라인도 TTS 생성 시도
 }
 ```
 
-## 🔄 향후 개발 계획
+#### MUST: 파일명 규칙
+```typescript
+// ✅ CORRECT
+const fileName = `${String(line.order).padStart(3, '0')}-${line.voiceName ?? 'music'}.mp3`;
+// 예: 001-music.mp3, 002-김서연.mp3, 003-박진호.mp3
 
-### 단기 계획
-- [ ] 프롬프트 템플릿 다양화
-- [ ] 호스트 선택 알고리즘 개선
-- [ ] 음성 특성 기반 호스트 매칭
-
-### 중기 계획
-- [ ] 멀티모달 입력 지원 (이미지, 비디오)
-- [ ] 실시간 스크립트 생성 API
-- [ ] 다국어 지원 확장
-
-## 🎯 명명 규칙 (v3.7.3+)
-
-### camelCase 전환
-모든 필드명이 camelCase로 통일되었습니다:
-- `program_name` → `programName`
-- `estimated_duration` → `estimatedDuration`
-- `voice_model` → `voiceModel`
-
-### 특수 약어 규칙
-다음 약어는 모두 대문자로 유지:
-- **ID**: `newscastID`, `topicID`, `hostID`
-- **HTML**: `newsHTML`, `contentHTML`
-- **JSON**: `newsJSON`, `outputJSON`
-- **URL**: `newsURL`, `sourceURL`
-
-## 📋 CLI 명령어 업데이트 (v3.7.3+)
-
-### Script Command
-`newscastID`와 `topicIndex`는 입력 파일(news.json)의 metrics에서 자동으로 읽어옵니다:
-
-```bash
-# 기본 사용
-node --experimental-strip-types command.ts script \
-  -i output/2025-10-05T19-53-26-599Z/topic-01/news.json \
-  -o output/2025-10-05T19-53-26-599Z/topic-01/newscast-script.json
-
-# JSON 출력 형식
-node --experimental-strip-types command.ts script \
-  -i output/.../news.json \
-  -o output/.../newscast-script.json \
-  -f json
+// ❌ WRONG
+const fileName = `${line.order}.mp3`;  // ❌ 정렬 불가, 호스트 이름 없음
 ```
 
-### Audio Command
-`newscastID`와 `topicIndex`는 입력 파일(newscast-script.json)의 metrics에서 자동으로 읽어옵니다:
+#### MUST: audio-files.json 메타데이터
+```typescript
+// ✅ CORRECT
+const audioFilesMetadata = {
+  audioFiles: generatedAudioFiles.map(file => ({
+    fileName: file.fileName,
+    voiceModel: file.voiceModel,
+    voiceName: file.voiceName,
+    text: file.text,
+    order: file.order,
+    durationSeconds: file.durationSeconds,
+  })),
+  metrics: {
+    newscastID: newscastID,
+    topicIndex: topicIndex,
+    timing: { /* ... */ },
+    // ...
+  }
+};
 
-```bash
-# 기본 사용
-node --experimental-strip-types command.ts audio \
-  -i output/2025-10-05T19-53-26-599Z/topic-01/newscast-script.json \
-  -o output/2025-10-05T19-53-26-599Z/topic-01
+await writeFile(
+  path.join(outputFolder, 'audio', 'audio-files.json'),
+  JSON.stringify(audioFilesMetadata, null, 2)
+);
 
-# 결과: audio/ 폴더에 개별 MP3 파일 + audio-files.json (metrics 포함)
+// ❌ WRONG
+// audio-files.json 생성 안 함 또는 metrics 누락
+```
+
+### Lambda API 호출 규칙
+
+#### MUST: API 에러 처리
+```typescript
+// ✅ CORRECT
+const response = await fetch(lambdaURL, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ newscast_id, topic_index, dry_run }),
+});
+
+if (!response.ok) {
+  const errorText = await response.text();
+  throw new Error(`Lambda API error: ${response.status} - ${errorText}`);
+}
+
+const result = await response.json();
+
+// ❌ WRONG
+const response = await fetch(lambdaURL, { /* ... */ });
+const result = await response.json();  // ❌ 에러 체크 없음
+```
+
+#### MUST: snake_case 요청 (Lambda는 Python)
+```typescript
+// ✅ CORRECT (Lambda API 요청)
+const requestBody = {
+  newscast_id: newscastID,     // snake_case
+  topic_index: topicIndex,     // snake_case
+  dry_run: false               // snake_case
+};
+
+// ❌ WRONG
+const requestBody = {
+  newscastId: newscastID,      // ❌ camelCase (Lambda와 불일치)
+  topicIndex: topicIndex,      // ❌ camelCase
+};
 ```
 
 ---
-*최종 업데이트: 2025-10-06 v3.7.3 - Metrics 시스템 추가 + camelCase 전환*
+
+## 🚨 에러 처리 방식
+
+### Google Gemini API 에러
+
+```typescript
+// ✅ CORRECT
+try {
+  const result = await generateNewscastScript(options);
+  return result;
+} catch (error) {
+  if (error.message.includes('API key')) {
+    console.error('Google Gemini API key 설정 확인 필요');
+    throw new Error('Invalid or missing Google Gemini API key');
+  } else if (error.message.includes('No valid JSON')) {
+    console.error('AI 응답 JSON 파싱 실패');
+    throw new Error('Failed to parse AI response as JSON');
+  } else {
+    console.error('스크립트 생성 오류:', error);
+    throw error;
+  }
+}
+```
+
+### TTS API 에러
+
+```typescript
+// ✅ CORRECT
+try {
+  await generateNewscastAudio(scriptFile, outputFolder, apiKey);
+  console.log('✓ TTS 오디오 생성 완료');
+} catch (error) {
+  if (error.message.includes('GOOGLE_CLOUD_API_KEY')) {
+    console.error('Google Cloud TTS API key 설정 확인 필요');
+    process.exit(1);
+  }
+  throw error;
+}
+```
+
+### Lambda API 에러
+
+```typescript
+// ✅ CORRECT
+try {
+  await generateNewscast(audioFolder, outputFile, apiKey);
+  console.log('✓ 오디오 병합 완료');
+} catch (error) {
+  if (error.message.includes('Lambda API')) {
+    console.error('Lambda API 호출 실패:', error.message);
+    process.exit(1);
+  }
+  throw error;
+}
+```
+
+---
+
+## 🔗 다른 패키지와의 의존성
+
+### 의존 관계
+- **core**: 공통 타입 정의 import
+- **news-generator**: 이 패키지가 news-generator의 출력을 입력으로 사용
+- **newscast-generator-worker**: 이 패키지의 함수를 Workers에서 재사용
+- **newscast-generator-lambda**: 이 패키지가 Lambda API 호출
+
+### Export (다른 패키지에서 사용)
+
+```typescript
+// newscast-generator-worker에서 사용 예시
+import {
+  generateNewscastScript,
+  generateNewscastAudio
+} from '@ai-newscast/newscast-generator';
+
+export async function handleScript(newsContent, promptTemplate, voices, apiKey) {
+  const result = await generateNewscastScript({
+    newsContent,
+    promptTemplate,
+    voices,
+    apiKey,
+  });
+  return result.newscastScript;
+}
+```
+
+---
+
+## ⚠️ 주의사항 (MUST/NEVER)
+
+### 호스트 선택 (MUST)
+
+#### MUST: 성별 균형
+```typescript
+// ✅ CORRECT
+export function selectRandomHosts(voices: TTSVoices): SelectedHosts {
+  const maleVoices = Object.entries(voices.voices).filter(
+    ([_, voice]) => voice.gender === 'male'
+  );
+  const femaleVoices = Object.entries(voices.voices).filter(
+    ([_, voice]) => voice.gender === 'female'
+  );
+
+  if (maleVoices.length === 0 || femaleVoices.length === 0) {
+    throw new Error('남성 또는 여성 음성 모델 부족');
+  }
+
+  const host1 = maleVoices[Math.floor(Math.random() * maleVoices.length)];
+  const host2 = femaleVoices[Math.floor(Math.random() * femaleVoices.length)];
+
+  return { host1: { ...host1[1], voiceModel: host1[0] }, host2: { ...host2[1], voiceModel: host2[0] } };
+}
+
+// ❌ WRONG
+function selectRandomHosts(voices) {
+  const allVoices = Object.entries(voices.voices);
+  const host1 = allVoices[0];  // ❌ 성별 고려 안 함
+  const host2 = allVoices[1];  // ❌ 둘 다 같은 성별 가능
+  return { host1, host2 };
+}
+```
+
+### TTS 파일 생성 (MUST)
+
+#### MUST: 순차 처리 (rate limit)
+```typescript
+// ✅ CORRECT
+for (const line of dialogueLines) {
+  await generateTTS(line);
+  // TTS API는 rate limit 없지만 순차 처리 권장
+}
+
+// ❌ WRONG
+await Promise.all(dialogueLines.map(line => generateTTS(line)));  // ⚠️ 동시 호출 (rate limit 주의)
+```
+
+#### NEVER: 음악 라인 TTS 생성
+```typescript
+// ✅ CORRECT
+if (line.type === 'music') {
+  console.log(`⏭️ Skipping music: ${line.content}`);
+  continue;
+}
+
+// ❌ WRONG
+await generateTTS(line);  // ❌ 음악 라인도 TTS 생성 시도
+```
+
+### Lambda API 호출 (MUST)
+
+#### MUST: snake_case 요청 파라미터
+```typescript
+// ✅ CORRECT (Lambda는 Python)
+const requestBody = {
+  newscast_id: newscastID,
+  topic_index: topicIndex,
+  dry_run: false
+};
+
+// ❌ WRONG
+const requestBody = {
+  newscastId: newscastID,  // ❌ camelCase
+};
+```
+
+#### MUST: Base64 응답 처리
+```typescript
+// ✅ CORRECT
+const result = await response.json();
+if (result.audio_base64) {
+  const audioBuffer = Buffer.from(result.audio_base64, 'base64');
+  await writeFile(outputFile, audioBuffer);
+}
+
+// ❌ WRONG
+await writeFile(outputFile, result.audio_base64);  // ❌ Base64 디코딩 없음
+```
+
+### Metrics 시스템 (MUST)
+
+#### MUST: newscastID와 topicIndex 전파
+```typescript
+// ✅ CORRECT
+// news.json의 metrics에서 읽기
+const newsMetrics = JSON.parse(newsContent).metrics;
+const newscastID = newsMetrics.newscastID;
+const topicIndex = newsMetrics.topicIndex;
+
+// 모든 출력 JSON에 포함
+const output = {
+  // ... 데이터
+  metrics: {
+    newscastID: newscastID,
+    topicIndex: topicIndex,
+    // ...
+  }
+};
+
+// ❌ WRONG
+const newscastID = new Date().toISOString();  // ❌ 새로 생성 (불일치)
+```
+
+---
+
+## 📚 참고 문서
+
+- **프로젝트 공통 규칙**: [../../CLAUDE.md](../../CLAUDE.md)
+- **Core 타입 정의**: [../core/CLAUDE.md](../core/CLAUDE.md)
+- **프롬프트 템플릿**: [prompts/newscast-script.md](prompts/newscast-script.md)
+- **음성 설정**: [config/tts-hosts.json](config/tts-hosts.json)
+
+---
+
+*최종 업데이트: 2025-10-11 - Lambda API 통합 및 Metrics 시스템 강화*

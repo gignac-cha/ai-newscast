@@ -1,65 +1,49 @@
 # News Generator Worker
 
-AI 기반 뉴스 통합을 위한 Cloudflare Workers API
+Cloudflare Workers 기반 AI 뉴스 통합 API
 
-## 🌟 이게 뭔가요?
+## 개요
 
-Google Gemini AI를 사용하여 크롤링된 뉴스 기사를 통합 스토리로 만드는 서버리스 API입니다. Cloudflare Workers에서 실행되며 R2 스토리지와 통합됩니다.
+Google Gemini AI를 활용하여 크롤링된 여러 뉴스 기사를 하나의 통합 뉴스 스토리로 생성하는 서버리스 API입니다.
 
-## ✨ 핵심 기능
+## 주요 기능
 
-- **AI 기반**: `@ai-newscast/news-generator` 라이브러리 + Google Gemini 2.5 Pro 사용
-- **서버리스**: Cloudflare Workers에서 실행
-- **R2 통합**: R2 스토리지에서 입력을 읽고 출력 저장
-- **다중 형식**: JSON 또는 Markdown 응답 반환
-- **토픽 기반**: 개별 토픽 처리 또는 상태 확인
+- **AI 기반 통합**: Google Gemini 2.5 Pro가 여러 기사를 하나로 합성
+- **자동 스케줄링**: Cron Triggers로 토픽별 자동 생성 (매일 09:41-09:50)
+- **R2 스토리지**: 뉴스 데이터 읽기 및 결과 저장
+- **다중 형식**: JSON 및 Markdown 출력
+- **토픽 기반**: 1-10번 토픽 개별 처리
 
-## 🚀 빠른 시작
+## 빠른 시작
 
-### Cloudflare에 배포
+### 배포
 
 ```bash
 # 의존성 설치
 pnpm install
 
-# Worker 빌드
-pnpm build
-
-# Cloudflare에 배포
+# Worker 빌드 및 배포
 pnpm run deploy
 ```
 
-### API 엔드포인트 테스트
+### API 사용
 
 ```bash
-# 토픽의 통합 뉴스 생성
-curl -X POST "https://your-worker.workers.dev/generate?newscast-id=2025-09-17T16-50-13-648Z&topic-index=1"
+# 토픽별 뉴스 통합 생성
+curl -X POST "https://your-worker.workers.dev/news?newscast-id=2025-10-05T10-00-00-000Z&topic-index=1"
 
 # 생성 상태 확인
-curl "https://your-worker.workers.dev/status?newscast-id=2025-09-17T16-50-13-648Z"
+curl "https://your-worker.workers.dev/status?newscast-id=2025-10-05T10-00-00-000Z"
 ```
 
-## 📊 동작 방식
+## 출력 예시
 
-1. **읽기**: R2에서 토픽의 모든 뉴스 기사 가져오기
-2. **통합**: AI를 사용하여 통합 뉴스 스토리 생성
-3. **저장**: JSON 및 Markdown 출력을 R2에 저장
-4. **추적**: 메타데이터에 생성 상태 기록
-
-## 🎯 출력 구조
-
-```
-newscasts/{newscast-id}/topic-{01-10}/
-├── news.json              # 통합 뉴스 (JSON)
-└── news.md                # 통합 뉴스 (Markdown)
-```
-
-## 📦 응답 예제
+### 성공 응답
 
 ```json
 {
   "success": true,
-  "newscast_id": "2025-09-17T16-50-13-648Z",
+  "newscast_id": "2025-10-05T10-00-00-000Z",
   "topic_index": 1,
   "input_articles_count": 25,
   "sources_count": 8,
@@ -71,30 +55,63 @@ newscasts/{newscast-id}/topic-{01-10}/
 }
 ```
 
-## 🔧 설정
+### 에러 응답
+
+```json
+{
+  "error": "Missing required parameter: newscast-id",
+  "status": 400
+}
+```
+
+## 기술 스택
+
+- **Runtime**: Cloudflare Workers (TypeScript + esbuild)
+- **AI**: Google Gemini 2.5 Pro API
+- **Storage**: Cloudflare R2 + KV
+- **Library**: @ai-newscast/news-generator (순수 함수)
+
+## 동작 방식
+
+1. **읽기**: R2에서 토픽별 크롤링된 뉴스 기사 읽기
+2. **통합**: Gemini AI로 통합 뉴스 스토리 생성
+3. **저장**: R2에 JSON 및 Markdown 저장
+4. **추적**: KV에 생성 상태 기록
+
+## 자동 스케줄
+
+매일 자동 실행:
+- **09:41-09:49**: 토픽 1-9 생성 (분당 1개 토픽)
+- **09:50**: 토픽 10 생성
+
+뉴스 크롤링 완료 후 순차 실행됩니다.
+
+## 환경 설정
 
 `wrangler.toml`에서 설정:
 
 ```toml
 [vars]
-GOOGLE_GEN_AI_API_KEY = "your_gemini_api_key"
+# Wrangler Secrets로 설정
+# wrangler secret put GOOGLE_GEN_AI_API_KEY
 
-[[r2_buckets]]
-binding = "AI_NEWSCAST_BUCKET"
-bucket_name = "ai-newscast"
+[triggers]
+crons = [
+  "41-49 9 * * *",  # 토픽 1-9
+  "50 9 * * *"      # 토픽 10
+]
 ```
 
-## 📚 더 알아보기
+## 개발 가이드
 
-- **전체 문서**: [CLAUDE.md](./CLAUDE.md) 참조
-- **라이브러리 문서**: `@ai-newscast/news-generator` 패키지 참조
-- **프롬프트 커스터마이징**: news-generator의 `prompts/news-consolidation.md` 편집
+상세한 API 명세, 코딩 규칙, 순수 함수 활용법은 [CLAUDE.md](./CLAUDE.md)를 참조하세요.
 
-## 🔗 관련 패키지
+## 관련 패키지
 
-- **@ai-newscast/news-generator**: 핵심 라이브러리 (순수 함수)
-- **@ai-newscast/core**: 공유 타입
+- **@ai-newscast/news-generator**: 핵심 뉴스 생성 로직
+- **@ai-newscast/news-crawler-worker**: 이전 단계 (뉴스 크롤링)
+- **@ai-newscast/newscast-generator-worker**: 다음 단계 (스크립트 생성)
 
 ---
 
-Cloudflare Workers + Google Gemini 2.5 Pro로 구축
+*AI Newscast 프로젝트의 일부입니다 - [프로젝트 문서](../../README.md)*

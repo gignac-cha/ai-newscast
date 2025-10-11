@@ -1,106 +1,91 @@
 # News Generator Package - AI Development Guide
 
-Claude에게: 이 패키지는 순수 함수 라이브러리로 설계되어 CLI와 Cloudflare Workers 양쪽에서 재사용됩니다. 사용자 친화적 정보는 README.md를 참조하세요. 이 문서는 코드 작성 시 필요한 아키텍처 원칙과 기술 세부사항에 집중합니다.
+## 📋 패키지 역할 및 책임
 
-## 🏗️ 아키텍처 원칙
+### 핵심 역할
+1. 여러 뉴스 기사를 AI가 분석하여 하나의 통합 뉴스로 생성
+2. Google Gemini 2.5 Pro API 통합
+3. JSON/Markdown 듀얼 포맷 출력
+4. CLI와 라이브러리 양쪽에서 재사용 가능한 순수 함수 제공
 
-**설계 철학:**
+### 구현 상태
+- ✅ **완성** - TypeScript 구현
+- ✅ 순수 함수 라이브러리 (`news-generator.ts`)
+- ✅ Commander.js CLI (`command.ts`)
+- ✅ Google Gemini 2.5 Pro 통합
+- ✅ 프롬프트 시스템 (`prompts/`)
+
+---
+
+## 🏗️ 파일 구조 및 역할
+
+### 아키텍처 원칙
+**설계 철학**:
 1. **순수 함수**: `news-generator.ts`는 파일 I/O 없는 순수 함수만 포함
 2. **관심사 분리**: CLI 로직은 `command.ts`에서 완전 분리
 3. **재사용성**: Workers 환경에서도 동일 함수 import 가능
 4. **타입 안전성**: TypeScript + Zod 스키마 검증
 
-**파일 역할:**
-- `news-generator.ts`: 순수 함수만 (generateNews, formatAsMarkdown)
-- `command.ts`: 파일 I/O + CLI 인터페이스 (Commander.js)
-- `prompts/`: AI 프롬프트 템플릿 (Markdown 형식)
-
-## 🛠️ 기술 스택
-
-### 런타임 환경
-- **Node.js**: 24+ (experimental TypeScript type stripping)
-- **AI 모델**: Google Gemini 2.5 Pro API
-- **CLI 프레임워크**: Commander.js
-- **타입 시스템**: TypeScript + Zod 스키마
-
-### 의존성
-- **@ai-newscast/core**: 공통 타입 정의 (`GeneratedNews`)
-- **@google/genai**: Google Gemini AI SDK
-- **commander**: CLI 인터페이스 (command.ts에서만 사용)
-
-## 🚀 사용 방법
-
-### 1. CLI 사용 (Command.js)
-```bash
-# 뉴스 생성 실행
-node --experimental-strip-types command.ts
-
-# 개발 모드 (watch)
-pnpm dev
-
-# 패키지 스크립트
-pnpm generate         # 뉴스 생성
-pnpm generate:news    # 뉴스 생성 (별칭)
+### 파일 구조
+```
+packages/news-generator/
+├── news-generator.ts          # 순수 함수 라이브러리 (핵심)
+├── command.ts                 # CLI 인터페이스 (Commander.js)
+├── prompts/                   # AI 프롬프트 템플릿
+│   └── news-consolidation.md # 뉴스 통합 프롬프트
+├── package.json               # 의존성 및 exports
+└── CLAUDE.md                  # 이 문서
 ```
 
-### 2. 라이브러리 사용 (Pure Functions)
+---
+
+## 🔧 API 및 함수 시그니처
+
+### 핵심 함수 (news-generator.ts)
+
+#### generateNews()
 ```typescript
-import { generateNews, formatAsMarkdown, type NewsDetail } from '@ai-newscast/news-generator';
-import newsConsolidationPrompt from '@ai-newscast/news-generator/prompts/news-consolidation.md';
+export async function generateNews(
+  newsDetails: NewsDetail[],
+  promptTemplate: string,
+  apiKey: string
+): Promise<GenerationResult>
 
-// 뉴스 데이터 준비
-const newsDetails: NewsDetail[] = [...];
-
-// AI 뉴스 생성
-const result = await generateNews(
-  newsDetails,
-  newsConsolidationPrompt,
-  'your-gemini-api-key'
-);
-
-// Markdown 변환
-const markdownContent = formatAsMarkdown(result.generatedNews);
-
-console.log(`Generated in ${result.executionTime}ms`);
-```
-
-## 📋 API 참조
-
-### 핵심 함수
-
-#### `generateNews(newsDetails, promptTemplate, apiKey)`
-여러 뉴스 기사를 하나의 통합 뉴스로 생성하는 핵심 함수
-
-**파라미터:**
-- `newsDetails: NewsDetail[]` - 크롤링된 뉴스 상세 정보 배열
-- `promptTemplate: string` - AI 생성용 프롬프트 템플릿
-- `apiKey: string` - Google Gemini API 키
-
-**반환값:** `Promise<GenerationResult>`
-```typescript
 interface GenerationResult {
   generatedNews: GeneratedNews;
-  executionTime: number;  // 밀리초
+  executionTime: number;  // 밀리세컨드
 }
 ```
 
-#### `formatAsMarkdown(news)`
-생성된 뉴스를 Markdown 형식으로 변환
+**역할**: 여러 뉴스 기사를 Google Gemini API로 통합 뉴스 생성
 
-**파라미터:**
-- `news: GeneratedNews` - 생성된 뉴스 데이터
+**파라미터**:
+- `newsDetails`: 크롤링된 뉴스 상세 정보 배열
+- `promptTemplate`: AI 프롬프트 템플릿 문자열
+- `apiKey`: Google Gemini API 키
 
-**반환값:** `string` - Markdown 형식 문서
+**반환**: 생성된 뉴스 데이터와 실행 시간
+
+#### formatAsMarkdown()
+```typescript
+export function formatAsMarkdown(news: GeneratedNews): string
+```
+
+**역할**: 생성된 뉴스를 Markdown 형식으로 변환
+
+**파라미터**:
+- `news`: 생성된 뉴스 데이터
+
+**반환**: Markdown 형식 문자열
 
 ### 타입 정의
 
-#### `NewsDetail`
+#### NewsDetail (입력)
 ```typescript
 interface NewsDetail {
   extraction_timestamp: string;
   original_news_id: string;
   api_news_id: string;
-  news_detail: any;
   content: string;
   metadata: {
     title: string;
@@ -115,156 +100,287 @@ interface NewsDetail {
 }
 ```
 
-#### `GeneratedNews` (from @ai-newscast/core)
+#### GeneratedNews (출력, from @ai-newscast/core)
 ```typescript
 interface GeneratedNews {
   title: string;
   summary: string;
-  content: string;
+  content: string;  // 500자 이상
   sources_count: number;
   sources: {
-    [provider: string]: {
+    [provider: string]: Array<{
       title: string;
       url: string;
-    }[]
+    }>;
   };
   generation_timestamp: string;
   input_articles_count: number;
 }
 ```
 
-## 📄 프롬프트 시스템
+---
 
-### 프롬프트 파일 위치
-```
-prompts/
-└── news-consolidation.md    # 뉴스 통합 생성 프롬프트
-```
+## 🎨 코딩 규칙 (패키지 특화)
 
-### 프롬프트 특징
-- **체계적 구조**: 입력 데이터, 작업 요구사항, 출력 형식, 출력 규칙
-- **품질 가이드라인**: 제목, 요약, 본문에 대한 세부 지침
-- **JSON 스키마**: 구조화된 출력 형식 정의
-- **다국어 지원**: 한국어 중심 뉴스 생성 최적화
+### 필수 규칙 (루트 CLAUDE.md 공통 규칙 준수)
+- **camelCase**: `newsID`, `apiKey` (루트 CLAUDE.md 참조)
+- **시간 단위**: 밀리세컨드 기본, 단위 생략 (루트 CLAUDE.md 참조)
+- **Nullish Coalescing**: `??` 사용, `||` 금지 (루트 CLAUDE.md 참조)
 
-### 프롬프트 import 방법
+### 순수 함수 원칙 (CRITICAL)
+
+#### MUST: news-generator.ts는 순수 함수만
 ```typescript
-// esbuild 환경 (Cloudflare Workers)
-import newsConsolidationPrompt from '@ai-newscast/news-generator/prompts/news-consolidation.md';
+// ✅ CORRECT (news-generator.ts)
+export async function generateNews(
+  newsDetails: NewsDetail[],
+  promptTemplate: string,
+  apiKey: string
+): Promise<GenerationResult> {
+  // AI API 호출만 (파일 I/O 없음)
+  const result = await callGeminiAPI(newsDetails, promptTemplate, apiKey);
+  return {
+    generatedNews: result,
+    executionTime: Date.now() - startTime
+  };
+}
 
-// Node.js 환경
-import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
+// ❌ WRONG (news-generator.ts에서 금지)
+import { writeFileSync } from 'fs';
 
-const promptPath = join(__dirname, 'prompts', 'news-consolidation.md');
-const prompt = readFileSync(promptPath, 'utf-8');
+export async function generateNews(...) {
+  const result = await callGeminiAPI(...);
+  writeFileSync('output.json', JSON.stringify(result));  // ❌ 파일 I/O 금지
+  return result;
+}
 ```
 
-## 📁 파일 구조
-
-```
-packages/news-generator/
-├── news-generator.ts        # 순수 함수 라이브러리
-├── command.ts              # Commander.js CLI 인터페이스
-├── package.json            # 패키지 설정
-├── prompts/               # AI 프롬프트 템플릿
-│   └── news-consolidation.md
-└── CLAUDE.md              # 이 문서
-```
-
-## 🔧 개발 가이드
-
-### 아키텍처 원칙
-1. **순수 함수**: `news-generator.ts`는 파일 I/O 없는 순수 함수만 포함
-2. **관심사 분리**: CLI 로직은 `command.ts`에서 분리 관리
-3. **재사용성**: 다양한 환경에서 import하여 사용 가능
-4. **타입 안전성**: TypeScript + Zod 스키마로 타입 검증
-
-### 환경변수
-```bash
-# .env 파일
-GOOGLE_GEN_AI_API_KEY=your_gemini_api_key_here
-```
-
-### 개발 명령어
-```bash
-# 타입 체크
-tsc --noEmit
-
-# 개발 실행
-node --experimental-strip-types --watch command.ts
-
-# 테스트
-node --experimental-strip-types --test **/*.test.ts
-```
-
-## 🚨 운영 고려사항
-
-### Google Gemini API
-- **Rate Limit**: 3초 지연으로 API 제한 준수 권장
-- **Context Length**: 매우 긴 뉴스의 경우 분할 처리 필요
-- **Error Handling**: JSON 파싱 실패 시 재시도 로직 구현
-
-### 성능 최적화
-- **실행 시간 추적**: `GenerationResult.executionTime`으로 성능 모니터링
-- **메모리 관리**: 대용량 뉴스 데이터 처리 시 주의
-- **동시 처리**: API Rate Limit 준수하며 병렬 처리 구현
-
-### 에러 처리
+#### MUST: CLI 로직은 command.ts에만
 ```typescript
+// ✅ CORRECT (command.ts)
+import { writeFileSync } from 'fs';
+import { generateNews } from './news-generator.ts';
+
+program
+  .action(async (options) => {
+    const result = await generateNews(newsDetails, prompt, apiKey);
+    writeFileSync(options.output, JSON.stringify(result.generatedNews));  // CLI에서만 파일 I/O
+  });
+
+// ❌ WRONG (news-generator.ts)
+export async function generateNews(...) {
+  writeFileSync(...);  // ❌ 순수 함수에서 파일 I/O 금지
+}
+```
+
+### Google Gemini API 사용 규칙
+
+#### MUST: JSON 파싱 에러 처리
+```typescript
+// ✅ CORRECT
+const response = await model.generateContent(prompt);
+const text = response.response.text();
+
+// JSON 추출 (```json ... ``` 제거)
+const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
+if (!jsonMatch) {
+  throw new Error('No valid JSON found in AI response');
+}
+
+const generatedNews = JSON.parse(jsonMatch[1]);
+
+// ❌ WRONG
+const generatedNews = JSON.parse(response.response.text());  // ❌ 에러 처리 없음
+```
+
+#### MUST: 프롬프트 변수 치환
+```typescript
+// ✅ CORRECT
+const prompt = promptTemplate
+  .replace('{{NEWS_COUNT}}', newsDetails.length.toString())
+  .replace('{{NEWS_DATA}}', JSON.stringify(newsDetails, null, 2));
+
+// ❌ WRONG
+const prompt = promptTemplate;  // ❌ 변수 치환 없음
+```
+
+### 타입 검증
+
+#### MUST: Zod 스키마 검증 (출력)
+```typescript
+// ✅ CORRECT
+import { z } from 'zod';
+
+const GeneratedNewsSchema = z.object({
+  title: z.string().min(1),
+  summary: z.string().min(1),
+  content: z.string().min(500),  // 500자 이상 필수
+  sources_count: z.number().min(1),
+  sources: z.record(z.array(z.object({
+    title: z.string(),
+    url: z.string().url(),
+  }))),
+});
+
+const validated = GeneratedNewsSchema.parse(generatedNews);
+
+// ❌ WRONG
+const generatedNews = JSON.parse(jsonText);  // ❌ 검증 없음
+```
+
+---
+
+## 🚨 에러 처리 방식
+
+### Google Gemini API 에러
+
+```typescript
+// ✅ CORRECT
 try {
   const result = await generateNews(newsDetails, prompt, apiKey);
-  console.log('Success:', result.generatedNews);
+  return result;
 } catch (error) {
   if (error.message.includes('API key')) {
-    console.error('Google AI API key 설정 확인 필요');
+    console.error('Google Gemini API key 설정 확인 필요');
+    throw new Error('Invalid or missing Google Gemini API key');
   } else if (error.message.includes('No valid JSON')) {
     console.error('AI 응답 JSON 파싱 실패');
+    throw new Error('Failed to parse AI response as JSON');
   } else {
     console.error('뉴스 생성 오류:', error);
+    throw error;
   }
 }
 ```
 
-## 📊 사용 예시
+### Commander.js CLI 에러
 
-### CLI 워크플로우
-```bash
-# 1. 환경변수 설정
-export GOOGLE_GEN_AI_API_KEY="your_api_key"
-
-# 2. 뉴스 생성 실행
-node --experimental-strip-types command.ts
-
-# 3. 출력 확인
-ls output/*/topic-*/news.*
+```typescript
+// ✅ CORRECT (command.ts)
+program
+  .action(async (options) => {
+    try {
+      const result = await generateNews(newsDetails, prompt, apiKey);
+      console.log(`✓ 뉴스 생성 완료 (${result.executionTime}ms)`);
+    } catch (error) {
+      console.error('Error:', error.message);
+      process.exit(1);
+    }
+  });
 ```
 
-### 라이브러리 통합 (Cloudflare Workers)
+---
+
+## 🔗 다른 패키지와의 의존성
+
+### 의존 관계
+- **core**: `GeneratedNews` 타입 정의 import
+- **news-crawler**: 이 패키지가 crawler의 출력을 입력으로 사용
+- **news-generator-worker**: 이 패키지의 순수 함수를 Workers에서 재사용
+- **newscast-generator**: 이 패키지의 출력을 입력으로 사용
+
+### Export (다른 패키지에서 사용)
+
 ```typescript
-// handlers/generate.ts
-import { generateNews, formatAsMarkdown, type NewsDetail } from '@ai-newscast/news-generator/news-generator.ts';
+// news-generator-worker에서 사용 예시
+import { generateNews, formatAsMarkdown } from '@ai-newscast/news-generator';
 import newsConsolidationPrompt from '@ai-newscast/news-generator/prompts/news-consolidation.md';
 
-export async function handleGenerate(newsDetails: NewsDetail[], apiKey: string) {
+export async function handleGenerate(newsDetails, apiKey) {
   const result = await generateNews(newsDetails, newsConsolidationPrompt, apiKey);
-
   return {
-    json: JSON.stringify(result.generatedNews, null, 2),
+    json: JSON.stringify(result.generatedNews),
     markdown: formatAsMarkdown(result.generatedNews),
-    executionTime: result.executionTime
   };
 }
 ```
 
-## 🔄 업데이트 이력
+---
 
-### v1.0.0 (2025-09-19)
-- 순수 함수와 CLI 분리 아키텍처 구현
-- `generateNews()`, `formatAsMarkdown()` 핵심 함수 완성
-- Commander.js 기반 CLI 인터페이스 추가
-- Cloudflare Workers 호환성 확보
-- 체계적인 프롬프트 시스템 구축
+## ⚠️ 주의사항 (MUST/NEVER)
+
+### 아키텍처 원칙 (CRITICAL)
+
+#### MUST: 순수 함수와 CLI 분리
+- `news-generator.ts`: 순수 함수만 (파일 I/O 금지)
+- `command.ts`: CLI 로직 및 파일 I/O
+
+#### NEVER: 순수 함수에서 부작용
+```typescript
+// ❌ WRONG (news-generator.ts에서 금지)
+import { writeFileSync } from 'fs';
+import { existsSync } from 'fs';
+import { config } from 'dotenv';
+
+export async function generateNews(...) {
+  config();  // ❌ 환경 변수 로딩 금지
+  writeFileSync(...);  // ❌ 파일 쓰기 금지
+  console.log(...);  // ⚠️ 로깅은 허용 (디버깅 목적)
+}
+```
+
+### Google Gemini API (MUST)
+
+#### MUST: Rate Limit 준수
+```typescript
+// ✅ CORRECT (3초 지연 권장)
+await generateNews(newsDetails1, prompt, apiKey);
+await new Promise(resolve => setTimeout(resolve, 3000));  // 3초 대기
+await generateNews(newsDetails2, prompt, apiKey);
+
+// ❌ WRONG
+await Promise.all([
+  generateNews(newsDetails1, prompt, apiKey),
+  generateNews(newsDetails2, prompt, apiKey),
+]);  // ❌ 동시 호출 금지 (rate limit 초과)
+```
+
+#### MUST: API 키 검증
+```typescript
+// ✅ CORRECT
+if (!apiKey) {
+  throw new Error('Google Gemini API key is required');
+}
+
+// ❌ WRONG
+const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });  // ❌ 키 검증 없음
+```
+
+### 프롬프트 시스템 (MUST)
+
+#### MUST: 프롬프트 변수 치환
+```typescript
+// ✅ CORRECT
+const prompt = promptTemplate
+  .replace('{{NEWS_COUNT}}', newsDetails.length.toString())
+  .replace('{{NEWS_DATA}}', JSON.stringify(newsDetails));
+
+// ❌ WRONG
+const prompt = promptTemplate;  // ❌ 변수 미치환
+```
+
+#### MUST: 출력 형식 검증
+```typescript
+// ✅ CORRECT
+const GeneratedNewsSchema = z.object({
+  title: z.string().min(1),
+  content: z.string().min(500),  // 500자 이상 필수
+});
+
+const validated = GeneratedNewsSchema.parse(generatedNews);
+
+// ❌ WRONG
+const generatedNews = JSON.parse(jsonText);  // ❌ 길이 검증 없음
+```
 
 ---
-*최종 업데이트: 2025-09-19 - 순수 함수 라이브러리 및 CLI 분리 아키텍처 완성*
+
+## 📚 참고 문서
+
+- **프로젝트 공통 규칙**: [../../CLAUDE.md](../../CLAUDE.md)
+- **Core 타입 정의**: [../core/CLAUDE.md](../core/CLAUDE.md)
+- **프롬프트 템플릿**: [prompts/news-consolidation.md](prompts/news-consolidation.md)
+
+---
+
+*최종 업데이트: 2025-10-11 - 순수 함수 아키텍처 및 분리 원칙 강화*

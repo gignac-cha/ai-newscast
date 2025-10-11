@@ -1,172 +1,113 @@
 # News Generator Worker Package - AI Development Guide
 
-Claude에게: 이 패키지는 `@ai-newscast/news-generator`의 순수 함수를 Workers 환경에서 호출합니다. 사용자 친화적 정보는 README.md를 참조하세요. 이 문서는 Workers 통합 패턴과 기술 세부사항에 집중합니다.
+## 📋 패키지 역할 및 책임
 
-## 🏗️ 아키텍처 패턴
+### 핵심 역할
+1. R2에서 토픽별 크롤링된 뉴스 기사 읽기
+2. Gemini AI로 여러 기사를 하나의 통합 뉴스로 합성
+3. @ai-newscast/news-generator 순수 함수 활용
+4. R2에 JSON 및 Markdown 저장
+5. Cron Triggers로 토픽별 자동 생성 스케줄링
 
-**핵심 설계:**
-- **순수 함수 래핑**: `@ai-newscast/news-generator`의 `generateNews()` 호출
-- **중앙화된 프롬프트**: `news-consolidation.md` 공유 사용 (CLI와 Worker 일관성)
-- **R2 데이터 흐름**: R2 읽기 → AI 처리 → R2 쓰기
-- **esbuild 통합**: .md 파일 import 지원 (text loader)
+### 구현 상태
+- ✅ **완성** - Cloudflare Workers API
+- ✅ Gemini AI 통합
+- ✅ 순수 함수 라이브러리 활용
+- ✅ 토픽별 분산 스케줄링 (09:41-09:50)
 
-**Workers 제약사항 대응:**
-- CPU 시간 30초: AI 호출 시간 포함하여 제한 준수
-- 메모리 128MB: 대용량 뉴스 데이터 처리 시 주의
-- 외부 API: Google Gemini API 호출 신뢰성 확보
+---
 
-## 🛠️ 기술 스택
+## 🏗️ 파일 구조 및 역할
 
-### Cloudflare Workers 환경
-- **Runtime**: TypeScript + esbuild 번들링
-- **AI 모델**: Google Gemini 2.5 Pro API
-- **스토리지**: R2 Bucket (입력/출력 데이터) + KV Namespace (메타데이터)
-- **빌드**: ESBuild (최적화된 번들링)
-
-### 의존성
-- **@ai-newscast/core**: 공통 타입 정의 (`GeneratedNews`)
-- **@ai-newscast/news-generator**: 순수 함수 라이브러리 (`generateNews`, `formatAsMarkdown`)
-- **@cloudflare/workers-types**: Workers 타입 정의
-- **esbuild**: 번들링 및 .md 파일 import 지원
-
-## 🚀 배포 및 설정
-
-### 환경 요구사항
-- **Wrangler CLI**: Cloudflare Workers 배포 도구
-- **Node.js**: 24+ (TypeScript experimental stripping)
-- **Google AI API Key**: Gemini 2.5 Pro 액세스
-
-### 배포 명령어
-```bash
-# 개발 환경 빌드
-pnpm build
-pnpm dev          # watch 모드
-
-# 로컬 개발 서버
-pnpm run dev:worker
-
-# 프로덕션 배포
-pnpm run deploy
-
-# 타입 체크
-pnpm typecheck
+```
+packages/news-generator-worker/
+├── worker.ts               # 메인 Worker 엔트리포인트 (라우팅)
+├── wrangler.toml          # Cloudflare 설정 (R2, KV, Cron)
+├── build.ts               # esbuild 번들링 설정 (.md import)
+├── handlers/              # API 핸들러
+│   ├── help.ts           # GET / - 헬프 메시지
+│   ├── news.ts           # POST /news - 뉴스 통합 생성
+│   └── status.ts         # GET /status - 생성 상태
+└── package.json          # 의존성 및 스크립트
 ```
 
-### Cloudflare 리소스 설정
-```toml
-# wrangler.toml
-[[r2_buckets]]
-binding = "AI_NEWSCAST_BUCKET"
-bucket_name = "ai-newscast"
+---
 
-[[kv_namespaces]]
-binding = "AI_NEWSCAST_KV"
-id = "1a002997dc124ce9a4ff5080a7e2b5e6"
+## 🔧 API 및 함수 시그니처
 
-[vars]
-GOOGLE_GEN_AI_API_KEY = "your_gemini_api_key_here"
-```
+### POST /news (handlers/news.ts)
+```typescript
+export async function handleNews(
+  request: Request,
+  env: Env
+): Promise<Response>
 
-## 📋 API 엔드포인트
-
-### GET /
-헬프 메시지 및 사용 가능한 엔드포인트 목록
-
-### POST /generate?newscast-id={id}&topic-index={n}
-```bash
-curl -X POST "https://ai-newscast-news-generator-worker.r-s-account.workers.dev/generate?newscast-id=2025-09-17T16-50-13-648Z&topic-index=1"
-```
-
-**기능:**
-- 지정된 토픽의 모든 크롤링된 뉴스 기사 읽기
-- Google Gemini AI로 통합 뉴스 생성
-- JSON/Markdown 형태로 R2에 저장
-
-**파라미터:**
-- `newscast-id`: 뉴스캐스트 ID (필수)
-- `topic-index`: 토픽 인덱스 1-10 (필수)
-- `format`: 응답 형식 (json|markdown), 기본값 json
-
-**응답 예시:**
-```json
-{
-  "success": true,
-  "newscast_id": "2025-09-17T16-50-13-648Z",
-  "topic_index": 1,
-  "input_articles_count": 25,
-  "sources_count": 8,
-  "output_files": {
-    "json": "newscasts/2025-09-17T16-50-13-648Z/topic-01/news.json",
-    "markdown": "newscasts/2025-09-17T16-50-13-648Z/topic-01/news.md"
-  },
-  "execution_time_ms": 15420,
-  "message": "Successfully generated news for topic 1 from 25 articles"
+// 필수 파라미터
+interface NewsParams {
+  newscastID: string;      // ?newscast-id=2025-10-05T10-00-00-000Z
+  topicIndex: number;      // ?topic-index=1
 }
+
+// R2 입력 경로
+newscasts/{newscastID}/topic-{NN}/news/*.json
+
+// R2 출력 경로
+newscasts/{newscastID}/topic-{NN}/news.json
+newscasts/{newscastID}/topic-{NN}/news.md
 ```
 
-**출력 구조:**
-```
-newscasts/{newscast-id}/topic-{01-10}/
-├── news.json              # AI 통합 뉴스 (JSON)
-└── news.md                # AI 통합 뉴스 (Markdown)
-```
+### GET /status (handlers/status.ts)
+```typescript
+export async function handleStatus(
+  request: Request,
+  env: Env
+): Promise<Response>
 
-### GET /status?newscast-id={id}
-```bash
-curl "https://ai-newscast-news-generator-worker.r-s-account.workers.dev/status?newscast-id=2025-09-17T16-50-13-648Z"
-```
-
-**기능:**
-- 뉴스캐스트의 전체 생성 상태 확인
-- 토픽별 생성 완료 여부 추적
-- 진행률 및 완료 정보 제공
-
-**응답 예시:**
-```json
+// 응답 예시
 {
-  "success": true,
-  "newscast_id": "2025-09-17T16-50-13-648Z",
-  "total_topics": 10,
-  "generated_topics": 3,
-  "completion_percentage": 30,
-  "is_complete": false,
-  "topics": [
+  success: true,
+  newscast_id: "2025-10-05T10-00-00-000Z",
+  total_topics: 10,
+  generated_topics: 3,
+  completion_percentage: 30,
+  topics: [
     {
-      "topic_index": 1,
-      "generated": true,
-      "has_json": true,
-      "has_markdown": true,
-      "generation_timestamp": "2025-09-18T02:15:30.123Z",
-      "input_articles_count": 25
+      topic_index: 1,
+      generated: true,
+      has_json: true,
+      has_markdown: true
     }
   ]
 }
 ```
 
-## 🤖 AI 뉴스 통합 프로세스
+---
 
-### 입력 데이터 구조
-각 토픽의 `news/` 폴더에서 크롤링된 뉴스 파일들을 읽어옵니다:
-```
-newscasts/{newscast-id}/topic-{01-10}/news/
-├── {news-id-1}.json
-├── {news-id-2}.json
-└── ...
-```
+## 🎨 코딩 규칙 (패키지 특화)
 
-### AI 통합 과정
-1. **데이터 수집**: 토픽 폴더의 모든 뉴스 JSON 파일 읽기 (R2 API)
-2. **순수 함수 호출**: `@ai-newscast/news-generator`의 `generateNews()` 활용
-3. **중앙화된 프롬프트**: `news-consolidation.md` 공유 사용
-4. **결과 처리**: `formatAsMarkdown()` 함수로 마크다운 변환
-5. **저장**: JSON/Markdown 형태로 R2에 저장
+### 필수 규칙 (루트 CLAUDE.md 공통 규칙 준수)
+- **camelCase**: `newscastID`, `topicIndex` (루트 CLAUDE.md 참조)
+- **시간 단위**: 밀리세컨드 기본, 단위 생략 (루트 CLAUDE.md 참조)
+- **Nullish Coalescing**: `??` 사용, `||` 금지 (루트 CLAUDE.md 참조)
 
-### 핵심 구현 패턴
+### 순수 함수 활용 규칙 (CRITICAL)
+
+#### MUST: @ai-newscast/news-generator import
 ```typescript
-import { generateNews, formatAsMarkdown, type NewsDetail } from '@ai-newscast/news-generator/news-generator.ts';
+// ✅ CORRECT
+import { generateNews, formatAsMarkdown } from '@ai-newscast/news-generator/news-generator.ts';
 import newsConsolidationPrompt from '@ai-newscast/news-generator/prompts/news-consolidation.md';
+import type { NewsDetail, GeneratedNews } from '@ai-newscast/news-generator/news-generator.ts';
 
-// 순수 함수 라이브러리 활용
+// ❌ WRONG
+import { generateNews } from '@ai-newscast/news-generator';  // ❌ .ts 생략
+```
+
+#### MUST: 순수 함수만 호출 (Worker에서 파일 I/O 없음)
+```typescript
+// ✅ CORRECT
+const newsDetails: NewsDetail[] = await readNewsFromR2(env, newscastID, topicIndex);
+
 const result = await generateNews(
   newsDetails,
   newsConsolidationPrompt,
@@ -174,115 +115,275 @@ const result = await generateNews(
 );
 
 const markdownContent = formatAsMarkdown(result.generatedNews);
+
+// ❌ WRONG
+import { generateNewsFromFiles } from '@ai-newscast/news-generator/command.ts';
+await generateNewsFromFiles('./input', './output');  // ❌ CLI 함수 (파일 I/O)
 ```
 
-### 출력 데이터 구조
+### R2 경로 규칙
+
+#### MUST: 토픽 패딩
 ```typescript
-interface GeneratedNews {
-  title: string;                    // 통합된 뉴스 제목
-  summary: string;                  // 3-4문장 요약
-  content: string;                  // 상세 본문 (500자 이상)
-  sources_count: number;            // 참고 언론사 수
-  sources: {                        // 언론사별 소스 목록
-    [provider: string]: {
-      title: string;
-      url: string;
-    }[]
-  };
-  generation_timestamp: string;     // 생성 시간
-  input_articles_count: number;     // 입력 기사 수
+// ✅ CORRECT
+const topicPadded = topicIndex.toString().padStart(2, '0');  // 01, 02, ..., 10
+const newsPath = `newscasts/${newscastID}/topic-${topicPadded}/news`;
+
+// ❌ WRONG
+const newsPath = `newscasts/${newscastID}/topic-${topicIndex}/news`;  // ❌ topic-1 (패딩 없음)
+```
+
+#### MUST: R2 리스트 객체 처리
+```typescript
+// ✅ CORRECT
+const listResult = await env.AI_NEWSCAST_BUCKET.list({
+  prefix: `newscasts/${newscastID}/topic-${topicPadded}/news/`
+});
+
+const newsDetails: NewsDetail[] = [];
+
+for (const object of listResult.objects) {
+  if (object.key.endsWith('.json')) {
+    const r2Object = await env.AI_NEWSCAST_BUCKET.get(object.key);
+    if (r2Object) {
+      const newsData = await r2Object.json();
+      newsDetails.push(newsData);
+    }
+  }
+}
+
+if (newsDetails.length === 0) {
+  return new Response(JSON.stringify({
+    error: `No news articles found in ${newsPath}`
+  }), { status: 404 });
+}
+
+// ❌ WRONG
+const newsDetails = listResult.objects.map(obj => obj.json());  // ❌ 동기 처리 불가
+```
+
+### Gemini API 호출 규칙
+
+#### MUST: 순수 함수로 캡슐화
+```typescript
+// ✅ CORRECT - news-generator.ts 순수 함수 사용
+const result = await generateNews(
+  newsDetails,
+  newsConsolidationPrompt,
+  env.GOOGLE_GEN_AI_API_KEY
+);
+
+// result.generatedNews: GeneratedNews 객체
+// result.executionTime: 밀리세컨드
+
+// ❌ WRONG - Worker에서 직접 Gemini API 호출
+import { GoogleGenerativeAI } from '@google/genai';
+const genAI = new GoogleGenerativeAI(env.GOOGLE_GEN_AI_API_KEY);
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-pro-exp' });
+// ... 직접 프롬프트 구성 및 호출 (코드 중복, 일관성 저하)
+```
+
+### Cron Triggers 규칙
+
+#### MUST: 토픽 인덱스 계산 (시간 기반)
+```typescript
+// ✅ CORRECT
+const currentHour = new Date().getUTCHours();
+const currentMinute = new Date().getUTCMinutes();
+
+let topicIndex: number;
+
+if (currentHour === 9 && currentMinute >= 41 && currentMinute <= 49) {
+  topicIndex = currentMinute - 40;  // 41→1, 42→2, ..., 49→9
+} else if (currentHour === 9 && currentMinute === 50) {
+  topicIndex = 10;
+} else {
+  throw new Error('Invalid cron execution time');
+}
+
+// ❌ WRONG
+const topicIndex = 1;  // ❌ 하드코딩 (모든 Cron에서 토픽 1만 생성)
+```
+
+---
+
+## 🚨 에러 처리 방식
+
+### Workers 표준 에러 응답
+
+```typescript
+// ✅ CORRECT
+export async function handleNews(request: Request, env: Env): Promise<Response> {
+  try {
+    // 파라미터 검증
+    const { newscastID, topicIndex } = validateParams(request);
+
+    // R2에서 뉴스 읽기
+    const newsDetails = await readNewsFromR2(env, newscastID, topicIndex);
+
+    // 순수 함수 호출
+    const result = await generateNews(
+      newsDetails,
+      newsConsolidationPrompt,
+      env.GOOGLE_GEN_AI_API_KEY
+    );
+
+    // R2에 저장
+    await saveToR2(env, newscastID, topicIndex, result);
+
+    return new Response(JSON.stringify({
+      success: true,
+      newscast_id: newscastID,
+      topic_index: topicIndex,
+      input_articles_count: newsDetails.length,
+      execution_time_ms: result.executionTime
+    }), { status: 200 });
+
+  } catch (error) {
+    console.error('[ERROR]', error.message);
+    return new Response(JSON.stringify({
+      error: error.message,
+      status: 500
+    }), { status: 500 });
+  }
+}
+
+// ❌ WRONG
+export async function handleNews(request: Request, env: Env): Promise<Response> {
+  const result = await generateNews({...});  // ❌ try/catch 없음
+  return new Response(JSON.stringify(result));
 }
 ```
 
-## 📁 파일 구조
+### 로깅 패턴
 
+```typescript
+// ✅ CORRECT
+console.log(`[INFO] Processing newscast: ${newscastID}, topic: ${topicIndex}`);
+console.log(`[INFO] Found ${newsDetails.length} articles`);
+console.log(`[INFO] Calling Gemini API...`);
+console.log(`[INFO] Generated news: ${result.generatedNews.title}`);
+console.log(`[INFO] Execution time: ${result.executionTime}ms`);
+
+// ❌ WRONG
+console.log('Processing...');  // ❌ 구체적 정보 없음
 ```
-packages/news-generator-worker/
-├── worker.ts                # 메인 Worker 엔트리포인트
-├── wrangler.toml           # Cloudflare Workers 설정
-├── build.ts                # esbuild 설정
-├── handlers/               # API 핸들러
-│   ├── help.ts            # 헬프 엔드포인트
-│   ├── generate.ts        # 뉴스 생성 핸들러
-│   └── status.ts          # 상태 확인 핸들러
-├── utils/                 # 유틸리티 함수
-│   ├── cors.ts           # CORS 헤더 처리
-│   ├── error.ts          # 에러 응답 생성
-│   ├── json.ts           # JSON 응답 생성
-│   ├── response.ts       # HTTP 응답 래퍼
-│   └── fetch.ts          # 확장된 fetch 유틸리티
-└── dist/                 # 빌드 결과물
-```
-
-## 🔧 개발 가이드
-
-### 로컬 개발
-```bash
-# 개발 서버 시작 (hot reload)
-pnpm run dev:worker
-
-# 빌드 및 배포
-pnpm run deploy
-```
-
-### 환경변수 및 설정
-- **R2 Bucket**: `AI_NEWSCAST_BUCKET` (ai-newscast)
-- **KV Namespace**: `AI_NEWSCAST_KV` (메타데이터 저장)
-- **Google AI API Key**: `GOOGLE_GEN_AI_API_KEY`
-
-### AI 프롬프트 커스터마이징
-`@ai-newscast/news-generator/prompts/news-consolidation.md` 파일을 수정하여 AI 생성 동작을 조정할 수 있습니다. 이 프롬프트는 중앙에서 관리되어 CLI와 Worker 모두에서 일관된 품질을 보장합니다.
-
-## 🚨 운영 고려사항
-
-### Cloudflare Workers 제한사항
-- **CPU 시간**: 30초 (AI 생성 시간 고려)
-- **메모리**: 128MB (대용량 뉴스 데이터 처리 시 주의)
-- **외부 API 호출**: Google AI API 호출 시간 포함
-
-### Google Gemini API 제한사항
-- **Rate Limit**: API 요청 간 3초 지연 권장
-- **Context Length**: 매우 긴 뉴스의 경우 분할 처리 필요
-- **Cost**: API 호출 비용 모니터링 필요
-
-### 에러 처리 및 복구
-- **AI 응답 파싱 실패**: JSON 형식 검증 및 재시도 로직
-- **R2 읽기/쓰기 실패**: 적절한 에러 메시지 및 상태 코드
-- **API 키 오류**: 환경변수 설정 확인
-
-### 성능 최적화
-- **순수 함수 활용**: 중복 코드 제거 및 일관된 성능
-- **중앙화된 프롬프트**: 프롬프트 최적화의 단일 진실 공급원
-- **실행 시간 추적**: `result.executionTime`으로 성능 모니터링
-- **병렬 처리**: 여러 토픽 동시 생성 가능
-
-## 📊 모니터링 및 디버깅
-
-### 로그 확인
-```bash
-# Workers 로그 실시간 확인
-wrangler tail
-
-# 특정 배포 버전 확인
-wrangler deployments list
-```
-
-### 상태 확인
-```bash
-# 생성 상태 확인
-curl "https://ai-newscast-news-generator-worker.r-s-account.workers.dev/status?newscast-id=latest"
-
-# 특정 토픽 생성
-curl -X POST "https://ai-newscast-news-generator-worker.r-s-account.workers.dev/generate?newscast-id=latest&topic-index=1"
-```
-
-## 🔄 업데이트 이력
-
-### v1.1.0 (2025-09-19)
-- `@ai-newscast/news-generator` 순수 함수 라이브러리 활용
-- 중앙화된 프롬프트 시스템 구현 (news-consolidation.md)
-- esbuild 플러그인으로 .md 파일 import 지원
-- 코드 중복 제거 및 일관된 뉴스 생성 품질 확보
 
 ---
-*최종 업데이트: 2025-09-19 - 순수 함수 라이브러리 통합 및 아키텍처 개선*
+
+## 🔗 다른 패키지와의 의존성
+
+### 의존 관계
+- **@ai-newscast/news-generator**: 순수 함수 라이브러리 (generateNews, formatAsMarkdown)
+- **@ai-newscast/core**: 공통 타입 정의
+- **news-crawler-worker**: 이전 파이프라인 단계 (뉴스 크롤링)
+- **newscast-generator-worker**: 다음 파이프라인 단계 (스크립트 생성)
+
+### Import 패턴
+
+```typescript
+// ✅ CORRECT
+import { generateNews, formatAsMarkdown } from '@ai-newscast/news-generator/news-generator.ts';
+import newsConsolidationPrompt from '@ai-newscast/news-generator/prompts/news-consolidation.md';
+import type { GeneratedNews } from '@ai-newscast/core';
+
+// ❌ WRONG
+import { generateNews } from '@ai-newscast/news-generator';  // ❌ .ts 생략
+```
+
+---
+
+## ⚠️ 주의사항 (MUST/NEVER)
+
+### Cloudflare Workers 제약 (MUST)
+
+#### MUST: CPU 시간 제한 (30초)
+```typescript
+// ✅ CORRECT
+// Gemini API 응답 시간은 보통 10-20초
+const result = await generateNews(newsDetails, promptTemplate, apiKey);
+
+// ❌ WRONG
+// 100개 파일 순차 처리 (30초 초과 위험)
+for (let i = 0; i < 100; i++) {
+  await processFile(i);  // ❌ 타임아웃 위험
+}
+```
+
+#### NEVER: 파일 시스템 접근
+```typescript
+// ❌ WRONG
+import { readFileSync } from 'fs';
+const data = readFileSync('./input.json');  // ❌ Workers에서 불가능
+
+// ✅ CORRECT - R2 사용
+const r2Object = await env.AI_NEWSCAST_BUCKET.get(path);
+const data = await r2Object.json();
+```
+
+### R2 스토리지 규칙 (MUST)
+
+#### MUST: JSON과 Markdown 둘 다 저장
+```typescript
+// ✅ CORRECT
+await env.AI_NEWSCAST_BUCKET.put(
+  `${basePath}/news.json`,
+  JSON.stringify(result.generatedNews)
+);
+
+const markdownContent = formatAsMarkdown(result.generatedNews);
+await env.AI_NEWSCAST_BUCKET.put(
+  `${basePath}/news.md`,
+  markdownContent
+);
+
+// ❌ WRONG
+await env.AI_NEWSCAST_BUCKET.put(
+  `${basePath}/news.json`,
+  JSON.stringify(result.generatedNews)
+);  // ❌ Markdown 누락
+```
+
+#### MUST: httpMetadata 설정
+```typescript
+// ✅ CORRECT
+await env.AI_NEWSCAST_BUCKET.put(
+  path,
+  jsonString,
+  { httpMetadata: { contentType: 'application/json' } }
+);
+
+await env.AI_NEWSCAST_BUCKET.put(
+  path,
+  markdownString,
+  { httpMetadata: { contentType: 'text/markdown' } }
+);
+
+// ❌ WRONG
+await env.AI_NEWSCAST_BUCKET.put(path, data);  // ❌ Content-Type 없음
+```
+
+### 환경변수 관리 (MUST)
+
+#### MUST: Wrangler Secrets 사용 (API 키)
+```bash
+# ✅ CORRECT
+wrangler secret put GOOGLE_GEN_AI_API_KEY
+
+# ❌ WRONG
+# wrangler.toml에 평문으로 저장 (보안 위험)
+[vars]
+GOOGLE_GEN_AI_API_KEY = "AIzaSy..."  # ❌ 절대 금지
+```
+
+---
+
+## 📚 참고 문서
+
+- **프로젝트 공통 규칙**: [../../CLAUDE.md](../../CLAUDE.md)
+- **핵심 라이브러리**: [../news-generator/CLAUDE.md](../news-generator/CLAUDE.md)
+- **Core 타입**: [../core/CLAUDE.md](../core/CLAUDE.md)
+
+---
+
+*최종 업데이트: 2025-10-11 - Cloudflare Workers API (Gemini 순수 함수 활용)*

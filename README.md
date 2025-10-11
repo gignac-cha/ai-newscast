@@ -1,277 +1,237 @@
 # AI Newscast
 
-> 🤖 AI-powered automated news casting system - **v3.7.2 Real-time Subtitle System & Source Links Complete** 
+> AI 기반 자동 뉴스캐스트 생성 시스템
 
 [![Version](https://img.shields.io/badge/version-3.7.2-blue.svg)](https://github.com/your-repo/ai-newscast)
 [![Pipeline](https://img.shields.io/badge/pipeline-7/7%20steps-brightgreen.svg)](PIPELINE_PLAN.md)
-[![AI](https://img.shields.io/badge/status-automation%20+%20web%20player-brightgreen.svg)](CLAUDE.md)
 [![License](https://img.shields.io/badge/license-ISC-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![TypeScript](https://img.shields.io/badge/typescript-5.0+-blue.svg)](https://typescriptlang.org)
 [![Node.js](https://img.shields.io/badge/node.js-24+-green.svg)](https://nodejs.org)
-[![pnpm](https://img.shields.io/badge/pnpm-10.12.2-yellow.svg)](https://pnpm.io)
 
-## 🚀 Features (v3.7.2 - Real-time Subtitle System & Source Links Complete)
+## 프로젝트 개요
 
-- **🕷️ Complete News Crawling**: ✅ 3-stage pipeline (topics → lists → details) with deduplication
-- **🤖 AI News Generation**: ✅ Google Gemini 2.5 Pro integration for intelligent news consolidation
-- **🎙️ AI Newscast Script Generation**: ✅ Two-host dialogue format with random TTS voice selection
-- **🎵 AI Audio Generation**: ✅ Google Cloud TTS Chirp HD with MP3 file generation (193 files tested)
-- **⚡ Parallel Processing**: ✅ GNU Parallel integration with auto-concurrency and rate limiting
-- **🎯 Modern CLI Experience**: ✅ Typer (Python) + Commander.js (TypeScript) with consistent UX
-- **🔧 Turbo + UV Integration**: ✅ Complete virtual environment automation with Turbo build system
-- **📊 Smart Data Processing**: ✅ 10 trending topics, up to 100 news per topic, full article extraction
-- **🔧 JSON Logging System**: ✅ Clean metadata extraction with jq parsing + dual output formats
-- **⚙️ Advanced Pipeline Control**: ✅ Skip functionality + resume capability for all 7 steps
-- **🎵 Multi-voice TTS**: ✅ Google Cloud TTS Chirp HD integration (8 premium Korean voices)
-- **🎛️ Audio Processing**: ✅ FFmpeg-based audio merging with @ffmpeg-installer integration
-- **⚡ High Performance**: ✅ UV + Turbo monorepo + TypeScript experimental stripping
-- **🌐 React Web Player**: ✅ TypeScript + React 19 + Radix UI newscast player with complete UI/UX
-- **🏗️ Modular Architecture**: ✅ Component refactoring (AudioPlayer, TopicCard, NewscastViewer) for maintainability
-- **⚡ React 19 Integration**: ✅ Modern ref handling, forwardRef removal, improved performance
-- **🎮 Advanced Audio Player**: ✅ Play/pause, progress bar, time display, fixed bottom player with marquee
-- **🎨 Interactive UI**: ✅ Expand/collapse cards, hover effects, smooth animations, 3-row layout
-- **📱 Responsive Design**: ✅ Markdown rendering, optimized click areas, source list expansion
-- **🔧 Modern Tooling**: ✅ Nullish coalescing (??), KV-based environment variables, Vite optimization
-- **🚀 Performance Optimization**: ✅ React.memo, useCallback, useMemo - 전면 메모이제이션 적용 (15개 컴포넌트)
-- **⚡ Bundle Optimization**: ✅ 벤더 청크 분리로 초기 로딩 성능 향상 (main 195.55 kB, build 33.97s)
-- **📺 Real-time Subtitle System**: ✅ Time-based script matching with duration_seconds from audio-files.json
-- **🔗 Interactive Source Links**: ✅ Popover-based source lists with clickable article links to original news
-- **🎯 Audio State Synchronization**: ✅ AudioContext for global state management across components
-- **🏗️ Clean Architecture**: ✅ 5/10 packages fully implemented, 7/7 pipeline steps + modular web player
-- **📋 Systematic Development**: ✅ PIPELINE_PLAN.md-based step-by-step implementation
+빅카인드(BigKinds)에서 실시간 뉴스를 자동으로 수집하고, AI가 뉴스를 분석·통합하여 듀얼 호스트 대화형 뉴스캐스트를 완전 자동으로 생성하는 시스템입니다.
 
-## 📦 Architecture
+**왜 이 프로젝트를 만들었나요?**
+- 매일 쏟아지는 수많은 뉴스를 효율적으로 소비하고 싶었습니다
+- 텍스트보다 오디오로 뉴스를 듣는 것이 더 편리합니다
+- AI 기술로 뉴스 제작 과정을 완전 자동화할 수 있음을 보여주고 싶었습니다
 
-### Package Structure (v3.7.2 Real-time Subtitle & Source Links Complete)
-```
-packages/
-├── news-crawler/         # ✅ Complete 3-stage pipeline (Python + UV)
-│   ├── news-topics       # ✅ Trending topics extraction (10 unique topics)
-│   ├── news-list         # ✅ News lists per topic (up to 100 articles each)
-│   └── news-details      # ✅ Full article content extraction
-├── news-generator/       # ✅ Complete AI news consolidation (TypeScript + Google Gemini)
-├── newscast-generator/   # ✅ Complete AI script + TTS audio + FFmpeg merging (modularized)
-├── newscast-latest-id/   # ✅ Complete Cloudflare Workers API (TypeScript + KV storage)
-├── newscast-web/         # ✅ Complete React web player (TypeScript + React 19 + Radix UI)
-├── core/                 # 🚧 Planned - Common types, utilities, configurations
-├── audio-processor/      # 🚧 Planned - Audio mixing and post-processing
-├── api-server/           # 🚧 Planned - Extended Cloudflare Workers API
-└── cli/                  # 🚧 Planned - Unified CLI interface
-```
+**무엇을 해결하나요?**
+- 뉴스 과부하: 10개 주요 토픽으로 압축하여 핵심만 전달
+- 시간 부족: 오디오 뉴스캐스트로 이동 중에도 청취 가능
+- 편향 감소: 여러 언론사 기사를 AI가 통합하여 균형잡힌 시각 제공
 
-### Technology Stack
-- **🐍 Python**: UV package manager, Typer CLI, requests, lxml (crawling pipeline)
-- **📘 TypeScript**: Node.js 24+, Commander.js CLI, experimental type stripping (AI generation)
-- **🏗️ Build Tools**: Turbo monorepo, pnpm@10.12.2 workspaces
-- **🤖 AI Services**: Google Gemini 2.5 Pro (implemented), Google Cloud TTS (planned)
-- **☁️ Deployment**: Cloudflare Workers (planned)
-- **📊 Data**: JSON/TXT dual output with timestamp-based organization
+## 주요 기능
 
-## 🚀 Quick Start
+### 완전 자동화 파이프라인 (7단계)
+1. **뉴스 토픽 추출**: 빅카인드에서 실시간 트렌딩 토픽 10개 수집
+2. **뉴스 목록 수집**: 각 토픽별 최대 100개 뉴스 기사 수집
+3. **상세 정보 추출**: 제목, 본문, 요약, 언론사, 기자명 등 완전한 데이터 추출
+4. **AI 뉴스 통합**: Google Gemini 2.5 Pro가 여러 기사를 하나로 통합
+5. **뉴스캐스트 스크립트 생성**: 듀얼 호스트 대화형 스크립트 자동 작성
+6. **TTS 오디오 생성**: Google Cloud TTS Chirp HD로 고품질 음성 생성
+7. **오디오 병합**: FFmpeg로 최종 뉴스캐스트 완성
 
-### Prerequisites
+### 웹 플레이어
+- React 19 기반 반응형 오디오 플레이어
+- 실시간 자막 시스템 (오디오와 동기화)
+- 클릭 가능한 뉴스 소스 링크
+- 진행률 표시, 재생/일시정지, 시간 표시
+
+### 고급 기능
+- GNU Parallel 병렬 처리로 10개 토픽을 동시에 처리
+- 중복 제거 알고리즘으로 유니크한 토픽만 선별
+- JSON/Markdown 듀얼 포맷 출력
+- 단계별 스킵 및 재개 기능
+
+## 빠른 시작
+
+### 사전 요구사항
+
 ```bash
-# Install Node.js 24+ and pnpm
+# Node.js 24+ 및 pnpm 설치
 npm install -g pnpm@10.12.2
 
-# Install UV (Python package manager)
+# UV (Python 패키지 매니저) 설치
 curl -LsSf https://astral.sh/uv/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
 
-# Install FFmpeg (for audio processing)
-# Ubuntu/Debian: apt install ffmpeg
-# macOS: brew install ffmpeg  
-# Windows: winget install ffmpeg
+# FFmpeg 설치 (오디오 처리용)
+# Ubuntu/Debian:
+sudo apt install ffmpeg
+
+# macOS:
+brew install ffmpeg
+
+# Windows:
+winget install ffmpeg
 ```
 
-### Setup
+### 설치
+
 ```bash
-# Clone and install dependencies
+# 저장소 클론
 git clone <repository-url> ai-newscast
 cd ai-newscast
+
+# 의존성 설치 및 빌드
 pnpm install && pnpm build
 
-# Set up environment variables
+# 환경 변수 설정
 cp .env.example .env
-# Edit .env with your Google Gemini API key
+# .env 파일을 열어 API 키 입력
 echo "GOOGLE_GEN_AI_API_KEY=your_api_key_here" >> .env
 ```
 
-### Usage
+### 사용 방법
 
-#### 🚀 Complete Pipeline (All-in-One)
+#### 전체 파이프라인 실행 (추천)
+
 ```bash
-# Full 4-stage pipeline with parallel processing (auto-concurrency)
+# 기본 실행 (자동 병렬 처리)
 ./scripts/run-all.sh
 
-# Parallel processing with custom concurrency
+# 병렬 처리 개수 조정
 ./scripts/run-all.sh --max-concurrency 4
 
-# Sequential processing (disable parallel)
-./scripts/run-all.sh --no-parallel
+# 특정 단계 건너뛰기
+./scripts/run-all.sh --skip newscast-audio --skip newscast
 
-# Dry-run mode (test without API calls)
-./scripts/run-all.sh --dry-run --max-concurrency 8
-
-# Skip specific stages for debugging
-./scripts/run-all.sh --skip-topics --skip-lists   # Only details + generation
-./scripts/run-all.sh --skip-generation            # Only crawling pipeline
-
-# Resume from existing output directory
-./scripts/run-all.sh --output-dir output/2025-06-27T15-52-44-934067
+# 기존 출력에서 재개
+./scripts/run-all.sh --output-dir output/2025-10-05T19-53-26-599Z
 ```
 
-#### 📊 Step-by-Step Pipeline
+#### 단계별 실행
+
 ```bash
-# 1. Crawl news topics (10 unique topics from BigKinds)
-pnpm run:crawler:news-topics --output-file ./output/topic-list.json
+# 1. 뉴스 토픽 추출
+pnpm run:crawler:news-topics
 
-# 2. Crawl news lists for each topic (up to 100 articles per topic)
-pnpm run:crawler:news-list --input-file ./output/topic-list.json --topic-index 0 --output-file ./output/topic-01/news-list.json
+# 2. 뉴스 목록 수집
+pnpm run:crawler:news-list
 
-# 3. Extract detailed news content
-pnpm run:crawler:news-details --input-file ./output/topic-01/news-list.json --output-folder ./output/topic-01/news
+# 3. 상세 정보 추출
+pnpm run:crawler:news-details
 
-# 4. Generate AI-consolidated news (Commander.js CLI)
-pnpm run:generator:news --input-folder ./output/topic-01/news --output-file ./output/topic-01/news.json
-# Or with short options
-pnpm run:generator:news -i ./output/topic-01/news -o ./output/topic-01/news.json
+# 4. AI 뉴스 통합
+pnpm run:generator:news
 
-# 5. Generate newscast script (Planned)
-pnpm script:generate ./output/topic-01/news.json
+# 5. 뉴스캐스트 스크립트 생성
+pnpm run:generator:newscast-script
 
-# 6. Generate TTS audio (Planned)
-pnpm audio:generate ./output/topic-01/newscast-script.json
+# 6. TTS 오디오 생성
+pnpm run:generator:newscast-audio
 
-# 7. Mix final audio (Planned)
-pnpm audio:process ./output/topic-01/
+# 7. 최종 오디오 병합
+pnpm run:generator:newscast
 ```
 
-#### 🛠️ Development Commands
-```bash
-# Build all packages
-pnpm build
+#### 웹 플레이어 실행
 
-# Development mode (watch)
+```bash
+cd packages/newscast-web
 pnpm dev
-
-# Type checking
-pnpm typecheck
-
-# Environment setup validation
-pnpm env:setup
+# http://localhost:5173 접속
 ```
 
-## 📊 Current Status (v3.2.0)
+## 아키텍처
 
-### ✅ Completed Features
-- **News Crawling**: 100% - 3-stage pipeline with deduplication (topics → lists → details)
-- **AI News Generation**: 100% - Google Gemini 2.5 Pro consolidation (details → unified news)
-- **Data Processing**: 100% - BigKinds real-time trending topics extraction
-- **JSON Output**: 100% - Clean metadata with jq-compatible parsing + TXT format
-- **Pipeline Automation**: 100% - 4-stage workflow with skip/resume functionality
-- **Monorepo Setup**: 100% - Turbo + pnpm workspace integration
-
-### 🚧 Next Implementation Priority
-- **Script Generation**: Planned - AI-powered newscast script creation
-- **TTS Generation**: Planned - Google Cloud TTS integration
-- **Audio Processing**: Planned - FFmpeg mixing optimization
-- **Web Interface**: Planned - Newscast player implementation
-- **API Server**: Planned - Cloudflare Workers deployment
-
-### Package Implementation
-```
-✅ @ai-newscast/news-crawler   (100%) - 3-stage crawling pipeline
-✅ @ai-newscast/news-generator (100%) - AI news consolidation with Google Gemini
-🚧 @ai-newscast/core           (Planned) - Types, utilities
-🚧 @ai-newscast/script-generator (Planned) - Newscast script generation
-🚧 @ai-newscast/audio-generator (Planned) - TTS voice generation
-🚧 @ai-newscast/audio-processor (Planned) - Audio mixing/processing
-🚧 @ai-newscast/api-server     (Planned) - Cloudflare Workers API
-🚧 @ai-newscast/cli            (Planned) - Unified CLI
-🚧 @ai-newscast/web            (Planned) - Newscast player
-```
-
-## 📁 Output Structure
+### 패키지 구조
 
 ```
-output/2025-06-27T18-41-56-330937/
-├── topic-list.json                 # Trending topics list (10 unique topics)
-├── topic-01/                       # Rank #1 topic
-│   ├── news-list.json             # News articles list (up to 100 articles)
-│   ├── news/                      # Individual article details
-│   │   ├── 01100101-*.json        # Article ID-based files
-│   │   └── ...
-│   ├── news.json                  # 🆕 AI-consolidated news (v3.2.0)
-│   ├── news.txt                   # 🆕 Human-readable consolidated text
-│   ├── newscast-script.json       # Structured newscast script
-│   ├── newscast-script.txt        # Human-readable script
-│   ├── audio/                     # TTS-generated audio files
-│   │   ├── 001-김민준.mp3         # Individual dialogue lines
-│   │   ├── 002-이서연.mp3         # Speaker-specific TTS
-│   │   └── audio-files.json      # Audio metadata
-│   ├── newscast-final.mp3         # Complete newscast audio
-│   └── newscast-audio-info.json   # Final audio metadata
-├── topic-02/                       # Rank #2 topic (same structure)
-└── ...                             # Additional topics
+packages/
+├── news-crawler/           # 뉴스 크롤링 (Python + TypeScript 듀얼 구현)
+├── news-crawler-worker/    # Cloudflare Workers 크롤링 API
+├── news-generator/         # AI 뉴스 통합 (Google Gemini)
+├── newscast-generator/     # 뉴스캐스트 생성 (스크립트 + TTS + 병합)
+├── newscast-generator-worker/ # Cloudflare Workers 생성 API
+├── newscast-scheduler-worker/ # 전체 파이프라인 오케스트레이션
+├── newscast-latest-id/     # 최신 뉴스캐스트 ID 관리 API
+├── newscast-web/           # React 웹 플레이어
+└── core/                   # 공통 타입 정의
 ```
 
-## 🎯 Performance Metrics (v3.2.4)
+### 기술 스택
 
-- **News Topics**: 0.41s (10 unique topics extracted, Turbo integrated)
-- **News Lists**: ~15s per topic (up to 100 articles)
-- **News Details**: ~2-3min per topic (full article extraction)
-- **AI News Generation**: ~45-50s per topic (Google Gemini 2.5 Pro)
-- **Parallel Processing**: 10 topics in ~120s (vs 450s sequential) with 4-8 cores
-- **Deduplication**: 100% accuracy (30 → 10 unique topics)
-- **Pipeline Automation**: Single command execution with skip/resume
-- **JSON Output**: Clean jq-compatible format + human-readable TXT
+- **Python**: UV 패키지 매니저, Typer CLI, requests, lxml
+- **TypeScript**: Node.js 24+, Commander.js, experimental type stripping
+- **AI**: Google Gemini 2.5 Pro (뉴스 통합), Google Cloud TTS Chirp HD (음성 생성)
+- **빌드 도구**: Turbo 모노레포, pnpm 워크스페이스
+- **프론트엔드**: React 19, Vite, Radix UI, TanStack Query
+- **배포**: Cloudflare Workers, KV 스토리지
 
-## 🔧 Troubleshooting
+### 출력 구조
 
-### Common Issues
+```
+output/2025-10-05T19-53-26-599Z/
+├── topic-list.json           # 10개 트렌딩 토픽
+├── topic-01/                 # 1순위 토픽
+│   ├── news-list.json       # 최대 100개 뉴스
+│   ├── news/                # 개별 뉴스 상세 정보
+│   ├── news.json            # AI 통합 뉴스 (JSON)
+│   ├── news.md              # AI 통합 뉴스 (Markdown)
+│   ├── newscast-script.json # 뉴스캐스트 스크립트 (JSON)
+│   ├── newscast-script.md   # 뉴스캐스트 스크립트 (Markdown)
+│   ├── newscast.mp3         # 최종 뉴스캐스트 오디오
+│   └── audio/               # TTS 생성 오디오 파일들
+└── topic-02/                 # 2순위 토픽 (동일 구조)
+```
+
+## 성능 지표
+
+- **뉴스 토픽 추출**: 0.4초 (10개 유니크 토픽)
+- **뉴스 목록 수집**: 토픽당 약 15초 (최대 100개 기사)
+- **상세 정보 추출**: 토픽당 2-3분 (전체 본문 추출)
+- **AI 뉴스 통합**: 토픽당 45-50초 (Google Gemini)
+- **병렬 처리**: 10개 토픽을 120초에 처리 (순차 대비 3.75배 빠름)
+- **중복 제거**: 100% 정확도 (30개 → 10개 유니크)
+
+## 문제 해결
+
+### 일반적인 문제
+
 ```bash
-# UV installation check
-which uv  # Should show /home/user/.local/bin/uv
+# UV 설치 확인
+which uv  # /home/user/.local/bin/uv 출력 확인
 
-# TypeScript import errors - always include .ts extension
-import { something } from './file.ts';  # ✅ Correct
+# API 키 확인
+echo $GOOGLE_GEN_AI_API_KEY
 
-# API key verification
-echo $GOOGLE_GEN_AI_API_KEY  # Should show your key
-
-# FFmpeg for audio processing
-sudo apt install ffmpeg  # Ubuntu
-brew install ffmpeg      # macOS
+# FFmpeg 설치 확인
+ffmpeg -version
 ```
 
-### Performance Optimization
-- **Memory**: Large datasets use streaming processing
-- **Parallel**: 3 concurrent API calls + 1s intervals (rate limit compliance)
-- **Caching**: TTS results cached, AI response deduplication
-- **Build**: Turbo parallel builds complete in <6 seconds
+### 성능 최적화 팁
 
-## 🤝 Contributing
+- 메모리: 대용량 데이터는 스트리밍 방식으로 처리
+- 병렬 처리: 최대 동시 실행 개수를 시스템 코어 수에 맞춰 조정
+- 캐싱: TTS 결과는 자동으로 캐시되어 재사용
+- 빌드: Turbo가 변경된 패키지만 선택적으로 빌드
 
-1. Fork the repository
-2. Create your feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+## 기여하기
 
-## 📄 License
+1. 저장소를 Fork 합니다
+2. Feature 브랜치를 생성합니다 (`git checkout -b feature/amazing-feature`)
+3. 변경사항을 커밋합니다 (`git commit -m 'Add amazing feature'`)
+4. 브랜치에 Push 합니다 (`git push origin feature/amazing-feature`)
+5. Pull Request를 생성합니다
 
-This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
+자세한 개발 가이드는 [CLAUDE.md](CLAUDE.md)를 참조하세요.
 
-## 🙏 Acknowledgments
+## 라이선스
 
-- [BigKinds](https://bigkinds.or.kr) - News data source
+이 프로젝트는 ISC 라이선스 하에 배포됩니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
+
+## 감사의 말
+
+- [BigKinds](https://bigkinds.or.kr) - 뉴스 데이터 소스
 - [Google AI](https://ai.google.dev/) - Gemini API
 - [Google Cloud](https://cloud.google.com/text-to-speech) - TTS API
-- [Cloudflare](https://workers.cloudflare.com/) - Workers platform
+- [Cloudflare](https://workers.cloudflare.com/) - Workers 플랫폼
 
 ---
 
-**Version**: v3.7.1 (2025-07-03)  
-**Development Team**: AI Newscast Team
+**Version**: v3.7.2 (2025-07-03)
+**개발 가이드**: [CLAUDE.md](CLAUDE.md) 참조

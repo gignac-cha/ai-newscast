@@ -1,115 +1,159 @@
 # Newscast Generator
 
-Google Gemini와 Cloud TTS를 사용한 AI 기반 뉴스캐스트 스크립트 및 오디오 생성
+AI 기반 뉴스캐스트 스크립트 생성 및 오디오 합성 패키지
 
-## 🌟 이게 뭔가요?
+## 개요
 
-AI를 사용하여 방송 품질의 스크립트와 오디오를 생성하는 종합 뉴스캐스트 제작 도구입니다. 듀얼 호스트 대화형 뉴스캐스트 스크립트를 생성하고 전문 오디오 파일로 합성합니다.
+통합된 뉴스를 듀얼 호스트 대화형 뉴스캐스트 스크립트로 변환하고, Google Cloud TTS로 전문 품질의 오디오를 생성합니다.
 
-## ✨ 핵심 기능
+## 주요 기능
 
 - **AI 스크립트 생성**: Google Gemini 2.5 Pro가 매력적인 듀얼 호스트 대화 생성
 - **TTS 오디오 합성**: Google Cloud TTS Chirp HD (30개 한국어 프리미엄 음성)
+- **자동 호스트 선택**: 남성 1명 + 여성 1명 랜덤 매칭
+- **다중 포맷 출력**: JSON, Markdown, MP3
 - **완전한 파이프라인**: 스크립트 → 오디오 → 병합 (Lambda 경유)
-- **CLI 인터페이스**: Commander.js 기반 명령줄 도구
-- **다중 형식 출력**: JSON, Markdown, MP3
 
-## 🚀 빠른 시작
+## 빠른 시작
 
-### 뉴스캐스트 스크립트 생성
+### 설치
 
 ```bash
-# 통합 뉴스에서 스크립트 생성
-node --experimental-strip-types command.ts script \
-  -i input/news.json \
-  -o output/newscast-script.json
-
-# 또는 pnpm 스크립트 사용
-pnpm run generate:newscast-script
+# 루트에서 전체 설치
+pnpm install
 ```
 
-### 오디오 파일 생성
+### 스크립트 생성
 
 ```bash
-# 스크립트에서 TTS 오디오 생성
-node --experimental-strip-types command.ts audio \
-  -i output/newscast-script.json \
-  -o output/audio/
+# 환경 변수 설정
+export GOOGLE_GEN_AI_API_KEY="your_gemini_api_key"
 
-# 또는 pnpm 스크립트 사용
-pnpm run generate:newscast-audio
+# 스크립트 생성
+pnpm --filter @ai-newscast/newscast-generator run generate:script
 ```
 
-### 오디오 병합 (Lambda)
+### 오디오 생성
 
 ```bash
-# Lambda API 호출하여 오디오 파일 병합
-# (generate-newscast.ts가 처리)
+# 환경 변수 설정
+export GOOGLE_CLOUD_API_KEY="your_cloud_tts_api_key"
+
+# TTS 오디오 생성
+pnpm --filter @ai-newscast/newscast-generator run generate:audio
 ```
 
-## 📊 전체 워크플로우
+### 최종 병합
+
+```bash
+# Lambda API URL 설정
+export AWS_LAMBDA_NEWSCAST_API_URL="your_lambda_url"
+
+# 오디오 병합 (Lambda 경유)
+pnpm --filter @ai-newscast/newscast-generator run generate:newscast
+```
+
+## 출력 예시
+
+### 스크립트 (newscast-script.json)
+
+```json
+{
+  "title": "이종섭 전 장관과 한학자 총재 조사 - 통일교 연루 의혹 심화",
+  "programName": "AI 뉴스캐스트",
+  "hosts": {
+    "host1": {
+      "name": "김서연",
+      "gender": "female",
+      "voiceModel": "ko-KR-Chirp3-HD-Achernar"
+    },
+    "host2": {
+      "name": "박진호",
+      "gender": "male",
+      "voiceModel": "ko-KR-Chirp3-HD-Betelgeuse"
+    }
+  },
+  "estimatedDuration": "3분 30초",
+  "script": [
+    {
+      "type": "music",
+      "content": "오프닝 음악 5초",
+      "order": 1
+    },
+    {
+      "type": "dialogue",
+      "role": "host1",
+      "content": "안녕하세요, AI 뉴스캐스트입니다.",
+      "order": 2,
+      "voiceModel": "ko-KR-Chirp3-HD-Achernar"
+    }
+  ],
+  "metrics": {
+    "newscastID": "2025-10-05T19-53-26-599Z",
+    "topicIndex": 1,
+    "timing": {
+      "duration": 12340
+    }
+  }
+}
+```
+
+### 오디오 파일 구조
 
 ```
-통합 뉴스 → 스크립트 생성 → 오디오 합성 → 오디오 병합 → 최종 MP3
- (news.json)   (Gemini AI)     (TTS API)   (FFmpeg Lambda)  (newscast.mp3)
+output/2025-10-05T19-53-26-599Z/topic-01/
+├── newscast-script.json       # 스크립트 JSON
+├── newscast-script.md         # 스크립트 Markdown
+├── audio/
+│   ├── 001-music.mp3          # 오프닝 음악
+│   ├── 002-김서연.mp3         # 호스트 1 대사
+│   ├── 003-박진호.mp3         # 호스트 2 대사
+│   └── audio-files.json       # 오디오 메타데이터
+├── newscast.mp3               # 최종 병합 오디오
+└── newscast-audio-info.json   # 병합 메타데이터
 ```
 
-## 🎙️ 음성 시스템
+## 기술 스택
+
+- **Node.js**: 24+ (experimental type stripping)
+- **AI 모델**: Google Gemini 2.5 Pro (스크립트 생성)
+- **TTS**: Google Cloud TTS Chirp HD (30개 한국어 음성)
+- **오디오 병합**: AWS Lambda + FFmpeg
+- **CLI**: Commander.js
+
+## 음성 시스템
 
 30개 한국어 프리미엄 음성 (Google Cloud TTS Chirp HD):
 - 자동 성별 균형 호스트 선택 (남성 1명 + 여성 1명)
 - 각 음성에 고유한 한국어 이름 할당
-- 각 생성마다 다양성을 위한 랜덤 선택
+- 매 생성마다 랜덤 선택으로 다양성 확보
 
-## 🎯 출력 구조 (v3.7.3+)
+음성 설정은 `config/tts-hosts.json`에서 관리합니다.
+
+## 전체 워크플로우
 
 ```
-output/{newscast-id}/topic-{NN}/
-├── newscast-script.json       # TTS 메타데이터 + metrics 포함 스크립트
-├── newscast-script.md         # 사람이 읽기 쉬운 스크립트
-├── audio/
-│   ├── 001-music.mp3          # 오프닝 음악
-│   ├── 002-host1.mp3          # 호스트 1 대사
-│   ├── 003-host2.mp3          # 호스트 2 대사
-│   ├── ...                    # 더 많은 세그먼트
-│   └── audio-files.json       # 오디오 메타데이터 + metrics
-├── newscast.mp3               # 최종 병합된 오디오
-└── newscast-audio-info.json   # 병합 메타데이터
+통합 뉴스 → 스크립트 생성 → 오디오 합성 → 오디오 병합 → 최종 MP3
+(news.json)   (Gemini AI)     (TTS API)   (FFmpeg Lambda)  (newscast.mp3)
 ```
 
-### Metrics 시스템
-모든 JSON 출력에는 `metrics` 필드가 포함됩니다:
-- **newscastID**: 뉴스캐스트 고유 ID (ISO timestamp)
-- **topicIndex**: 토픽 인덱스 (1-10)
-- **timing**: 시작/완료 시간, 소요 시간
-- **input/output**: 입출력 데이터 통계
-- **performance**: 성능 메트릭스
+## 참고사항
 
-### 명명 규칙
-- **camelCase**: 모든 필드명 (예: `programName`, `estimatedDuration`)
-- **특수 약어 대문자**: ID, HTML, JSON, URL (예: `newscastID`, `hostID`)
+- Google Gemini API 키 필요 (환경 변수 `GOOGLE_GEN_AI_API_KEY`)
+- Google Cloud TTS API 키 필요 (환경 변수 `GOOGLE_CLOUD_API_KEY`)
+- Lambda API URL 필요 (환경 변수 `AWS_LAMBDA_NEWSCAST_API_URL`)
+- 프롬프트는 `prompts/newscast-script.md`에서 커스터마이징 가능
 
-## 🔧 설정
+## 개발 가이드
 
-```bash
-# API 키 설정
-export GOOGLE_GEN_AI_API_KEY="your_gemini_api_key"
-export GOOGLE_CLOUD_API_KEY="your_cloud_tts_api_key"
-export AWS_LAMBDA_NEWSCAST_API_URL="your_lambda_url"
-```
+상세한 API 명세, 아키텍처 설명, 코딩 규칙은 [CLAUDE.md](./CLAUDE.md)를 참조하세요.
 
-## 📚 더 알아보기
-
-- **전체 문서**: [CLAUDE.md](./CLAUDE.md) 참조
-- **음성 설정**: `config/tts-hosts.json`
-- **프롬프트**: `prompts/newscast-script.md`
-
-## 🔗 관련 패키지
+## 관련 패키지
 
 - **@ai-newscast/newscast-generator-worker**: Cloudflare Workers API 래퍼
 - **@ai-newscast/newscast-generator-lambda**: AWS Lambda 오디오 병합기
-- **@ai-newscast/core**: 공유 타입
+- **@ai-newscast/core**: 공통 타입 정의
 
 ---
 
-Google Gemini 2.5 Pro + Google Cloud TTS Chirp HD로 구동
+*AI Newscast 프로젝트의 일부입니다 - [프로젝트 문서](../../README.md)*

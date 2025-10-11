@@ -1,47 +1,60 @@
 # News Crawler
 
-빅카인드(bigkinds.or.kr)에서 실시간 뉴스를 수집하는 다중 언어 크롤링 패키지
+빅카인드(BigKinds)에서 실시간 뉴스를 자동으로 수집하는 TypeScript 크롤링 패키지
 
-## ✨ 주요 기능
+## 개요
 
-- 🔥 **트렌딩 토픽**: 실시간 인기 토픽 10개 추출 (중복 제거)
-- 📰 **뉴스 수집**: 토픽별 최대 100개 뉴스 자동 수집
-- 📝 **상세 정보**: 제목, 본문, 요약, 언론사, 기자명 등 완전한 메타데이터
-- 🌐 **듀얼 구현**: Python (Typer) + TypeScript (Commander.js) 지원
+빅카인드 뉴스 포털에서 트렌딩 토픽과 관련 뉴스를 3단계로 수집합니다.
 
-## 🚀 빠른 시작
+## 주요 기능
 
-### 1. 설치
+- **트렌딩 토픽 추출**: 실시간 인기 토픽 10개를 중복 제거하여 추출
+- **뉴스 목록 수집**: 각 토픽별 최대 100개 뉴스 기사 자동 수집
+- **상세 정보 추출**: 제목, 본문, 요약, 언론사, 기자명 등 완전한 메타데이터 추출
+- **CLI 지원**: Commander.js 기반 명령줄 인터페이스
+
+## 빠른 시작
+
+### 설치
+
 ```bash
+# 루트에서 전체 설치
 pnpm install
 ```
 
-### 2. 실행
-```bash
-# Python으로 전체 크롤링 (토픽 → 뉴스 목록 → 상세정보)
-pnpm run crawl:news-topics
-pnpm run crawl:news-list
-pnpm run crawl:news-details
+### 실행 방법
 
-# TypeScript로 전체 파이프라인 한 번에
-pnpm run crawl:ts-full
+```bash
+# 토픽 추출
+pnpm --filter @ai-newscast/news-crawler run crawl:topics
+
+# 뉴스 목록 수집
+pnpm --filter @ai-newscast/news-crawler run crawl:list
+
+# 상세 정보 추출 (개별)
+pnpm --filter @ai-newscast/news-crawler run crawl:detail
+
+# 상세 정보 추출 (전체)
+pnpm --filter @ai-newscast/news-crawler run crawl:details
 ```
 
-### 3. 결과 확인
-```bash
-output/2025-09-30T10-00-00-000Z/
-├── topic-list.json              # 10개 토픽
+## 출력 예시
+
+### 디렉터리 구조
+
+```
+output/2025-10-05T19-53-26-599Z/
+├── topic-list.json              # 10개 트렌딩 토픽
 ├── topic-01/
 │   ├── news-list.json          # 최대 100개 뉴스 목록
 │   └── news/
 │       ├── 01100201.json       # 개별 뉴스 상세정보
 │       └── ...
-└── topic-{N}/
+└── topic-02/                    # 2순위 토픽 (동일 구조)
 ```
 
-## 📖 출력 예시
+### 토픽 목록 (topic-list.json)
 
-### 토픽 목록
 ```json
 {
   "topics": [
@@ -49,40 +62,60 @@ output/2025-09-30T10-00-00-000Z/
       "rank": 1,
       "title": "이종섭 전 장관과 한학자 총재 조사",
       "keywords": ["한학자", "통일교", "김건희"],
-      "news_count": 59
+      "news_count": 59,
+      "href": "https://bigkinds.or.kr/..."
     }
-  ]
+  ],
+  "count": 10,
+  "timestamp": "2025-10-05T19:53:26.599Z"
 }
 ```
 
-### 뉴스 상세정보
+### 뉴스 상세정보 (news/{id}.json)
+
 ```json
 {
   "newsId": "02100701.20250917164815001",
   "title": "뉴스 제목",
-  "content": "뉴스 본문...",
+  "content": "뉴스 본문 전체...",
+  "summary": "뉴스 요약...",
   "category": "정치",
   "media": "연합뉴스",
-  "publishedAt": "2025-09-17T16:48:15.000Z"
+  "reporter": "홍길동 기자",
+  "publishedAt": "2025-09-17T16:48:15.000Z",
+  "url": "https://bigkinds.or.kr/v2/news/..."
 }
 ```
 
-## 🛠️ 기술 스택
+## 기술 스택
 
-- **Python**: 3.11+ (UV 패키지 매니저)
-- **TypeScript**: Node.js 24+ (experimental type stripping)
-- **크롤링**: requests + lxml (Python), fetch + Cheerio (TypeScript)
+- **Node.js**: 24+
+- **CLI**: Commander.js
+- **HTTP/파싱**: fetch + Cheerio
+- **타입 검증**: Zod schemas
 
-## 📚 더 알아보기
+## 프로그래밍 방식 사용
 
-- **상세 가이드**: [CLAUDE.md](./CLAUDE.md) - 전체 API, 개발 규칙, 코딩 컨벤션
-- **프로젝트 문서**: [../../CLAUDE.md](../../CLAUDE.md)
+다른 패키지에서 함수를 직접 import하여 사용할 수 있습니다:
 
-## ⚠️ 참고사항
+```typescript
+import { crawlNewsTopics } from '@ai-newscast/news-crawler/crawl-news-topics';
+import { crawlNewsList } from '@ai-newscast/news-crawler/crawl-news-list';
+import { crawlNewsDetail } from '@ai-newscast/news-crawler/crawl-news-detail';
 
-- BigKinds의 공개 API를 사용하며, 1초 간격으로 크롤링합니다
+const topics = await crawlNewsTopics('./output/topic-list.json');
+```
+
+## 참고사항
+
+- BigKinds 공개 API를 사용하며, 서버 보호를 위해 1초 간격으로 크롤링합니다
 - 출력 파일은 `output/{ISO_TIMESTAMP}/` 구조로 자동 저장됩니다
+- 중복 토픽은 자동으로 제거되어 항상 10개의 유니크한 토픽만 추출됩니다
+
+## 개발 가이드
+
+상세한 개발 규칙, API 명세, 코딩 컨벤션은 [CLAUDE.md](./CLAUDE.md)를 참조하세요.
 
 ---
 
-*AI 뉴스캐스트 프로젝트의 일부입니다*
+*AI Newscast 프로젝트의 일부입니다 - [프로젝트 문서](../../README.md)*
