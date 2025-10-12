@@ -67,15 +67,15 @@ export const useNewscastData = (newscastID: string | undefined) => {
             id: topicNum,
             title: topic.title,
             rank: topic.rank,
-            newsCount: topic.news_count ?? topic.newsCount ?? 0,
+            newsCount: topic.newsCount ?? 0,
             keywords: topic.keywords ?? [],
             news: newsData,
             script: scriptData,
             audioURL: scriptData ? `${NEWSCAST_STORAGE}/${newscastID}/topic-${topicNum}/newscast.mp3` : null,
             audioInfo: null, // No longer exists in backend
             audioFiles: audioFilesData ? {
-              audioFiles: audioFilesData.audioFiles ?? audioFilesData.audio_files ?? [],
-              allSegments: audioFilesData.allSegments ?? audioFilesData.all_segments ?? [],
+              audioFiles: audioFilesData.audioFiles ?? [],
+              allSegments: audioFilesData.allSegments ?? [],
             } : null,
           };
         })

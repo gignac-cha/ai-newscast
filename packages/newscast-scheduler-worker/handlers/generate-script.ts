@@ -27,8 +27,13 @@ export async function handleGenerateScript(request: Request, env: Env, topicInde
 		}
 
 		// Service Binding을 통한 내부 호출
-		const response = await env.NEWSCAST_GENERATOR_WORKER.fetch(`http://www.example.com/script?newscast-id=${newscastID}&topic-index=${topic}`, {
-			method: 'GET',
+		const fetchURL = new URL('http://www.example.com');
+		fetchURL.pathname = '/script';
+		fetchURL.searchParams.set('newscast-id', newscastID);
+		fetchURL.searchParams.set('topic-index', topic.toString());
+		fetchURL.searchParams.set('save', 'true');
+		const response = await env.NEWSCAST_GENERATOR_WORKER.fetch(fetchURL.toString(), {
+			method: 'POST',
 		});
 
 		const result = await response.json();
@@ -38,8 +43,8 @@ export async function handleGenerateScript(request: Request, env: Env, topicInde
 		return new Response(JSON.stringify({
 			success: true,
 			step: 'generate-script',
-			newscast_id: newscastID,
-			topic_index: topic,
+			newscastID,
+			topicIndex: topic,
 			timestamp: new Date().toISOString(),
 			result,
 		}, null, 2), {

@@ -16,8 +16,9 @@ export async function handleNewscast(
     const url = new URL(request.url);
     const newscastID = url.searchParams.get('newscast-id');
     const topicIndex = url.searchParams.get('topic-index');
+    const saveToR2 = url.searchParams.get('save') === 'true';
 
-    console.log(`[NEWSCAST_HANDLER PARAMS] newscast-id: ${newscastID}, topic-index: ${topicIndex}`);
+    console.log(`[NEWSCAST_HANDLER PARAMS] newscast-id: ${newscastID}, topic-index: ${topicIndex}, saveToR2: ${saveToR2}`);
 
     if (!newscastID) {
       console.error(`[NEWSCAST_HANDLER ERROR] Missing newscast-id parameter`);
@@ -65,31 +66,48 @@ export async function handleNewscast(
     });
     console.log(`[NEWSCAST_HANDLER LAMBDA] Lambda merge completed: ${mergeResult.fileSizeFormatted}`);
 
-    // Save merged audio to R2
-    const mergedAudioPath = `newscasts/${newscastID}/topic-${topicIndexPadded}/newscast.mp3`;
-    console.log(`[NEWSCAST_HANDLER R2] Uploading merged audio: ${mergedAudioPath} (${mergeResult.audioData.length} bytes)`);
-    await bucket.put(mergedAudioPath, mergeResult.audioData, {
-      httpMetadata: {
-        contentType: 'audio/mpeg',
-      },
-    });
-    console.log(`[NEWSCAST_HANDLER R2] Merged audio uploaded successfully`);
-
     const totalTime = Date.now() - startTime;
-    console.log(`[NEWSCAST_HANDLER SUCCESS] Completed in ${totalTime}ms for topic ${topicIndexNumber}`);
 
     // Remove audioData from merge_result before sending response
     const { audioData, ...mergeResultWithoutAudio } = mergeResult;
 
-    return response(cors(json({
+    const responseData: {
+      success: boolean;
+      newscastID: string;
+      topicIndex: number;
+      mergeResult: typeof mergeResultWithoutAudio;
+      timestamp: string;
+      outputPath?: string;
+      message: string;
+    } = {
       success: true,
-      newscast_id: newscastID,
-      topic_index: topicIndexNumber,
-      merge_result: mergeResultWithoutAudio,
-      output_path: mergedAudioPath,
+      newscastID,
+      topicIndex: topicIndexNumber,
+      mergeResult: mergeResultWithoutAudio,
       timestamp: new Date().toISOString(),
-      message: `Generated newscast audio for topic ${topicIndexNumber}`,
-    })));
+      message: '',
+    };
+
+    if (saveToR2) {
+      // Save merged audio to R2
+      const mergedAudioPath = `newscasts/${newscastID}/topic-${topicIndexPadded}/newscast.mp3`;
+      console.log(`[NEWSCAST_HANDLER R2] Uploading merged audio: ${mergedAudioPath} (${mergeResult.audioData.length} bytes)`);
+      await bucket.put(mergedAudioPath, mergeResult.audioData, {
+        httpMetadata: {
+          contentType: 'audio/mpeg',
+        },
+      });
+      console.log(`[NEWSCAST_HANDLER R2] Merged audio uploaded successfully`);
+
+      responseData.outputPath = mergedAudioPath;
+      responseData.message = `Generated and saved newscast audio for topic ${topicIndexNumber}`;
+    } else {
+      responseData.message = `Generated newscast audio for topic ${topicIndexNumber}`;
+    }
+
+    console.log(`[NEWSCAST_HANDLER SUCCESS] Completed in ${totalTime}ms for topic ${topicIndexNumber}`);
+
+    return response(cors(json(responseData)));
 
   } catch (err) {
     const totalTime = Date.now() - startTime;

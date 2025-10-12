@@ -143,6 +143,7 @@ export async function crawlNewsDetail(newsId: string): Promise<NewsDetailResult>
 
 export interface NewsDetailsItem {
   newsID: string;
+  topicIndex: number;
   status: 'success' | 'error';
   timing: {
     startedAt: string;
@@ -225,6 +226,7 @@ export async function crawlNewsDetailsBatch(
       // Add item details
       items.push({
         newsID,
+        topicIndex,
         status: 'success',
         timing: {
           startedAt: itemStartedAt,
@@ -247,6 +249,7 @@ export async function crawlNewsDetailsBatch(
       // Add error item details
       items.push({
         newsID,
+        topicIndex,
         status: 'error',
         timing: {
           startedAt: itemStartedAt,

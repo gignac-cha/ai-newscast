@@ -27,8 +27,13 @@ export async function handleMergeNewscast(request: Request, env: Env, topicIndex
 		}
 
 		// Service Binding을 통한 내부 호출
-		const response = await env.NEWSCAST_GENERATOR_WORKER.fetch(`http://www.example.com/newscast?newscast-id=${newscastID}&topic-index=${topic}`, {
-			method: 'GET',
+		const fetchURL = new URL('http://www.example.com');
+		fetchURL.pathname = '/newscast';
+		fetchURL.searchParams.set('newscast-id', newscastID);
+		fetchURL.searchParams.set('topic-index', topic.toString());
+		fetchURL.searchParams.set('save', 'true');
+		const response = await env.NEWSCAST_GENERATOR_WORKER.fetch(fetchURL.toString(), {
+			method: 'POST',
 		});
 
 		const result = await response.json();
@@ -38,8 +43,8 @@ export async function handleMergeNewscast(request: Request, env: Env, topicIndex
 		return new Response(JSON.stringify({
 			success: true,
 			step: 'merge-newscast',
-			newscast_id: newscastID,
-			topic_index: topic,
+			newscastID,
+			topicIndex: topic,
 			timestamp: new Date().toISOString(),
 			result,
 		}, null, 2), {

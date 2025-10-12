@@ -21,8 +21,9 @@ export async function handleScript(
     const url = new URL(request.url);
     const newscastID = url.searchParams.get('newscast-id');
     const topicIndex = url.searchParams.get('topic-index');
+    const saveToR2 = url.searchParams.get('save') === 'true';
 
-    console.log(`[SCRIPT_HANDLER PARAMS] newscast-id: ${newscastID}, topic-index: ${topicIndex}`);
+    console.log(`[SCRIPT_HANDLER PARAMS] newscast-id: ${newscastID}, topic-index: ${topicIndex}, saveToR2: ${saveToR2}`);
 
     if (!newscastID) {
       console.error(`[SCRIPT_HANDLER ERROR] Missing newscast-id parameter`);
@@ -73,11 +74,11 @@ export async function handleScript(
 
     console.log(`[SCRIPT_HANDLER R2] News file found, parsing JSON`);
     const newsData = await newsObject.json<GeneratedNews>();
-    console.log(`[SCRIPT_HANDLER NEWS] Loaded news data: title="${newsData.title}", sources_count=${newsData.sources_count}`);
+    console.log(`[SCRIPT_HANDLER NEWS] Loaded news data: title="${newsData.title}", sourcesCount=${newsData.sourcesCount}`);
 
     console.log(`[SCRIPT_HANDLER CONFIG] Loading TTS host configuration`);
     const defaultVoices = ttsHostConfig as TTSVoices;
-    console.log(`[SCRIPT_HANDLER CONFIG] TTS hosts loaded: ${Object.keys(defaultVoices).join(', ')}`);
+    console.log(`[SCRIPT_HANDLER CONFIG] TTS hosts loaded: ${Object.keys(defaultVoices.voices).join(', ')}`);
 
     console.log(`[SCRIPT_HANDLER AI] Starting newscast script generation with Gemini API`);
     const result = await generateNewscastScript({
@@ -88,40 +89,43 @@ export async function handleScript(
       newscastID,
       topicIndex: topicIndexNumber,
     });
-    console.log(`[SCRIPT_HANDLER AI] Script generation completed: ${result.stats.dialogue_count} dialogue lines, ${result.stats.music_count} music lines`);
-
-    const scriptJSONPath = `newscasts/${newscastID}/topic-${topicIndexPadded}/newscast-script.json`;
-    const scriptMarkdownPath = `newscasts/${newscastID}/topic-${topicIndexPadded}/newscast-script.md`;
-    console.log(`[SCRIPT_HANDLER R2] Saving script files to: ${scriptJSONPath}, ${scriptMarkdownPath}`);
-
-    await Promise.all([
-      bucket.put(scriptJSONPath, JSON.stringify(result.output, null, 2), {
-        httpMetadata: {
-          contentType: 'application/json; charset=utf-8',
-        },
-      }),
-      bucket.put(scriptMarkdownPath, result.markdown, {
-        httpMetadata: {
-          contentType: 'text/markdown; charset=utf-8',
-        },
-      }),
-    ]);
-    console.log(`[SCRIPT_HANDLER R2] Script files saved successfully`);
+    console.log(`[SCRIPT_HANDLER AI] Script generation completed: ${result.stats.scriptLines} script lines`);
 
     const responseData: ScriptGenerationResponse = {
       success: true,
-      newscast_id: newscastID,
-      topic_index: topicIndexNumber,
-      input_file: newsFilePath,
-      output_files: {
-        json: scriptJSONPath,
-        markdown: scriptMarkdownPath,
-      },
+      newscastID,
+      topicIndex: topicIndexNumber,
+      inputFile: newsFilePath,
       stats: result.stats,
       timestamp: new Date().toISOString(),
-      message: `Generated newscast script for topic ${topicIndexNumber}`,
+      message: '',
       script: result.output,
     };
+
+    if (saveToR2) {
+      const scriptJSONPath = `newscasts/${newscastID}/topic-${topicIndexPadded}/newscast-script.json`;
+      const scriptMarkdownPath = `newscasts/${newscastID}/topic-${topicIndexPadded}/newscast-script.md`;
+      console.log(`[SCRIPT_HANDLER R2] Saving script files to: ${scriptJSONPath}, ${scriptMarkdownPath}`);
+
+      await Promise.all([
+        bucket.put(scriptJSONPath, JSON.stringify(result.output, null, 2), {
+          httpMetadata: {
+            contentType: 'application/json; charset=utf-8',
+          },
+        }),
+        bucket.put(scriptMarkdownPath, result.markdown, {
+          httpMetadata: {
+            contentType: 'text/markdown; charset=utf-8',
+          },
+        }),
+      ]);
+      console.log(`[SCRIPT_HANDLER R2] Script files saved successfully`);
+
+      responseData.outputFiles = { json: scriptJSONPath, markdown: scriptMarkdownPath };
+      responseData.message = `Generated and saved newscast script for topic ${topicIndexNumber}`;
+    } else {
+      responseData.message = `Generated newscast script for topic ${topicIndexNumber}`;
+    }
 
     const totalTime = Date.now() - startTime;
     console.log(`[SCRIPT_HANDLER SUCCESS] Completed in ${totalTime}ms for topic ${topicIndexNumber}`);

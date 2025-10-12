@@ -10,6 +10,7 @@ import type { Env } from './types/env.ts';
 import { createCORSPreflightResponse } from './utils/cors.ts';
 import { response } from './utils/response.ts';
 import { cors } from './utils/cors.ts';
+import { json } from './utils/json.ts';
 import { error } from './utils/error.ts';
 
 export default {
@@ -22,7 +23,15 @@ export default {
     }
 
     try {
-      if (request.method === 'GET' && url.pathname === '/') {
+      if (request.method === 'GET' && url.pathname === '/health') {
+        return response(cors(json({ status: 'ok', service: 'newscast-generator-worker' }, {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+          },
+        })));
+      }
+
+      if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/help')) {
         return handleHelp();
       }
 
@@ -30,19 +39,19 @@ export default {
         return handleStatus(request, env);
       }
 
-      if (request.method === 'GET' && url.pathname === '/script') {
+      if (request.method === 'POST' && url.pathname === '/script') {
         return handleScript(request, env);
       }
 
-      if (request.method === 'GET' && url.pathname === '/audio') {
+      if (request.method === 'POST' && url.pathname === '/audio') {
         return handleAudio(request, env);
       }
 
-      if (request.method === 'GET' && url.pathname === '/newscast') {
+      if (request.method === 'POST' && url.pathname === '/newscast') {
         return handleNewscast(request, env);
       }
 
-      return response(cors(error('Not Found', 'Available endpoints: GET /, GET /status, GET /script?newscast-id=X&topic-index=N, GET /audio?newscast-id=X&topic-index=N, GET /newscast?newscast-id=X&topic-index=N')));
+      return response(cors(error('Not Found', 'Available endpoints: GET /, GET /status, POST /script?newscast-id=X&topic-index=N, POST /audio?newscast-id=X&topic-index=N, POST /newscast?newscast-id=X&topic-index=N')));
 
     } catch (err) {
       console.error('Worker error:', err);
@@ -56,6 +65,7 @@ export default {
       console.log(`[NEWSCAST_SCHEDULED START] ${startTime} - Cron: ${controller.cron}`);
 
       try {
+        const BASE_URL = 'http://www.example.com';
         const cronExpression = controller.cron;
         console.log(`[NEWSCAST_SCHEDULED INFO] Processing cron expression: ${cronExpression}`);
 
@@ -86,7 +96,11 @@ export default {
 
             try {
               console.log(`[NEWSCAST_SCHEDULED SCRIPT] Starting script generation for topic ${topicIndex} at ${hourLabel}:${minuteLabel}`);
-              const scriptRequest = new Request(`http://www.example.com/script?newscast-id=${workingNewscastID}&topic-index=${topicIndex}`);
+              const scriptURL = new URL(BASE_URL);
+              scriptURL.pathname = '/script';
+              scriptURL.searchParams.set('newscast-id', workingNewscastID);
+              scriptURL.searchParams.set('topic-index', topicIndex.toString());
+              const scriptRequest = new Request(scriptURL.toString(), { method: 'POST' });
               console.log(`[NEWSCAST_SCHEDULED SCRIPT] Calling handleScript with newscast-id=${workingNewscastID}&topic-index=${topicIndex}`);
 
               const result = await handleScript(scriptRequest, env);
@@ -125,7 +139,11 @@ export default {
 
             try {
               console.log(`[NEWSCAST_SCHEDULED AUDIO] Starting audio generation for topic ${topicIndex} at ${hourLabel}:${minuteLabel}`);
-              const audioRequest = new Request(`http://www.example.com/audio?newscast-id=${workingNewscastID}&topic-index=${topicIndex}`);
+              const audioURL = new URL(BASE_URL);
+              audioURL.pathname = '/audio';
+              audioURL.searchParams.set('newscast-id', workingNewscastID);
+              audioURL.searchParams.set('topic-index', topicIndex.toString());
+              const audioRequest = new Request(audioURL.toString(), { method: 'POST' });
               console.log(`[NEWSCAST_SCHEDULED AUDIO] Calling handleAudio with newscast-id=${workingNewscastID}&topic-index=${topicIndex}`);
 
               const result = await handleAudio(audioRequest, env);

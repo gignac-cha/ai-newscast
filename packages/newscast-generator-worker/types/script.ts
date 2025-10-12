@@ -13,10 +13,10 @@ export interface ScriptGenerationStats {
 
 export interface ScriptGenerationResponse {
   success: true;
-  newscast_id: string;
-  topic_index: number;
-  input_file: string;
-  output_files: {
+  newscastID: string;
+  topicIndex: number;
+  inputFile: string;
+  outputFiles?: {
     json: string;
     markdown: string;
   };

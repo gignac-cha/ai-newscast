@@ -8,16 +8,15 @@ export async function handleHelp(): Promise<Response> {
     version: "1.0.0",
     endpoints: {
       "GET /": "This help message",
-      "GET /script?newscast-id={id}&topic-index={n}": "Generate newscast script from consolidated news for specific topic",
-      "GET /audio?newscast-id={id}&topic-index={n}": "Generate TTS audio from newscast script for specific topic",
-      "GET /newscast?newscast-id={id}&topic-index={n}": "Merge audio files into final newscast for specific topic",
-      "GET /full?newscast-id={id}&topic-index={n}": "Run full pipeline for specific topic: script -> audio -> merge"
+      "GET /status": "Check worker status",
+      "POST /script?newscast-id={id}&topic-index={n}": "Generate newscast script from consolidated news for specific topic",
+      "POST /audio?newscast-id={id}&topic-index={n}": "Generate TTS audio from newscast script for specific topic",
+      "POST /newscast?newscast-id={id}&topic-index={n}": "Merge audio files into final newscast for specific topic"
     },
     usage: {
       script: "Generate script from news.json in specified newscast/topic directory",
       audio: "Generate TTS audio files from newscast-script.json for specific topic",
       newscast: "Merge audio files using FFmpeg into final MP3 for specific topic",
-      full: "Complete newscast generation pipeline for specific topic",
       topic_index: "Topic index 1-10, determines which topic to process"
     },
     storage: {

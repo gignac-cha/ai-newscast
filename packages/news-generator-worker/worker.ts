@@ -7,6 +7,7 @@ import { handleStatus } from './handlers/status.ts';
 import { createCORSPreflightResponse } from './utils/cors.ts';
 import { response } from './utils/response.ts';
 import { cors } from './utils/cors.ts';
+import { json } from './utils/json.ts';
 import { error } from './utils/error.ts';
 
 export default {
@@ -19,7 +20,15 @@ export default {
     }
 
     try {
-      if (request.method === 'GET' && url.pathname === '/') {
+      if (request.method === 'GET' && url.pathname === '/health') {
+        return response(cors(json({ status: 'ok', service: 'news-generator-worker' }, {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+          },
+        })));
+      }
+
+      if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/help')) {
         return handleHelp();
       }
 
@@ -45,6 +54,7 @@ export default {
       console.log(`[NEWS_GENERATOR_SCHEDULED START] ${startTime} - Cron: ${controller.cron}`);
 
       try {
+        const BASE_URL = 'http://www.example.com';
         const cronExpression = controller.cron;
         console.log(`[NEWS_GENERATOR_SCHEDULED INFO] Processing cron expression: ${cronExpression}`);
 
@@ -67,7 +77,11 @@ export default {
 
               try {
                 console.log(`[NEWS_GENERATOR_SCHEDULED GENERATE] Starting news generation for topic ${topicIndex} in newscast: ${workingNewscastID}`);
-                const generateURL = new URL(`http://www.example.com/news?newscast-id=${workingNewscastID}&topic-index=${topicIndex}`);
+                const generateURL = new URL(BASE_URL);
+                generateURL.pathname = '/news';
+                generateURL.searchParams.set('newscast-id', workingNewscastID);
+                generateURL.searchParams.set('topic-index', topicIndex.toString());
+                generateURL.searchParams.set('save', 'true');
                 console.log(`[NEWS_GENERATOR_SCHEDULED GENERATE] Calling handleGenerateNews with URL: ${generateURL.toString()}`);
 
                 const result = await handleGenerateNews(generateURL, env);

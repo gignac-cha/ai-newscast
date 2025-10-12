@@ -21,8 +21,9 @@ export async function handleGenerateNews(
   const newscastID = url.searchParams.get('newscast-id');
   const topicIndex = url.searchParams.get('topic-index');
   const format = url.searchParams.get('format') ?? 'json';
+  const saveToR2 = url.searchParams.get('save') === 'true';
 
-  console.log(`[GENERATE START] ${new Date().toISOString()} - newscastID: ${newscastID}, topicIndex: ${topicIndex}, format: ${format}`);
+  console.log(`[GENERATE START] ${new Date().toISOString()} - newscastID: ${newscastID}, topicIndex: ${topicIndex}, format: ${format}, saveToR2: ${saveToR2}`);
 
   if (!newscastID) {
     console.error(`[GENERATE ERROR] Missing newscast-id parameter`);
@@ -94,42 +95,57 @@ export async function handleGenerateNews(
     const generatedNews = result.generatedNews;
     console.log(`[GENERATE AI] AI generation completed - title: "${generatedNews.title}"`);
 
-    // Save to R2
-    const outputPath = `newscasts/${newscastID}/topic-${topicIndexPadded}`;
-    console.log(`[GENERATE R2] Saving results to: ${outputPath}`);
-
-    // Save JSON
-    const jsonKey = `${outputPath}/news.json`;
-    console.log(`[GENERATE R2] Saving JSON to: ${jsonKey}`);
-    await env.AI_NEWSCAST_BUCKET.put(jsonKey, JSON.stringify(generatedNews, null, 2));
-
-    // Save Markdown
-    const markdownKey = `${outputPath}/news.md`;
-    console.log(`[GENERATE R2] Saving Markdown to: ${markdownKey}`);
     const markdownContent = formatAsMarkdown(generatedNews);
-    await env.AI_NEWSCAST_BUCKET.put(markdownKey, markdownContent);
-
-    console.log(`[GENERATE R2] Both files saved successfully`);
-
     const endTime = Date.now();
     const totalTime = endTime - startTime;
 
-    const responseData = {
+    const responseData: {
+      success: boolean;
+      newscastID: string;
+      topicIndex: number;
+      inputArticlesCount: number;
+      sourcesCount: number;
+      executionTime: number;
+      totalTime: number;
+      timestamp: string;
+      metrics: typeof result.metrics;
+      outputFiles?: { json: string; markdown: string };
+      message: string;
+    } = {
       success: true,
       newscastID,
       topicIndex: parseInt(topicIndex),
       inputArticlesCount: newsDetails.length,
       sourcesCount: generatedNews.sourcesCount,
-      outputFiles: {
-        json: jsonKey,
-        markdown: markdownKey
-      },
       executionTime: result.executionTime,
       totalTime,
       timestamp: new Date().toISOString(),
-      message: `Successfully generated news for topic ${topicIndex} from ${newsDetails.length} articles`,
-      metrics: result.metrics
+      metrics: result.metrics,
+      message: ''
     };
+
+    // Save to R2 if save=true
+    if (saveToR2) {
+      const outputPath = `newscasts/${newscastID}/topic-${topicIndexPadded}`;
+      console.log(`[GENERATE R2] Saving results to: ${outputPath}`);
+
+      // Save JSON
+      const jsonKey = `${outputPath}/news.json`;
+      console.log(`[GENERATE R2] Saving JSON to: ${jsonKey}`);
+      await env.AI_NEWSCAST_BUCKET.put(jsonKey, JSON.stringify(generatedNews, null, 2));
+
+      // Save Markdown
+      const markdownKey = `${outputPath}/news.md`;
+      console.log(`[GENERATE R2] Saving Markdown to: ${markdownKey}`);
+      await env.AI_NEWSCAST_BUCKET.put(markdownKey, markdownContent);
+
+      console.log(`[GENERATE R2] Both files saved successfully`);
+
+      responseData.outputFiles = { json: jsonKey, markdown: markdownKey };
+      responseData.message = `Successfully generated and saved news for topic ${topicIndex} from ${newsDetails.length} articles`;
+    } else {
+      responseData.message = `Successfully generated news for topic ${topicIndex} from ${newsDetails.length} articles`;
+    }
 
     console.log(`[GENERATE SUCCESS] Generated news for topic ${topicIndex}: "${generatedNews.title}"`);
     console.log(`[GENERATE SUCCESS] Input articles: ${newsDetails.length}, Sources: ${generatedNews.sourcesCount}`);

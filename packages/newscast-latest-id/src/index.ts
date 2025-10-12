@@ -62,17 +62,33 @@ export default {
     try {
       switch (path) {
         case '/':
-          return handleRoot();
-        
-        case '/latest':
-          return await handleGetLatest(env);
-        
-        case '/update':
-          if (request.method === 'POST') {
-            return await handleUpdateLatest(request, env);
+        case '/help':
+          if (request.method !== 'GET') {
+            return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
+              status: 405,
+              headers: { 'Content-Type': 'application/json', 'Allow': 'GET', ...corsHeaders }
+            });
           }
-          return new Response('Method not allowed', { status: 405 });
-        
+          return handleRoot();
+
+        case '/latest':
+          if (request.method !== 'GET') {
+            return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
+              status: 405,
+              headers: { 'Content-Type': 'application/json', 'Allow': 'GET', ...corsHeaders }
+            });
+          }
+          return await handleGetLatest(env);
+
+        case '/update':
+          if (request.method !== 'POST') {
+            return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
+              status: 405,
+              headers: { 'Content-Type': 'application/json', 'Allow': 'POST', ...corsHeaders }
+            });
+          }
+          return await handleUpdateLatest(request, env);
+
         default:
           return new Response('Not found', { status: 404 });
       }

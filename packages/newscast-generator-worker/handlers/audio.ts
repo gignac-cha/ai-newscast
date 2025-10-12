@@ -18,8 +18,9 @@ export async function handleAudio(
     const url = new URL(request.url);
     const newscastID = url.searchParams.get('newscast-id');
     const topicIndex = url.searchParams.get('topic-index');
+    const saveToR2 = url.searchParams.get('save') === 'true';
 
-    console.log(`[AUDIO_HANDLER PARAMS] newscast-id: ${newscastID}, topic-index: ${topicIndex}`);
+    console.log(`[AUDIO_HANDLER PARAMS] newscast-id: ${newscastID}, topic-index: ${topicIndex}, saveToR2: ${saveToR2}`);
 
     if (!newscastID) {
       console.error(`[AUDIO_HANDLER ERROR] Missing newscast-id parameter`);
@@ -103,43 +104,48 @@ export async function handleAudio(
     });
     console.log(`[AUDIO_HANDLER TTS] Audio generation completed: ${result.audioFiles.length} files generated, ${result.stats.successCount} successful`);
 
-    // Store audio files in R2
-    console.log(`[AUDIO_HANDLER R2] Uploading ${result.audioFiles.length} audio files to R2`);
-    const audioFileUploads = result.audioFiles.map(async (audioFile, index) => {
-      const audioFilePath = `newscasts/${newscastID}/topic-${topicIndexPadded}/audio/${audioFile.fileName}`;
-      console.log(`[AUDIO_HANDLER R2] Uploading audio file ${index + 1}/${result.audioFiles.length}: ${audioFile.fileName} (${audioFile.audioContent.length} bytes)`);
-      return bucket.put(audioFilePath, audioFile.audioContent, {
-        httpMetadata: {
-          contentType: 'audio/mpeg',
-        },
-      });
-    });
-
-    // Store audio metadata
-    const audioMetadataPath = `newscasts/${newscastID}/topic-${topicIndexPadded}/audio/audio-files.json`;
-    console.log(`[AUDIO_HANDLER R2] Uploading audio metadata: ${audioMetadataPath}`);
-    const audioMetadataUpload = bucket.put(audioMetadataPath, JSON.stringify(result.audioOutput, null, 2), {
-      httpMetadata: {
-        contentType: 'application/json; charset=utf-8',
-      },
-    });
-
-    await Promise.all([...audioFileUploads, audioMetadataUpload]);
-    console.log(`[AUDIO_HANDLER R2] All audio files and metadata uploaded successfully`);
-
     const responseData: AudioGenerationResponse = {
       success: true,
-      newscast_id: newscastID,
-      topic_index: topicIndexNumber,
-      input_file: scriptFilePath,
-      output_files: {
-        audio_metadata: audioMetadataPath,
-        audio_files: result.audioFiles.map(file => `newscasts/${newscastID}/topic-${topicIndexPadded}/audio/${file.fileName}`),
-      },
+      newscastID,
+      topicIndex: topicIndexNumber,
+      inputFile: scriptFilePath,
       stats: result.stats,
       timestamp: new Date().toISOString(),
-      message: `Generated TTS audio for topic ${topicIndexNumber}`,
+      message: '',
     };
+
+    if (saveToR2) {
+      // Store audio files in R2
+      console.log(`[AUDIO_HANDLER R2] Uploading ${result.audioFiles.length} audio files to R2`);
+      const audioFileUploads = result.audioFiles.map(async (audioFile, index) => {
+        const audioFilePath = `newscasts/${newscastID}/topic-${topicIndexPadded}/audio/${audioFile.fileName}`;
+        console.log(`[AUDIO_HANDLER R2] Uploading audio file ${index + 1}/${result.audioFiles.length}: ${audioFile.fileName} (${audioFile.audioContent.length} bytes)`);
+        return bucket.put(audioFilePath, audioFile.audioContent, {
+          httpMetadata: {
+            contentType: 'audio/mpeg',
+          },
+        });
+      });
+
+      // Store audio metadata
+      const audioMetadataPath = `newscasts/${newscastID}/topic-${topicIndexPadded}/audio/audio-files.json`;
+      console.log(`[AUDIO_HANDLER R2] Uploading audio metadata: ${audioMetadataPath}`);
+      const audioMetadataUpload = bucket.put(audioMetadataPath, JSON.stringify(result.audioOutput, null, 2), {
+        httpMetadata: {
+          contentType: 'application/json; charset=utf-8',
+        },
+      });
+
+      await Promise.all([...audioFileUploads, audioMetadataUpload]);
+      console.log(`[AUDIO_HANDLER R2] All audio files and metadata uploaded successfully`);
+
+      const audioFilePaths = result.audioFiles.map(file => `newscasts/${newscastID}/topic-${topicIndexPadded}/audio/${file.fileName}`);
+
+      responseData.outputFiles = { audioMetadata: audioMetadataPath, audioFiles: audioFilePaths };
+      responseData.message = `Generated and saved TTS audio for topic ${topicIndexNumber}`;
+    } else {
+      responseData.message = `Generated TTS audio for topic ${topicIndexNumber}`;
+    }
 
     const totalTime = Date.now() - startTime;
     console.log(`[AUDIO_HANDLER SUCCESS] Completed in ${totalTime}ms for topic ${topicIndexNumber}`);

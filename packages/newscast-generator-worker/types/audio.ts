@@ -2,12 +2,12 @@ import type { AudioOutput } from '@ai-newscast/core';
 
 export interface AudioGenerationResponse {
   success: boolean;
-  newscast_id: string;
-  topic_index: number;
-  input_file: string;
-  output_files: {
-    audio_metadata: string;
-    audio_files: string[];
+  newscastID: string;
+  topicIndex: number;
+  inputFile: string;
+  outputFiles?: {
+    audioMetadata: string;
+    audioFiles: string[];
   };
   stats: {
     startedAt: string;

@@ -19,8 +19,7 @@ export interface TTSVoices {
   voices: Record<string, {
     name: string;
     gender: string;
-    description: string;
-    voice_type: string;
+    voiceType: string;
   }>;
 }
 

@@ -13,6 +13,7 @@ export async function handleTopics(
   env: Env
 ): Promise<Response> {
   const startTime = Date.now();
+  // Save to R2 if ?save=true parameter is provided
   const saveToR2 = url.searchParams.get('save') === 'true';
 
   console.log(`[TOPICS START] ${new Date().toISOString()} - saveToR2: ${saveToR2}`);
@@ -25,15 +26,21 @@ export async function handleTopics(
     const endTime = Date.now();
     const executionTime = endTime - startTime;
 
-    const responseData = {
+    const responseData: {
+      success: boolean;
+      topics: typeof result.topics;
+      count: number;
+      timestamp: string;
+      executionTime: number;
+      message?: string;
+      path?: string;
+      newscastID?: string;
+    } = {
       success: true,
       topics: result.topics,
       count: result.topics.length,
       timestamp: new Date().toISOString(),
       executionTime: executionTime,
-      message: undefined as string | undefined,
-      path: undefined as string | undefined,
-      newscastID: undefined as string | undefined
     };
 
     if (saveToR2) {

@@ -10,8 +10,11 @@ export async function handleCrawlTopics(request: Request, env: Env): Promise<Res
 
 	try {
 		// Service Binding을 통한 내부 호출
-		const response = await env.NEWS_CRAWLER_WORKER.fetch('http://www.example.com/topics?save=true', {
-			method: 'GET',
+		const url = new URL('http://www.example.com');
+		url.pathname = '/topics';
+		url.searchParams.set('save', 'true');
+		const response = await env.NEWS_CRAWLER_WORKER.fetch(url.toString(), {
+			method: 'POST',
 		});
 
 		const result = await response.json();

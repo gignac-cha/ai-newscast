@@ -27,7 +27,12 @@ export async function handleGenerateNews(request: Request, env: Env, topicIndex?
 		}
 
 		// Service Binding을 통한 내부 호출
-		const response = await env.NEWS_GENERATOR_WORKER.fetch(`http://www.example.com/news?newscast-id=${newscastID}&topic-index=${topic}`, {
+		const fetchURL = new URL('http://www.example.com');
+		fetchURL.pathname = '/news';
+		fetchURL.searchParams.set('newscast-id', newscastID);
+		fetchURL.searchParams.set('topic-index', topic.toString());
+		fetchURL.searchParams.set('save', 'true');
+		const response = await env.NEWS_GENERATOR_WORKER.fetch(fetchURL.toString(), {
 			method: 'POST',
 		});
 
@@ -38,8 +43,8 @@ export async function handleGenerateNews(request: Request, env: Env, topicIndex?
 		return new Response(JSON.stringify({
 			success: true,
 			step: 'generate-news',
-			newscast_id: newscastID,
-			topic_index: topic,
+			newscastID,
+			topicIndex: topic,
 			timestamp: new Date().toISOString(),
 			result,
 		}, null, 2), {

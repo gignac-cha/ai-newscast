@@ -58,10 +58,10 @@ export async function handleNewsDetails(
       console.log(`[NEWS_DETAILS COMPLETE] No more items to process. Queue completed.`);
       return response(cors(json({
         success: true,
-        newscast_id: newscastID,
+        newscastID,
         message: 'No more items to process',
-        current_index: currentIndex,
-        total_items: newsList.length
+        currentIndex,
+        totalItems: newsList.length
       })));
     }
 
@@ -83,7 +83,12 @@ export async function handleNewsDetails(
 
         try {
           const topicIndex = item.topicIndex;
-          const newsDetailURL = new URL(`http://www.example.com/news-detail?news-id=${item.newsID}&newscast-id=${newscastID}&topic-index=${topicIndex}`);
+          const newsDetailURL = new URL('http://www.example.com');
+          newsDetailURL.pathname = '/news-detail';
+          newsDetailURL.searchParams.set('news-id', item.newsID);
+          newsDetailURL.searchParams.set('newscast-id', newscastID);
+          newsDetailURL.searchParams.set('topic-index', topicIndex.toString());
+          newsDetailURL.searchParams.set('save', 'true');
           console.log(`[NEWS_DETAILS ITEM] Processing item ${i + itemIndex + 1}/${itemsToProcess.length}: ${item.newsID}`);
           const result = await handleNewsDetail(newsDetailURL, env);
           console.log(`[NEWS_DETAILS ITEM] Completed item ${i + itemIndex + 1}: ${result.status}`);
@@ -252,6 +257,7 @@ export async function handleNewsDetail(
   const newsID = url.searchParams.get('news-id');
   const newscastID = url.searchParams.get('newscast-id');
   const topicIndex = url.searchParams.get('topic-index');
+  const saveToR2 = url.searchParams.get('save') === 'true';
 
   if (!newsID) {
     return response(cors(error('Bad Request', 'Missing required parameter: news-id')));
@@ -262,38 +268,36 @@ export async function handleNewsDetail(
   const endTime = Date.now();
   const executionTime = endTime - startTime;
 
-  const responseData = {
+  const responseData: {
+    success: boolean;
+    data: typeof result;
+    timestamp: string;
+    executionTime: number;
+    message?: string;
+    path?: string;
+    newscastID?: string;
+  } = {
     success: true,
     data: result,
     timestamp: new Date().toISOString(),
-    execution_time_ms: executionTime,
-    message: undefined as string | undefined,
-    path: undefined as string | undefined,
-    newscast_id: undefined as string | undefined
+    executionTime,
   };
 
-  // If newscastID is provided, save to R2 in newscast folder
-  if (newscastID) {
-    let newsDetailKey: string;
-
-    if (topicIndex) {
-      // Save to topic-specific folder: topic-{index:02}/news/{news-id}.json
-      const topicFolder = `topic-${topicIndex.padStart(2, '0')}`;
-      newsDetailKey = `newscasts/${newscastID}/${topicFolder}/news/${newsID}.json`;
-    } else {
-      // Fallback to old structure
-      newsDetailKey = `newscasts/${newscastID}/news/${newsID}.json`;
-    }
+  // Save to R2 if newscastID and save=true are provided
+  if (newscastID && saveToR2) {
+    const newsDetailKey = topicIndex
+      ? `newscasts/${newscastID}/topic-${topicIndex.padStart(2, '0')}/news/${newsID}.json`
+      : `newscasts/${newscastID}/news/${newsID}.json`;
 
     const newsDetailData = {
       ...result,
-      execution_time_ms: executionTime
+      executionTime
     };
     await env.AI_NEWSCAST_BUCKET.put(newsDetailKey, JSON.stringify(newsDetailData, null, 2));
 
     responseData.message = 'News detail saved to R2';
     responseData.path = newsDetailKey;
-    responseData.newscast_id = newscastID;
+    responseData.newscastID = newscastID;
   }
 
   return response(cors(json(responseData)));

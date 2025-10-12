@@ -10,22 +10,24 @@ Available endpoints:
 GET /
   Show this help message
 
-GET /topics
-  Crawl news topics from BigKinds
+POST /topics
+  Crawl news topics from BigKinds and create new topics resource
   Query parameters:
-    - save=true: Save HTML and JSON to R2 bucket
+    - save=true (optional): Save to R2 bucket
 
-GET /detail?news-id=<id>&newscast-id=<id>&topic-index=<n>
+POST /detail
   Crawl detail for a specific news item
   Query parameters:
     - news-id (required): News ID to crawl
-    - newscast-id (optional): Newscast ID to save to R2 bucket
+    - newscast-id (optional): Newscast ID for folder structure
     - topic-index (optional): Topic index for organized folder structure
+    - save=true (optional): Save to R2 bucket
 
-GET /details?newscast-id=<id>
+POST /details
   Crawl all news details for a newscast using queue-based batch processing
   Query parameters:
     - newscast-id (required): Newscast ID to process
+  Note: Always saves to R2 with save=true internally
 
 GET /status?newscast-id=<id>
   Check crawling progress and batch completion status
@@ -33,10 +35,9 @@ GET /status?newscast-id=<id>
     - newscast-id (required): Newscast ID to check
 
 Examples:
-  GET /topics
-  GET /topics?save=true
-  GET /detail?news-id=01100201.20250915005551001
-  GET /details?newscast-id=2025-09-15T01-23-45-678Z
+  POST /topics?save=true
+  POST /detail?news-id=01100201.20250915005551001&newscast-id=2025-09-15T01-23-45-678Z&topic-index=1&save=true
+  POST /details?newscast-id=2025-09-15T01-23-45-678Z
   GET /status?newscast-id=2025-09-15T01-23-45-678Z
 `;
 

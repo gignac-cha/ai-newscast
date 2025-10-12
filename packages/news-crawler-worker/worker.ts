@@ -8,6 +8,7 @@ import { handleStatus } from './handlers/status.ts';
 import { createCORSPreflightResponse } from './utils/cors.ts';
 import { response } from './utils/response.ts';
 import { cors } from './utils/cors.ts';
+import { json } from './utils/json.ts';
 import { error } from './utils/error.ts';
 
 export default {
@@ -20,19 +21,28 @@ export default {
     }
 
     try {
-      if (request.method === 'GET' && url.pathname === '/') {
+      if (request.method === 'GET' && url.pathname === '/health') {
+        return response(cors(json({ status: 'ok', service: 'news-crawler-worker' }, {
+          cacheControl: 'no-cache, no-store, must-revalidate',
+        })));
+      }
+
+      if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/help')) {
         return handleHelp();
       }
 
-      if (request.method === 'GET' && url.pathname === '/topics') {
+      if (request.method === 'POST' && url.pathname === '/topics') {
+        // POST: Create new topics resource (add ?save=true to save to R2)
         return handleTopics(url, env);
       }
 
-      if (request.method === 'GET' && url.pathname === '/detail') {
+      if (request.method === 'POST' && url.pathname === '/detail') {
+        // POST: Create new news detail resource (add ?save=true to save to R2)
         return handleNewsDetail(url, env);
       }
 
-      if (request.method === 'GET' && url.pathname === '/details') {
+      if (request.method === 'POST' && url.pathname === '/details') {
+        // POST: Create news details batch (always saves to R2)
         return handleNewsDetails(url, env);
       }
 
@@ -40,7 +50,7 @@ export default {
         return handleStatus(url, env);
       }
 
-      return response(cors(error('Not Found', 'Available endpoints: GET /, GET /topics, GET /detail?news-id=Z, GET /details?newscast-id=Z, GET /status?newscast-id=Z')));
+      return response(cors(error('Not Found', 'Available endpoints: GET /, POST /topics, POST /detail, POST /details, GET /status')));
 
     } catch (err) {
       console.error('Worker error:', err);
@@ -54,6 +64,7 @@ export default {
       console.log(`[SCHEDULED START] ${startTime} - Cron: ${controller.cron}`);
 
       try {
+        const BASE_URL = 'http://www.example.com';
         const cronExpression = controller.cron;
         console.log(`[SCHEDULED INFO] Processing cron expression: ${cronExpression}`);
 
@@ -63,7 +74,9 @@ export default {
         switch (cronExpression) {
           case "5 9 * * *": {
             console.log(`[SCHEDULED TOPICS] Starting topics collection at ${new Date().toISOString()}`);
-            const topicsURL = new URL('http://www.example.com/topics?save=true');
+            const topicsURL = new URL(BASE_URL);
+            topicsURL.pathname = '/topics';
+            topicsURL.searchParams.set('save', 'true');
             console.log(`[SCHEDULED TOPICS] Calling handleTopics with URL: ${topicsURL.toString()}`);
 
             const result = await handleTopics(topicsURL, env);
@@ -82,7 +95,10 @@ export default {
             console.log(`[SCHEDULED DETAILS] Starting details collection at ${new Date().toISOString()}`);
 
             if (workingNewscastID) {
-              const detailsURL = new URL(`http://www.example.com/details?newscast-id=${workingNewscastID}`);
+              const detailsURL = new URL(BASE_URL);
+              detailsURL.pathname = '/details';
+              detailsURL.searchParams.set('newscast-id', workingNewscastID);
+              detailsURL.searchParams.set('save', 'true');
               console.log(`[SCHEDULED DETAILS] Calling handleDetails with URL: ${detailsURL.toString()}`);
 
               const result = await handleNewsDetails(detailsURL, env);
