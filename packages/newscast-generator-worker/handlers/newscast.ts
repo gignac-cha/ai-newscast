@@ -1,9 +1,6 @@
 import { generateNewscast } from '@ai-newscast/newscast-generator/generate-newscast.ts';
 import type { Env } from '../types/env.ts';
-import { cors } from '../utils/cors.ts';
-import { json } from '../utils/json.ts';
-import { error } from '../utils/error.ts';
-import { response } from '../utils/response.ts';
+import { cors, json, error, response } from '@ai-newscast/core-worker';
 
 export async function handleNewscast(
   request: Request,

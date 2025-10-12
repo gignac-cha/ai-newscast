@@ -15,6 +15,7 @@ import { handleMergeNewscast } from './handlers/merge-newscast';
 import { handleComplete } from './handlers/complete';
 import { handleHelp } from './handlers/help';
 import type { Env } from './types/env';
+import { createCORSPreflightResponse, response, cors, json } from '@ai-newscast/core-worker';
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -22,24 +23,15 @@ export default {
 
 		// Handle CORS preflight
 		if (request.method === 'OPTIONS') {
-			return new Response(null, {
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-					'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-					'Access-Control-Allow-Headers': 'Content-Type',
-					'Access-Control-Max-Age': '86400',
-				},
-			});
+			return createCORSPreflightResponse();
 		}
 
 		if (request.method === 'GET' && url.pathname === '/health') {
-			return new Response(JSON.stringify({ status: 'ok', service: 'newscast-scheduler-worker' }), {
+			return response(cors(json({ status: 'ok', service: 'newscast-scheduler-worker' }, {
 				headers: {
-					'Content-Type': 'application/json',
 					'Cache-Control': 'no-cache, no-store, must-revalidate',
-				'Access-Control-Allow-Origin': '*',
 				},
-			});
+			})));
 		}
 
 		if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/help')) {

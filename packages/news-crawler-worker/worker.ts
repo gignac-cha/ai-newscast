@@ -5,11 +5,7 @@ import { handleNewsDetail, handleNewsDetails } from './handlers/details.ts';
 import { handleStatus } from './handlers/status.ts';
 
 // Import utilities
-import { createCORSPreflightResponse } from './utils/cors.ts';
-import { response } from './utils/response.ts';
-import { cors } from './utils/cors.ts';
-import { json } from './utils/json.ts';
-import { error } from './utils/error.ts';
+import { createCORSPreflightResponse, response, cors, json, error } from '@ai-newscast/core-worker';
 
 export default {
   async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {

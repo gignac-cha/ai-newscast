@@ -1,7 +1,4 @@
-import { response } from '../utils/response.ts';
-import { cors } from '../utils/cors.ts';
-import { json } from '../utils/json.ts';
-import { error } from '../utils/error.ts';
+import { response, cors, json, error } from '@ai-newscast/core-worker';
 import type { GeneratedNews } from '@ai-newscast/core';
 import { generateNews, formatAsMarkdown, type NewsDetail } from '@ai-newscast/news-generator';
 import newsConsolidationPrompt from '../prompts/news-consolidation.md';

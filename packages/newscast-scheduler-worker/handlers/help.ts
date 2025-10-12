@@ -1,4 +1,5 @@
 import type { Env } from '../types/env';
+import { response, cors, json } from '@ai-newscast/core-worker';
 
 export async function handleHelp(request: Request, env: Env): Promise<Response> {
 	const help = {
@@ -32,7 +33,5 @@ export async function handleHelp(request: Request, env: Env): Promise<Response> 
 		},
 	};
 
-	return new Response(JSON.stringify(help, null, 2), {
-		headers: { 'Content-Type': 'application/json' },
-	});
+	return response(cors(json(help)));
 }

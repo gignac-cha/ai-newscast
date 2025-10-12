@@ -1,5 +1,4 @@
-import { cors } from '../utils/cors.ts';
-import { json } from '../utils/json.ts';
+import { cors, json } from '@ai-newscast/core-worker';
 
 export async function handleHelp(): Promise<Response> {
   const helpData = {

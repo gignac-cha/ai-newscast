@@ -6,6 +6,46 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
+    "build:workers": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "@ai-newscast/core#build:workers": {
+      "cache": false
+    },
+    "@ai-newscast/core-worker#build:workers": {
+      "cache": false
+    },
+    "@ai-newscast/news-crawler#build:workers": {
+      "cache": false
+    },
+    "@ai-newscast/news-generator#build:workers": {
+      "cache": false
+    },
+    "@ai-newscast/newscast-generator#build:workers": {
+      "cache": false
+    },
+    "@ai-newscast/newscast-web#build:workers": {
+      "cache": false
+    },
+    "typecheck": {
+      "outputs": []
+    },
+    "@ai-newscast/bigkinds-topics-test-web#typecheck": {
+      "cache": false
+    },
+    "@ai-newscast/bigkinds-topics-test-worker#typecheck": {
+      "cache": false
+    },
+    "@ai-newscast/document-polyfill#typecheck": {
+      "cache": false
+    },
+    "@ai-newscast/newscast-generator-lambda#typecheck": {
+      "cache": false
+    },
+    "@ai-newscast/newscast-latest-id#typecheck": {
+      "cache": false
+    },
     "crawl:topics": {
       "outputs": ["output/**"],
       "env": ["PATH", "VIRTUAL_ENV"]

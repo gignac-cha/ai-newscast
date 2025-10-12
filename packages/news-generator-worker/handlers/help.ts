@@ -1,6 +1,4 @@
-import { response } from '../utils/response.ts';
-import { cors } from '../utils/cors.ts';
-import { json } from '../utils/json.ts';
+import { response, cors, json } from '@ai-newscast/core-worker';
 
 export function handleHelp(): Response {
   const helpData = {

@@ -7,6 +7,7 @@
   "types": "dist/worker.d.ts",
   "scripts": {
     "build": "node build.ts",
+    "build:workers": "node build.ts",
     "dev": "wrangler dev",
     "typecheck": "tsc --noEmit",
     "deploy": "pnpm build && wrangler deploy"
@@ -22,6 +23,7 @@
   "license": "MIT",
   "dependencies": {
     "@ai-newscast/core": "workspace:*",
+    "@ai-newscast/core-worker": "workspace:*",
     "@ai-newscast/news-crawler": "workspace:*",
     "cheerio": "^1.1.2"
   },

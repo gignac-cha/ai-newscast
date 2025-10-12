@@ -4,13 +4,15 @@
   "description": "Cloudflare Workers scheduler for AI newscast pipeline orchestration",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "pnpm build && wrangler deploy",
     "build": "node build.ts",
-    "typecheck": "tsc --noEmit"
+    "build:workers": "node build.ts",
+    "dev": "wrangler dev",
+    "typecheck": "tsc --noEmit",
+    "deploy": "pnpm build && wrangler deploy"
   },
   "dependencies": {
-    "@ai-newscast/core": "workspace:*"
+    "@ai-newscast/core": "workspace:*",
+    "@ai-newscast/core-worker": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241127.0",

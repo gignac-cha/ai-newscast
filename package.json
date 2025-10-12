@@ -9,6 +9,8 @@
   "packageManager": "pnpm@10.17.0",
   "scripts": {
     "build": "turbo build",
+    "build:workers": "turbo build:workers",
+    "typecheck": "turbo typecheck",
     "run:crawler:news-topics": "turbo crawl:topics",
     "run:crawler:news-details": "turbo crawl:details",
     "run:generator:news": "turbo generate:news",

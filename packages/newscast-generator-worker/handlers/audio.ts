@@ -2,10 +2,7 @@ import { generateNewscastAudio } from '@ai-newscast/newscast-generator/generate-
 import type { NewscastOutput } from '@ai-newscast/core';
 import type { Env } from '../types/env.ts';
 import type { AudioGenerationResponse } from '../types/audio.ts';
-import { cors } from '../utils/cors.ts';
-import { json } from '../utils/json.ts';
-import { error } from '../utils/error.ts';
-import { response } from '../utils/response.ts';
+import { cors, json, error, response } from '@ai-newscast/core-worker';
 
 export async function handleAudio(
   request: Request,

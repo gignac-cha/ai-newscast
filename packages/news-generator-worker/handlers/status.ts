@@ -1,7 +1,4 @@
-import { response } from '../utils/response.ts';
-import { cors } from '../utils/cors.ts';
-import { json } from '../utils/json.ts';
-import { error } from '../utils/error.ts';
+import { response, cors, json, error } from '@ai-newscast/core-worker';
 
 interface Env {
   AI_NEWSCAST_BUCKET: R2Bucket;

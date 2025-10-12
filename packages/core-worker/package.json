@@ -1,0 +1,20 @@
+{
+  "name": "@ai-newscast/core-worker",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Core utilities for Cloudflare Workers in AI Newscast project",
+  "main": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  },
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  }
+}

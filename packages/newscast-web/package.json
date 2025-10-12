@@ -13,7 +13,7 @@
     "build:profile": "vite build --profile",
     "build:perf": "node build-perf.ts",
     "preview": "vite preview",
-    "type-check": "tsc --noEmit"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@ai-newscast/core": "workspace:*",
