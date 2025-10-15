@@ -13,11 +13,11 @@
     "./types": "./types.ts"
   },
   "scripts": {
-    "dev": "node --experimental-strip-types command.ts",
-    "build": "tsc --noEmit",
+    "dev": "node command.ts",
     "typecheck": "tsc --noEmit",
-    "upload": "node --experimental-strip-types command.ts upload",
-    "test": "node --experimental-strip-types command.ts upload --test"
+    "upload": "node command.ts upload",
+    "test": "node command.ts upload --test",
+    "upload:r2": "node command.ts upload"
   },
   "dependencies": {
     "@ai-newscast/core": "workspace:*",

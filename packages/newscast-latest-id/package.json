@@ -5,9 +5,9 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --format=esm --outfile=dist/index.js --platform=neutral --target=es2022",
+    "build": "node build.ts",
     "dev": "wrangler dev",
-    "deploy": "npm run build && wrangler deploy",
+    "deploy": "pnpm build && wrangler deploy",
     "tail": "wrangler tail",
     "type-check": "tsc --noEmit",
     "update:local": "wrangler kv key put \"latest-newscast-id\" --namespace-id 1a002997dc124ce9a4ff5080a7e2b5e6 --local",

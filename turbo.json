@@ -7,44 +7,26 @@
       "outputs": ["dist/**"]
     },
     "build:workers": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
-    },
-    "@ai-newscast/core#build:workers": {
-      "cache": false
-    },
-    "@ai-newscast/core-worker#build:workers": {
-      "cache": false
-    },
-    "@ai-newscast/news-crawler#build:workers": {
-      "cache": false
-    },
-    "@ai-newscast/news-generator#build:workers": {
-      "cache": false
-    },
-    "@ai-newscast/newscast-generator#build:workers": {
-      "cache": false
-    },
-    "@ai-newscast/newscast-web#build:workers": {
-      "cache": false
-    },
-    "typecheck": {
+      "dependsOn": [
+        "@ai-newscast/news-crawler-worker#build",
+        "@ai-newscast/news-generator-worker#build",
+        "@ai-newscast/newscast-generator-worker#build",
+        "@ai-newscast/newscast-scheduler-worker#build",
+        "@ai-newscast/newscast-latest-id#build"
+      ],
       "outputs": []
     },
-    "@ai-newscast/bigkinds-topics-test-web#typecheck": {
-      "cache": false
+    "build:lambdas": {
+      "dependsOn": ["@ai-newscast/newscast-generator-lambda#build"],
+      "outputs": []
     },
-    "@ai-newscast/bigkinds-topics-test-worker#typecheck": {
-      "cache": false
+    "build:web": {
+      "dependsOn": ["@ai-newscast/newscast-web#build"],
+      "outputs": []
     },
-    "@ai-newscast/document-polyfill#typecheck": {
-      "cache": false
-    },
-    "@ai-newscast/newscast-generator-lambda#typecheck": {
-      "cache": false
-    },
-    "@ai-newscast/newscast-latest-id#typecheck": {
-      "cache": false
+    "typecheck": {
+      "dependsOn": ["^typecheck"],
+      "outputs": []
     },
     "crawl:topics": {
       "outputs": ["output/**"],
@@ -72,6 +54,22 @@
     },
     "generate:newscast": {
       "outputs": ["output/**"]
+    },
+    "upload:r2": {
+      "outputs": [],
+      "env": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_ACCESS_KEY_ID", "CLOUDFLARE_SECRET_ACCESS_KEY"]
+    },
+    "update:local": {
+      "cache": false
+    },
+    "update:remote": {
+      "cache": false
+    },
+    "get:local": {
+      "cache": false
+    },
+    "get:remote": {
+      "cache": false
     }
   }
 }

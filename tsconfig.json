@@ -113,11 +113,18 @@
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
   "references": [
+    { "path": "./packages/cloudflare-uploader" },
     { "path": "./packages/core" },
+    { "path": "./packages/core-worker" },
     { "path": "./packages/news-crawler" },
-    { "path": "./packages/news-processor" },
-    { "path": "./packages/script-generator" },
-    { "path": "./packages/api-server" },
+    { "path": "./packages/news-crawler-worker" },
+    { "path": "./packages/news-generator" },
+    { "path": "./packages/news-generator-worker" },
+    { "path": "./packages/newscast-generator" },
+    { "path": "./packages/newscast-generator-lambda" },
+    { "path": "./packages/newscast-generator-worker" },
+    { "path": "./packages/newscast-latest-id" },
+    { "path": "./packages/newscast-scheduler-worker" },
     { "path": "./packages/newscast-web" }
   ]
 }

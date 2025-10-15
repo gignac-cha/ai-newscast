@@ -7,7 +7,6 @@
   "types": "dist/worker.d.ts",
   "scripts": {
     "build": "node build.ts",
-    "build:workers": "node build.ts",
     "dev": "wrangler dev",
     "typecheck": "tsc --noEmit",
     "deploy": "pnpm build && wrangler deploy"

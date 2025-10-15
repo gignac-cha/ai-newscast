@@ -362,7 +362,7 @@ jobs:
 
           echo "📤 Uploading topic-${TOPIC_INDEX_STRING} to R2"
 
-          pnpm run uploader:upload \
+          pnpm run:uploader:upload \
             --input-dir /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING} \
             --newscast-id ${NEWSCAST_ID} \
             --topic-index ${TOPIC_INDEX} \

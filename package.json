@@ -10,6 +10,8 @@
   "scripts": {
     "build": "turbo build",
     "build:workers": "turbo build:workers",
+    "build:lambdas": "turbo build:lambdas",
+    "build:web": "turbo build:web",
     "typecheck": "turbo typecheck",
     "run:crawler:news-topics": "turbo crawl:topics",
     "run:crawler:news-details": "turbo crawl:details",
@@ -17,11 +19,11 @@
     "run:generator:newscast-script": "turbo generate:script",
     "run:generator:newscast-audio": "turbo generate:audio",
     "run:generator:newscast": "turbo generate:newscast",
-    "update:latest-id:local": "pnpm --filter @ai-newscast/newscast-latest-id update:local --",
-    "update:latest-id:remote": "pnpm --filter @ai-newscast/newscast-latest-id update:remote --",
-    "get:latest-id:local": "pnpm --filter @ai-newscast/newscast-latest-id get:local",
-    "get:latest-id:remote": "pnpm --filter @ai-newscast/newscast-latest-id get:remote",
-    "uploader:upload": "pnpm --filter @ai-newscast/cloudflare-uploader run upload --"
+    "run:update:latest-id:local": "turbo update:local",
+    "run:update:latest-id:remote": "turbo update:remote",
+    "run:get:latest-id:local": "turbo get:local",
+    "run:get:latest-id:remote": "turbo get:remote",
+    "run:uploader:upload": "turbo upload:r2"
   },
   "keywords": [
     "ai",
