@@ -32,7 +32,7 @@ jobs:
       - name: Crawl topics and news lists
         id: topics
         run: |
-          pnpm --filter @ai-newscast/news-crawler run dev topics --output output
+          pnpm run:crawler:news-topics -- --output output
 
           # Extract newscast-id and set as output
           NEWSCAST_ID=$(ls -t output | head -n 1)
@@ -90,7 +90,7 @@ jobs:
             jq -r '.newsIDs | join(",")')
 
           # Crawl news details (sequential within topic)
-          pnpm --filter @ai-newscast/news-crawler run dev details \
+          pnpm run:crawler:news-details -- \
             --news-ids "${NEWS_IDS}" \
             --output output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING} \
             --topic-index ${TOPIC_INDEX}
@@ -144,7 +144,7 @@ jobs:
 
           echo "🤖 Generating consolidated news for topic-${TOPIC_INDEX_STRING}"
 
-          pnpm --filter @ai-newscast/news-generator run dev \
+          pnpm run:generator:news -- \
             --input-folder output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/news \
             --output-file output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/news.json
 
@@ -197,7 +197,7 @@ jobs:
 
           echo "📝 Generating newscast script for topic-${TOPIC_INDEX_STRING}"
 
-          pnpm --filter @ai-newscast/newscast-generator run dev script \
+          pnpm run:generator:newscast-script -- \
             --input-file output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/news.json \
             --output-file output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/newscast-script.json
 
@@ -250,7 +250,7 @@ jobs:
 
           echo "🎙️ Generating TTS audio for topic-${TOPIC_INDEX_STRING}"
 
-          pnpm --filter @ai-newscast/newscast-generator run dev audio \
+          pnpm run:generator:newscast-audio -- \
             --input-file output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/newscast-script.json \
             --output-dir output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}
 
@@ -301,7 +301,7 @@ jobs:
 
           echo "🎵 Merging audio files for topic-${TOPIC_INDEX_STRING}"
 
-          pnpm --filter @ai-newscast/newscast-generator run dev newscast \
+          pnpm run:generator:newscast -- \
             --input-dir output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}
 
           echo "✅ Completed audio merge for topic-${TOPIC_INDEX_STRING}"
