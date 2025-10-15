@@ -20,7 +20,8 @@
     "update:latest-id:local": "pnpm --filter @ai-newscast/newscast-latest-id update:local --",
     "update:latest-id:remote": "pnpm --filter @ai-newscast/newscast-latest-id update:remote --",
     "get:latest-id:local": "pnpm --filter @ai-newscast/newscast-latest-id get:local",
-    "get:latest-id:remote": "pnpm --filter @ai-newscast/newscast-latest-id get:remote"
+    "get:latest-id:remote": "pnpm --filter @ai-newscast/newscast-latest-id get:remote",
+    "uploader:upload": "pnpm --filter @ai-newscast/cloudflare-uploader run upload --"
   },
   "keywords": [
     "ai",
