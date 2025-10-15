@@ -149,8 +149,8 @@ export async function generateNewscastAudio({
         successCount++;
         console.log(`[AUDIO_GEN SUCCESS] ${audioFileName} generated successfully (${successCount}/${newscastData.script.length})`);
 
-        // API 요청 간격 조절 (과부하 방지)
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // API 요청 간격 조절 (Google Cloud TTS Chirp3 rate limit: 200/min, 3 topics parallel)
+        await new Promise(resolve => setTimeout(resolve, 10000));
       } else {
         // 음악 파일은 생성되지 않으므로 스킵 카운트
         audioFiles.push({
