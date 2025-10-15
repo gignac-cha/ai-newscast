@@ -25,14 +25,14 @@
     "@ai-newscast/core": "workspace:*",
     "@ai-newscast/core-worker": "workspace:*",
     "@ai-newscast/news-generator": "workspace:*",
-    "@google/genai": "^1.24.0"
+    "@google/genai": "^1.25.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251011.0",
     "@types/node": "^24.7.2",
-    "esbuild": "^0.25.10",
+    "esbuild": "^0.25.11",
     "typescript": "^5.9.3",
-    "wrangler": "^4.42.2"
+    "wrangler": "^4.43.0"
   },
   "files": [
     "dist",

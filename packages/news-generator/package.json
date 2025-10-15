@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@ai-newscast/core": "workspace:*",
-    "@google/genai": "^1.24.0",
+    "@google/genai": "^1.25.0",
     "commander": "^14.0.1"
   },
   "devDependencies": {
