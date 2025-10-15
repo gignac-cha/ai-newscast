@@ -32,19 +32,30 @@ jobs:
       - name: Crawl topics and news lists
         id: topics
         run: |
-          pnpm run:crawler:news-topics -- --output output
+          pnpm run:crawler:news-topics -- --output /tmp/newscast-output
+
+          # Check where output actually was created and move to /tmp if needed
+          if [ -d "packages/news-crawler/output" ]; then
+            mkdir -p /tmp/newscast-output
+            mv packages/news-crawler/output/* /tmp/newscast-output/
+          fi
 
           # Extract newscast-id and set as output
-          NEWSCAST_ID=$(ls -t output | head -n 1)
+          NEWSCAST_ID=$(ls -t /tmp/newscast-output | head -n 1)
+
+          if [ -z "$NEWSCAST_ID" ]; then
+            echo "❌ Newscast ID is empty!"
+            exit 1
+          fi
+
+          echo "✅ Newscast ID: ${NEWSCAST_ID}"
           echo "newscast-id=${NEWSCAST_ID}" >> $GITHUB_OUTPUT
-          echo "NEWSCAST_ID=${NEWSCAST_ID}" >> $GITHUB_ENV
-          echo "✅ Crawled topics for newscast: ${NEWSCAST_ID}"
 
       - name: Upload topics data
         uses: actions/upload-artifact@v4
         with:
           name: topics-data
-          path: output/${{ steps.topics.outputs.newscast-id }}/
+          path: /tmp/newscast-output/${{ steps.topics.outputs.newscast-id }}/
           retention-days: 7
 
   # Job 2: Crawl News Details (parallel: 10 topics)
@@ -75,7 +86,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: topics-data
-          path: output/${{ needs.crawl-topics.outputs.newscast-id }}/
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/
 
       - name: Crawl news details for topic-${{ matrix.topic }}
         run: |
@@ -86,13 +97,13 @@ jobs:
           echo "📰 Crawling news details for topic-${TOPIC_INDEX_STRING}"
 
           # Extract news IDs from news-list.json
-          NEWS_IDS=$(cat output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/news-list.json | \
+          NEWS_IDS=$(cat /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/news-list.json | \
             jq -r '.newsIDs | join(",")')
 
           # Crawl news details (sequential within topic)
           pnpm run:crawler:news-details -- \
             --news-ids "${NEWS_IDS}" \
-            --output output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING} \
+            --output /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING} \
             --topic-index ${TOPIC_INDEX}
 
           echo "✅ Completed news details for topic-${TOPIC_INDEX_STRING}"
@@ -100,8 +111,8 @@ jobs:
       - name: Upload topic-${{ matrix.topic }} details
         uses: actions/upload-artifact@v4
         with:
-          name: topic-${{ matrix.topic }}-details
-          path: output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
+          name: topic-${{ format('{0:D2}', matrix.topic) }}-details
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
           retention-days: 7
 
   # Job 3: Generate Consolidated News (parallel: 10 topics)
@@ -131,8 +142,8 @@ jobs:
       - name: Download topic-${{ matrix.topic }} details
         uses: actions/download-artifact@v4
         with:
-          name: topic-${{ matrix.topic }}-details
-          path: output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
+          name: topic-${{ format('{0:D2}', matrix.topic) }}-details
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
 
       - name: Generate consolidated news for topic-${{ matrix.topic }}
         env:
@@ -145,16 +156,16 @@ jobs:
           echo "🤖 Generating consolidated news for topic-${TOPIC_INDEX_STRING}"
 
           pnpm run:generator:news -- \
-            --input-folder output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/news \
-            --output-file output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/news.json
+            --input-folder /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/news \
+            --output-file /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/news.json
 
           echo "✅ Completed news generation for topic-${TOPIC_INDEX_STRING}"
 
       - name: Upload topic-${{ matrix.topic }} news
         uses: actions/upload-artifact@v4
         with:
-          name: topic-${{ matrix.topic }}-news
-          path: output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
+          name: topic-${{ format('{0:D2}', matrix.topic) }}-news
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
           retention-days: 7
 
   # Job 4: Generate Newscast Script (parallel: 10 topics)
@@ -184,8 +195,8 @@ jobs:
       - name: Download topic-${{ matrix.topic }} news
         uses: actions/download-artifact@v4
         with:
-          name: topic-${{ matrix.topic }}-news
-          path: output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
+          name: topic-${{ format('{0:D2}', matrix.topic) }}-news
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
 
       - name: Generate newscast script for topic-${{ matrix.topic }}
         env:
@@ -198,16 +209,16 @@ jobs:
           echo "📝 Generating newscast script for topic-${TOPIC_INDEX_STRING}"
 
           pnpm run:generator:newscast-script -- \
-            --input-file output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/news.json \
-            --output-file output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/newscast-script.json
+            --input-file /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/news.json \
+            --output-file /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/newscast-script.json
 
           echo "✅ Completed script generation for topic-${TOPIC_INDEX_STRING}"
 
       - name: Upload topic-${{ matrix.topic }} script
         uses: actions/upload-artifact@v4
         with:
-          name: topic-${{ matrix.topic }}-script
-          path: output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
+          name: topic-${{ format('{0:D2}', matrix.topic) }}-script
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
           retention-days: 7
 
   # Job 5: Generate TTS Audio (parallel: 10 topics)
@@ -237,8 +248,8 @@ jobs:
       - name: Download topic-${{ matrix.topic }} script
         uses: actions/download-artifact@v4
         with:
-          name: topic-${{ matrix.topic }}-script
-          path: output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
+          name: topic-${{ format('{0:D2}', matrix.topic) }}-script
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
 
       - name: Generate TTS audio for topic-${{ matrix.topic }}
         env:
@@ -251,16 +262,16 @@ jobs:
           echo "🎙️ Generating TTS audio for topic-${TOPIC_INDEX_STRING}"
 
           pnpm run:generator:newscast-audio -- \
-            --input-file output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/newscast-script.json \
-            --output-dir output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}
+            --input-file /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/newscast-script.json \
+            --output-dir /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}
 
           echo "✅ Completed audio generation for topic-${TOPIC_INDEX_STRING}"
 
       - name: Upload topic-${{ matrix.topic }} audio
         uses: actions/upload-artifact@v4
         with:
-          name: topic-${{ matrix.topic }}-audio
-          path: output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
+          name: topic-${{ format('{0:D2}', matrix.topic) }}-audio
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
           retention-days: 7
 
   # Job 6: Merge Newscast Audio (parallel: 10 topics)
@@ -290,8 +301,8 @@ jobs:
       - name: Download topic-${{ matrix.topic }} audio
         uses: actions/download-artifact@v4
         with:
-          name: topic-${{ matrix.topic }}-audio
-          path: output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
+          name: topic-${{ format('{0:D2}', matrix.topic) }}-audio
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
 
       - name: Merge audio files for topic-${{ matrix.topic }}
         run: |
@@ -302,15 +313,15 @@ jobs:
           echo "🎵 Merging audio files for topic-${TOPIC_INDEX_STRING}"
 
           pnpm run:generator:newscast -- \
-            --input-dir output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}
+            --input-dir /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}
 
           echo "✅ Completed audio merge for topic-${TOPIC_INDEX_STRING}"
 
       - name: Upload topic-${{ matrix.topic }} final newscast
         uses: actions/upload-artifact@v4
         with:
-          name: topic-${{ matrix.topic }}-final
-          path: output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
+          name: topic-${{ format('{0:D2}', matrix.topic) }}-final
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
           retention-days: 7
 
   # Job 7: Upload to R2 (parallel: 10 topics)
@@ -340,8 +351,8 @@ jobs:
       - name: Download topic-${{ matrix.topic }} final newscast
         uses: actions/download-artifact@v4
         with:
-          name: topic-${{ matrix.topic }}-final
-          path: output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
+          name: topic-${{ format('{0:D2}', matrix.topic) }}-final
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
 
       - name: Upload topic-${{ matrix.topic }} to R2
         env:
@@ -356,7 +367,7 @@ jobs:
           echo "📤 Uploading topic-${TOPIC_INDEX_STRING} to R2"
 
           pnpm run uploader:upload \
-            --input-dir output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING} \
+            --input-dir /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING} \
             --newscast-id ${NEWSCAST_ID} \
             --topic-index ${TOPIC_INDEX} \
             --test
@@ -364,39 +375,40 @@ jobs:
           echo "✅ Completed R2 upload for topic-${TOPIC_INDEX_STRING}"
 
   # Job 8: Update latest-newscast-id (single job)
-  update-latest-id:
-    needs: [crawl-topics, upload-to-r2-matrix]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Update latest-newscast-id
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_ACCESS_KEY_ID: ${{ secrets.CLOUDFLARE_ACCESS_KEY_ID }}
-          CLOUDFLARE_SECRET_ACCESS_KEY: ${{ secrets.CLOUDFLARE_SECRET_ACCESS_KEY }}
-        run: |
-          NEWSCAST_ID=${{ needs.crawl-topics.outputs.newscast-id }}
-
-          echo "🔄 Updating latest-newscast-id to ${NEWSCAST_ID}"
-
-          # Update latest-newscast-id (R2 or KV)
-          pnpm --filter @ai-newscast/newscast-latest-id run update:remote \
-            --newscast-id ${NEWSCAST_ID}
-
-          echo "✅ Latest newscast ID updated"
+  # TODO: Enable this after testing is complete
+  # update-latest-id:
+  #   needs: [crawl-topics, upload-to-r2-matrix]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #
+  #     - name: Setup pnpm
+  #       uses: pnpm/action-setup@v4
+  #
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: ${{ env.NODE_VERSION }}
+  #         cache: 'pnpm'
+  #
+  #     - name: Install dependencies
+  #       run: pnpm install --frozen-lockfile
+  #
+  #     - name: Update latest-newscast-id
+  #       env:
+  #         CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  #         CLOUDFLARE_ACCESS_KEY_ID: ${{ secrets.CLOUDFLARE_ACCESS_KEY_ID }}
+  #         CLOUDFLARE_SECRET_ACCESS_KEY: ${{ secrets.CLOUDFLARE_SECRET_ACCESS_KEY }}
+  #       run: |
+  #         NEWSCAST_ID=${{ needs.crawl-topics.outputs.newscast-id }}
+  #
+  #         echo "🔄 Updating latest-newscast-id to ${NEWSCAST_ID}"
+  #
+  #         # Update latest-newscast-id (R2 or KV)
+  #         pnpm --filter @ai-newscast/newscast-latest-id run update:remote \
+  #           --newscast-id ${NEWSCAST_ID}
+  #
+  #         echo "✅ Latest newscast ID updated"
 
       - name: Generate workflow summary
         run: |
