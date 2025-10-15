@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        topic: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        topic: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']
       max-parallel: 10
       fail-fast: false
     steps:
@@ -90,8 +90,8 @@ jobs:
 
       - name: Crawl news details for topic-${{ matrix.topic }}
         run: |
-          TOPIC_INDEX=${{ matrix.topic }}
-          TOPIC_INDEX_STRING=$(printf "%02d" $TOPIC_INDEX)
+          TOPIC_INDEX_STRING=${{ matrix.topic }}
+          TOPIC_INDEX=$((10#$TOPIC_INDEX_STRING))
           NEWSCAST_ID=${{ needs.crawl-topics.outputs.newscast-id }}
 
           echo "📰 Crawling news details for topic-${TOPIC_INDEX_STRING}"
@@ -111,8 +111,8 @@ jobs:
       - name: Upload topic-${{ matrix.topic }} details
         uses: actions/upload-artifact@v4
         with:
-          name: topic-${{ format('{0:D2}', matrix.topic) }}-details
-          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
+          name: topic-${{ matrix.topic }}-details
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
           retention-days: 7
 
   # Job 3: Generate Consolidated News (parallel: 10 topics)
@@ -121,7 +121,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        topic: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        topic: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']
       max-parallel: 10
       fail-fast: false
     steps:
@@ -142,15 +142,14 @@ jobs:
       - name: Download topic-${{ matrix.topic }} details
         uses: actions/download-artifact@v4
         with:
-          name: topic-${{ format('{0:D2}', matrix.topic) }}-details
-          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
+          name: topic-${{ matrix.topic }}-details
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
 
       - name: Generate consolidated news for topic-${{ matrix.topic }}
         env:
           GOOGLE_GEN_AI_API_KEY: ${{ secrets.GOOGLE_GEN_AI_API_KEY }}
         run: |
-          TOPIC_INDEX=${{ matrix.topic }}
-          TOPIC_INDEX_STRING=$(printf "%02d" $TOPIC_INDEX)
+          TOPIC_INDEX_STRING=${{ matrix.topic }}
           NEWSCAST_ID=${{ needs.crawl-topics.outputs.newscast-id }}
 
           echo "🤖 Generating consolidated news for topic-${TOPIC_INDEX_STRING}"
@@ -164,8 +163,8 @@ jobs:
       - name: Upload topic-${{ matrix.topic }} news
         uses: actions/upload-artifact@v4
         with:
-          name: topic-${{ format('{0:D2}', matrix.topic) }}-news
-          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
+          name: topic-${{ matrix.topic }}-news
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
           retention-days: 7
 
   # Job 4: Generate Newscast Script (parallel: 10 topics)
@@ -174,7 +173,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        topic: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        topic: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']
       max-parallel: 10
       fail-fast: false
     steps:
@@ -195,15 +194,14 @@ jobs:
       - name: Download topic-${{ matrix.topic }} news
         uses: actions/download-artifact@v4
         with:
-          name: topic-${{ format('{0:D2}', matrix.topic) }}-news
-          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
+          name: topic-${{ matrix.topic }}-news
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
 
       - name: Generate newscast script for topic-${{ matrix.topic }}
         env:
           GOOGLE_GEN_AI_API_KEY: ${{ secrets.GOOGLE_GEN_AI_API_KEY }}
         run: |
-          TOPIC_INDEX=${{ matrix.topic }}
-          TOPIC_INDEX_STRING=$(printf "%02d" $TOPIC_INDEX)
+          TOPIC_INDEX_STRING=${{ matrix.topic }}
           NEWSCAST_ID=${{ needs.crawl-topics.outputs.newscast-id }}
 
           echo "📝 Generating newscast script for topic-${TOPIC_INDEX_STRING}"
@@ -217,8 +215,8 @@ jobs:
       - name: Upload topic-${{ matrix.topic }} script
         uses: actions/upload-artifact@v4
         with:
-          name: topic-${{ format('{0:D2}', matrix.topic) }}-script
-          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
+          name: topic-${{ matrix.topic }}-script
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
           retention-days: 7
 
   # Job 5: Generate TTS Audio (parallel: 10 topics)
@@ -227,7 +225,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        topic: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        topic: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']
       max-parallel: 10
       fail-fast: false
     steps:
@@ -248,15 +246,14 @@ jobs:
       - name: Download topic-${{ matrix.topic }} script
         uses: actions/download-artifact@v4
         with:
-          name: topic-${{ format('{0:D2}', matrix.topic) }}-script
-          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
+          name: topic-${{ matrix.topic }}-script
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
 
       - name: Generate TTS audio for topic-${{ matrix.topic }}
         env:
           GOOGLE_CLOUD_API_KEY: ${{ secrets.GOOGLE_CLOUD_API_KEY }}
         run: |
-          TOPIC_INDEX=${{ matrix.topic }}
-          TOPIC_INDEX_STRING=$(printf "%02d" $TOPIC_INDEX)
+          TOPIC_INDEX_STRING=${{ matrix.topic }}
           NEWSCAST_ID=${{ needs.crawl-topics.outputs.newscast-id }}
 
           echo "🎙️ Generating TTS audio for topic-${TOPIC_INDEX_STRING}"
@@ -270,8 +267,8 @@ jobs:
       - name: Upload topic-${{ matrix.topic }} audio
         uses: actions/upload-artifact@v4
         with:
-          name: topic-${{ format('{0:D2}', matrix.topic) }}-audio
-          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
+          name: topic-${{ matrix.topic }}-audio
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
           retention-days: 7
 
   # Job 6: Merge Newscast Audio (parallel: 10 topics)
@@ -280,7 +277,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        topic: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        topic: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']
       max-parallel: 10
       fail-fast: false
     steps:
@@ -301,13 +298,12 @@ jobs:
       - name: Download topic-${{ matrix.topic }} audio
         uses: actions/download-artifact@v4
         with:
-          name: topic-${{ format('{0:D2}', matrix.topic) }}-audio
-          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
+          name: topic-${{ matrix.topic }}-audio
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
 
       - name: Merge audio files for topic-${{ matrix.topic }}
         run: |
-          TOPIC_INDEX=${{ matrix.topic }}
-          TOPIC_INDEX_STRING=$(printf "%02d" $TOPIC_INDEX)
+          TOPIC_INDEX_STRING=${{ matrix.topic }}
           NEWSCAST_ID=${{ needs.crawl-topics.outputs.newscast-id }}
 
           echo "🎵 Merging audio files for topic-${TOPIC_INDEX_STRING}"
@@ -320,8 +316,8 @@ jobs:
       - name: Upload topic-${{ matrix.topic }} final newscast
         uses: actions/upload-artifact@v4
         with:
-          name: topic-${{ format('{0:D2}', matrix.topic) }}-final
-          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
+          name: topic-${{ matrix.topic }}-final
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
           retention-days: 7
 
   # Job 7: Upload to R2 (parallel: 10 topics)
@@ -330,7 +326,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        topic: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        topic: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']
       max-parallel: 10
       fail-fast: false
     steps:
@@ -351,8 +347,8 @@ jobs:
       - name: Download topic-${{ matrix.topic }} final newscast
         uses: actions/download-artifact@v4
         with:
-          name: topic-${{ format('{0:D2}', matrix.topic) }}-final
-          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ format('{0:D2}', matrix.topic) }}/
+          name: topic-${{ matrix.topic }}-final
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
 
       - name: Upload topic-${{ matrix.topic }} to R2
         env:
@@ -360,8 +356,8 @@ jobs:
           CLOUDFLARE_ACCESS_KEY_ID: ${{ secrets.CLOUDFLARE_ACCESS_KEY_ID }}
           CLOUDFLARE_SECRET_ACCESS_KEY: ${{ secrets.CLOUDFLARE_SECRET_ACCESS_KEY }}
         run: |
-          TOPIC_INDEX=${{ matrix.topic }}
-          TOPIC_INDEX_STRING=$(printf "%02d" $TOPIC_INDEX)
+          TOPIC_INDEX_STRING=${{ matrix.topic }}
+          TOPIC_INDEX=$((10#$TOPIC_INDEX_STRING))
           NEWSCAST_ID=${{ needs.crawl-topics.outputs.newscast-id }}
 
           echo "📤 Uploading topic-${TOPIC_INDEX_STRING} to R2"
