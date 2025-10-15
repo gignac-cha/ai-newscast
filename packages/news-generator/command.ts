@@ -16,7 +16,8 @@ async function processNewsGeneration(
   inputFolder: string,
   outputFile: string,
   printFormat: string = 'text',
-  printLogFile?: string
+  printLogFile?: string,
+  model?: string
 ): Promise<void> {
   const startTime = Date.now();
 
@@ -67,7 +68,7 @@ async function processNewsGeneration(
     const promptTemplate = await loadPrompt();
 
     // Generate news using pure function with metrics
-    const result = await generateNews(newsDetails, promptTemplate, apiKey, newscastID, topicIndex);
+    const result = await generateNews(newsDetails, promptTemplate, apiKey, newscastID, topicIndex, model);
     const { generatedNews, executionTime, metrics } = result;
 
     // Ensure output directory exists
@@ -127,9 +128,10 @@ async function main() {
     .requiredOption('-o, --output-file <path>', 'Output file path for generated news')
     .option('-f, --print-format <format>', 'Output format (json|text)', 'text')
     .option('-l, --print-log-file <path>', 'File to write JSON log output')
+    .option('-m, --model <model>', 'Gemini model to use (default: gemini-2.5-pro)')
     .action(async (options) => {
-      const { inputFolder, outputFile, printFormat, printLogFile } = options;
-      await processNewsGeneration(inputFolder, outputFile, printFormat, printLogFile);
+      const { inputFolder, outputFile, printFormat, printLogFile, model } = options;
+      await processNewsGeneration(inputFolder, outputFile, printFormat, printLogFile, model);
     });
 
   program.parse();

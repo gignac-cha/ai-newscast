@@ -20,6 +20,7 @@ interface ScriptCommandOptions {
   outputFile: string;
   printFormat?: 'json' | 'text';
   printLogFile?: string;
+  model?: string;
 }
 
 interface AudioCommandOptions {
@@ -40,6 +41,7 @@ async function generateScriptToFiles({
   outputFile,
   printFormat = 'text',
   printLogFile,
+  model,
 }: ScriptCommandOptions) {
   const apiKey = process.env.GOOGLE_GEN_AI_API_KEY;
 
@@ -61,6 +63,7 @@ async function generateScriptToFiles({
     apiKey,
     newscastID: newsData.metrics.newscastID,
     topicIndex: newsData.metrics.topicIndex,
+    model,
   });
 
   await mkdir(dirname(outputFile), { recursive: true });
@@ -304,10 +307,11 @@ program
   .requiredOption('-o, --output-file <path>', 'Output file path for generated script')
   .option('-f, --print-format <format>', 'Output format (json|text)', 'text')
   .option('-l, --print-log-file <path>', 'File to write JSON log output')
+  .option('-m, --model <model>', 'Gemini model to use (default: gemini-2.5-pro)')
   .action(async (options) => {
     try {
-      const { inputFile, outputFile, printFormat, printLogFile } = options;
-      await generateScriptToFiles({ inputFile, outputFile, printFormat, printLogFile });
+      const { inputFile, outputFile, printFormat, printLogFile, model } = options;
+      await generateScriptToFiles({ inputFile, outputFile, printFormat, printLogFile, model });
     } catch (error) {
       console.error('❌ Error generating script:', error instanceof Error ? error.message : error);
       process.exit(1);

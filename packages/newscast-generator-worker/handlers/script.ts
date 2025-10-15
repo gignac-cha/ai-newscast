@@ -19,8 +19,9 @@ export async function handleScript(
     const newscastID = url.searchParams.get('newscast-id');
     const topicIndex = url.searchParams.get('topic-index');
     const saveToR2 = url.searchParams.get('save') === 'true';
+    const model = url.searchParams.get('model') ?? env.GEMINI_MODEL ?? 'gemini-2.5-pro';
 
-    console.log(`[SCRIPT_HANDLER PARAMS] newscast-id: ${newscastID}, topic-index: ${topicIndex}, saveToR2: ${saveToR2}`);
+    console.log(`[SCRIPT_HANDLER PARAMS] newscast-id: ${newscastID}, topic-index: ${topicIndex}, saveToR2: ${saveToR2}, model: ${model}`);
 
     if (!newscastID) {
       console.error(`[SCRIPT_HANDLER ERROR] Missing newscast-id parameter`);
@@ -77,7 +78,7 @@ export async function handleScript(
     const defaultVoices = ttsHostConfig as TTSVoices;
     console.log(`[SCRIPT_HANDLER CONFIG] TTS hosts loaded: ${Object.keys(defaultVoices.voices).join(', ')}`);
 
-    console.log(`[SCRIPT_HANDLER AI] Starting newscast script generation with Gemini API`);
+    console.log(`[SCRIPT_HANDLER AI] Starting newscast script generation with Gemini API (model: ${model})`);
     const result = await generateNewscastScript({
       news: newsData,
       promptTemplate: newscastScriptPrompt,
@@ -85,6 +86,7 @@ export async function handleScript(
       apiKey,
       newscastID,
       topicIndex: topicIndexNumber,
+      model,
     });
     console.log(`[SCRIPT_HANDLER AI] Script generation completed: ${result.stats.scriptLines} script lines`);
 

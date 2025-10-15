@@ -55,7 +55,8 @@ export async function generateNews(
   promptTemplate: string,
   apiKey: string,
   newscastID: string,
-  topicIndex: number
+  topicIndex: number,
+  model: string = 'gemini-2.5-pro'
 ): Promise<GenerationResult> {
   const startTime = Date.now();
   const startedAt = new Date().toISOString();
@@ -108,11 +109,11 @@ URL: ${metadata.url}`;
 
   // Generate content
   try {
-    console.log(`[NEWS_GENERATOR AI] Starting AI generation with Gemini 2.5 Pro`);
+    console.log(`[NEWS_GENERATOR AI] Starting AI generation with ${model}`);
     const aiStartTime = Date.now();
 
     const response = await genAI.models.generateContent({
-      model: 'gemini-2.5-pro',
+      model,
       contents: prompt,
     });
 

@@ -2,12 +2,7 @@ import { response, cors, json, error } from '@ai-newscast/core-worker';
 import type { GeneratedNews } from '@ai-newscast/core';
 import { generateNews, formatAsMarkdown, type NewsDetail } from '@ai-newscast/news-generator';
 import newsConsolidationPrompt from '../prompts/news-consolidation.md';
-
-interface Env {
-  AI_NEWSCAST_BUCKET: R2Bucket;
-  AI_NEWSCAST_KV: KVNamespace;
-  GOOGLE_GEN_AI_API_KEY: string;
-}
+import type { Env } from '../types/env.ts';
 
 
 export async function handleGenerateNews(
@@ -19,6 +14,7 @@ export async function handleGenerateNews(
   const topicIndex = url.searchParams.get('topic-index');
   const format = url.searchParams.get('format') ?? 'json';
   const saveToR2 = url.searchParams.get('save') === 'true';
+  const model = url.searchParams.get('model') ?? env.GEMINI_MODEL ?? 'gemini-2.5-pro';
 
   console.log(`[GENERATE START] ${new Date().toISOString()} - newscastID: ${newscastID}, topicIndex: ${topicIndex}, format: ${format}, saveToR2: ${saveToR2}`);
 
@@ -80,13 +76,14 @@ export async function handleGenerateNews(
     }
 
     // Generate news using imported function with metrics
-    console.log(`[GENERATE AI] Starting AI news generation`);
+    console.log(`[GENERATE AI] Starting AI news generation with model: ${model}`);
     const result = await generateNews(
       newsDetails,
       newsConsolidationPrompt,
       env.GOOGLE_GEN_AI_API_KEY,
       newscastID,
-      parseInt(topicIndex)
+      parseInt(topicIndex),
+      model
     );
 
     const generatedNews = result.generatedNews;

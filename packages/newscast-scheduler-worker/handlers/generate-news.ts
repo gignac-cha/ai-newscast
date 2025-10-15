@@ -26,12 +26,19 @@ export async function handleGenerateNews(request: Request, env: Env, topicIndex?
 			throw new Error('No newscast-id found in KV.');
 		}
 
+		// KV에서 model 설정 읽기
+		const modelFromKV = await env.AI_NEWSCAST_KV.get('gemini-model');
+		const model = modelFromKV ?? 'gemini-2.5-pro';
+
+		console.log(`[GenerateNews] Using model: ${model} (source: ${modelFromKV ? 'KV' : 'default'})`);
+
 		// Service Binding을 통한 내부 호출
 		const fetchURL = new URL('http://www.example.com');
 		fetchURL.pathname = '/news';
 		fetchURL.searchParams.set('newscast-id', newscastID);
 		fetchURL.searchParams.set('topic-index', topic.toString());
 		fetchURL.searchParams.set('save', 'true');
+		fetchURL.searchParams.set('model', model);
 		const response = await env.NEWS_GENERATOR_WORKER.fetch(fetchURL.toString(), {
 			method: 'POST',
 		});
