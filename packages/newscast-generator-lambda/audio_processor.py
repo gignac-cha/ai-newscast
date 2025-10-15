@@ -35,10 +35,6 @@ def merge_audio_files(input_files: List[str], output_file: str, ffmpeg_path: Opt
 
         logger.info(f"Using FFmpeg at: {ffmpeg_path}")
 
-        # Make sure FFmpeg is executable (only if it's a file path)
-        if os.path.exists(ffmpeg_path):
-            os.chmod(ffmpeg_path, 0o755)
-
         # Create file list for FFmpeg concat
         filelist_path = os.path.join(os.path.dirname(output_file), 'filelist.txt')
 
