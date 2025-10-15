@@ -1,6 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalEnv": ["PATH", "VIRTUAL_ENV"],
+  "globalEnv": ["PATH", "VIRTUAL_ENV", "GOOGLE_GEN_AI_API_KEY", "GOOGLE_CLOUD_API_KEY"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

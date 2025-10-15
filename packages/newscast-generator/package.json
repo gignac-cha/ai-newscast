@@ -6,9 +6,9 @@
   "main": "newscast-generator.js",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "generate:script": "node newscast-generator.ts script",
-    "generate:audio": "node newscast-generator.ts audio",
-    "generate:newscast": "node newscast-generator.ts newscast"
+    "generate:script": "node command.ts script",
+    "generate:audio": "node command.ts audio",
+    "generate:newscast": "node command.ts newscast"
   },
   "dependencies": {
     "@ai-newscast/core": "workspace:*",

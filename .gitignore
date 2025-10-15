@@ -429,6 +429,7 @@ pyrightconfig.json
 
 # AI News Cast output directories
 output/
+outputs/
 data/
 tests/claude-code/
 tests/codex/

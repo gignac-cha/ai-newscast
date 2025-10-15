@@ -25,35 +25,49 @@ pnpm install
 ### 실행 방법
 
 ```bash
-# 토픽 추출
-pnpm --filter @ai-newscast/news-crawler run crawl:topics
+# 1. 토픽 추출 (루트에서 turbo를 통해 실행 - 권장)
+pnpm run:crawler:news-topics -- --output outputs
 
-# 뉴스 목록 수집
-pnpm --filter @ai-newscast/news-crawler run crawl:list
+# 2. 뉴스 목록 수집 (루트에서 turbo를 통해 실행 - 권장)
+pnpm run:crawler:news-list -- \
+  --topics-file outputs/{TIMESTAMP}/topics.json \
+  --topic-index 1 \
+  --output outputs/{TIMESTAMP}/topic-01
 
-# 상세 정보 추출 (개별)
-pnpm --filter @ai-newscast/news-crawler run crawl:detail
+# 3. 상세 정보 추출 (패키지 디렉토리에서 jq로 news-list.json에서 ID 자동 추출)
+cd packages/news-crawler && \
+node command.ts details \
+  --news-ids "$(jq -r '.newsIDs | join(",")' ../../outputs/{TIMESTAMP}/topic-01/news-list.json)" \
+  --output ../../outputs/{TIMESTAMP}/topic-01 \
+  --topic-index 1
 
-# 상세 정보 추출 (전체)
-pnpm --filter @ai-newscast/news-crawler run crawl:details
+# 또는 개별 뉴스 추출
+cd packages/news-crawler && \
+node command.ts detail \
+  --news-id "01500051.20251015190423003" \
+  --output ../../outputs/{TIMESTAMP}/topic-01 \
+  --topic-index 1
 ```
+
+**주의**: `{TIMESTAMP}`는 실제 생성된 타임스탬프로 교체하세요 (예: `2025-10-15T06-43-36-209Z`)
 
 ## 출력 예시
 
 ### 디렉터리 구조
 
 ```
-output/2025-10-05T19-53-26-599Z/
-├── topic-list.json              # 10개 트렌딩 토픽
+outputs/2025-10-15T06-43-36-209Z/
+├── topics.html                 # HTML 원본
+├── topics.json                 # 10개 트렌딩 토픽
 ├── topic-01/
-│   ├── news-list.json          # 최대 100개 뉴스 목록
-│   └── news/
-│       ├── 01100201.json       # 개별 뉴스 상세정보
+│   ├── news-list.json         # 뉴스 ID 목록
+│   └── news/                  # 상세 크롤링 후 생성
+│       ├── 01100201.json      # 개별 뉴스 상세정보
 │       └── ...
-└── topic-02/                    # 2순위 토픽 (동일 구조)
+└── topic-02/                   # 2순위 토픽 (동일 구조)
 ```
 
-### 토픽 목록 (topic-list.json)
+### 토픽 목록 (topics.json)
 
 ```json
 {
@@ -109,7 +123,8 @@ const topics = await crawlNewsTopics('./output/topic-list.json');
 ## 참고사항
 
 - BigKinds 공개 API를 사용하며, 서버 보호를 위해 1초 간격으로 크롤링합니다
-- 출력 파일은 `output/{ISO_TIMESTAMP}/` 구조로 자동 저장됩니다
+- `--output` 옵션으로 출력 경로 지정 가능 (기본: 패키지 기준 상대 경로)
+- 출력 파일은 `{지정경로}/{ISO_TIMESTAMP}/` 구조로 자동 저장됩니다
 - 중복 토픽은 자동으로 제거되어 항상 10개의 유니크한 토픽만 추출됩니다
 
 ## 개발 가이드

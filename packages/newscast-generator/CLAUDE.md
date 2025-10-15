@@ -485,6 +485,79 @@ const newscastID = new Date().toISOString();  // ❌ 새로 생성 (불일치)
 
 ---
 
+## 📖 사용 예시
+
+### 스크립트 생성
+
+```bash
+# 루트에서 turbo를 통해 실행 (권장)
+export GOOGLE_GEN_AI_API_KEY="$(grep GOOGLE_GEN_AI_API_KEY .env | head -1 | cut -d '=' -f2)" && \
+pnpm run:generator:newscast-script -- \
+  -i ../../outputs/{TIMESTAMP}/topic-01/news.json \
+  -o ../../outputs/{TIMESTAMP}/topic-01/newscast-script.json
+
+# 또는 패키지 디렉토리에서 직접 실행
+cd packages/newscast-generator && \
+export GOOGLE_GEN_AI_API_KEY="$(grep GOOGLE_GEN_AI_API_KEY ../../.env | head -1 | cut -d '=' -f2)" && \
+node command.ts script \
+  -i ../../outputs/{TIMESTAMP}/topic-01/news.json \
+  -o ../../outputs/{TIMESTAMP}/topic-01/newscast-script.json
+
+# 결과: newscast-script.json, newscast-script.md 생성
+```
+
+### 오디오 생성
+
+```bash
+# 루트에서 turbo를 통해 실행 (권장)
+export GOOGLE_CLOUD_API_KEY="$(grep GOOGLE_CLOUD_API_KEY .env | head -1 | cut -d '=' -f2)" && \
+pnpm run:generator:newscast-audio -- \
+  -i ../../outputs/{TIMESTAMP}/topic-01/newscast-script.json \
+  -o ../../outputs/{TIMESTAMP}/topic-01
+
+# 또는 패키지 디렉토리에서 직접 실행
+cd packages/newscast-generator && \
+export GOOGLE_CLOUD_API_KEY="$(grep GOOGLE_CLOUD_API_KEY ../../.env | head -1 | cut -d '=' -f2)" && \
+node command.ts audio \
+  -i ../../outputs/{TIMESTAMP}/topic-01/newscast-script.json \
+  -o ../../outputs/{TIMESTAMP}/topic-01
+
+# 결과: audio/ 폴더에 개별 MP3 파일 + audio-files.json 생성
+```
+
+### 최종 병합
+
+```bash
+# 루트에서 turbo를 통해 실행 (권장)
+pnpm run:generator:newscast -- \
+  -i ../../outputs/{TIMESTAMP}/topic-01
+
+# 또는 패키지 디렉토리에서 직접 실행
+cd packages/newscast-generator && \
+node command.ts newscast \
+  -i ../../outputs/{TIMESTAMP}/topic-01
+
+# 결과: newscast.mp3 + newscast-audio-info.json 생성 (로컬 FFmpeg)
+```
+
+### 출력 구조
+
+```
+outputs/{TIMESTAMP}/topic-01/
+├── newscast-script.json       # 뉴스캐스트 스크립트 (JSON)
+├── newscast-script.md         # 뉴스캐스트 스크립트 (Markdown)
+├── audio/                     # TTS 오디오 파일들
+│   ├── 001-music.mp3         # 오프닝 음악 (스킵됨)
+│   ├── 002-host1.mp3         # 호스트1 음성
+│   ├── 003-host2.mp3         # 호스트2 음성
+│   └── audio-files.json      # 오디오 메타데이터
+├── newscast.mp3               # 최종 병합 오디오
+├── newscast-audio-info.json   # 병합 메타데이터
+└── news.json                  # 입력 통합 뉴스
+```
+
+---
+
 ## 📚 참고 문서
 
 - **프로젝트 공통 규칙**: [../../CLAUDE.md](../../CLAUDE.md)
@@ -494,4 +567,4 @@ const newscastID = new Date().toISOString();  // ❌ 새로 생성 (불일치)
 
 ---
 
-*최종 업데이트: 2025-10-11 - Lambda API 통합 및 Metrics 시스템 강화*
+*최종 업데이트: 2025-10-15 - 실제 사용 예시 및 환경변수 로딩 방법 추가*

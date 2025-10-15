@@ -26,12 +26,21 @@ pnpm install
 ### CLI 사용
 
 ```bash
-# 환경 변수 설정
-export GOOGLE_GEN_AI_API_KEY="your_gemini_api_key"
+# 루트에서 turbo를 통해 실행 (권장)
+export GOOGLE_GEN_AI_API_KEY="$(grep GOOGLE_GEN_AI_API_KEY .env | head -1 | cut -d '=' -f2)" && \
+pnpm run:generator:news -- \
+  --input-folder outputs/{TIMESTAMP}/topic-01/news \
+  --output-file outputs/{TIMESTAMP}/topic-01/news.json
 
-# 뉴스 생성 실행
-pnpm --filter @ai-newscast/news-generator run generate:news
+# 또는 패키지 디렉토리에서 직접 실행
+cd packages/news-generator && \
+export GOOGLE_GEN_AI_API_KEY="$(grep GOOGLE_GEN_AI_API_KEY ../../.env | head -1 | cut -d '=' -f2)" && \
+node command.ts \
+  --input-folder ../../outputs/{TIMESTAMP}/topic-01/news \
+  --output-file ../../outputs/{TIMESTAMP}/topic-01/news.json
 ```
+
+**주의**: `{TIMESTAMP}`는 실제 생성된 타임스탬프로 교체하세요 (예: `2025-10-15T06-43-36-209Z`)
 
 ### 라이브러리로 사용
 

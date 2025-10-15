@@ -375,6 +375,39 @@ const generatedNews = JSON.parse(jsonText);  // ❌ 길이 검증 없음
 
 ---
 
+## 📖 사용 예시
+
+### CLI 명령어 실행
+
+```bash
+# 루트에서 turbo를 통해 실행 (권장)
+export GOOGLE_GEN_AI_API_KEY="$(grep GOOGLE_GEN_AI_API_KEY .env | head -1 | cut -d '=' -f2)" && \
+pnpm run:generator:news -- \
+  --input-folder outputs/{TIMESTAMP}/topic-01/news \
+  --output-file outputs/{TIMESTAMP}/topic-01/news.json
+
+# 또는 패키지 디렉토리에서 직접 실행
+cd packages/news-generator && \
+export GOOGLE_GEN_AI_API_KEY="$(grep GOOGLE_GEN_AI_API_KEY ../../.env | head -1 | cut -d '=' -f2)" && \
+node command.ts \
+  --input-folder ../../outputs/{TIMESTAMP}/topic-01/news \
+  --output-file ../../outputs/{TIMESTAMP}/topic-01/news.json
+
+# 결과: news.json, news.md 생성
+```
+
+### 출력 구조
+
+```
+outputs/{TIMESTAMP}/topic-01/
+├── news.json              # AI 통합 뉴스 (JSON)
+├── news.md                # AI 통합 뉴스 (Markdown)
+└── news/                  # 입력 뉴스 파일들
+    └── *.json             # 개별 뉴스 상세정보
+```
+
+---
+
 ## 📚 참고 문서
 
 - **프로젝트 공통 규칙**: [../../CLAUDE.md](../../CLAUDE.md)
@@ -383,4 +416,4 @@ const generatedNews = JSON.parse(jsonText);  // ❌ 길이 검증 없음
 
 ---
 
-*최종 업데이트: 2025-10-11 - 순수 함수 아키텍처 및 분리 원칙 강화*
+*최종 업데이트: 2025-10-15 - 실제 사용 예시 및 환경변수 로딩 방법 추가*

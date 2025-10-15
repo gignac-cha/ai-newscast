@@ -9,6 +9,7 @@ import { exec } from 'child_process';
 import ffmpeg from '@ffmpeg-installer/ffmpeg';
 import { generateNewscastScript } from './generate-newscast-script.ts';
 import { generateNewscastAudio } from './generate-newscast-audio.ts';
+import { generateNewscastLocal } from './generate-newscast-local.ts';
 import { loadPrompt, loadTTSHosts } from './utils.ts';
 import type { GeneratedNews, NewscastOutput } from './types.ts';
 
@@ -24,6 +25,12 @@ interface ScriptCommandOptions {
 interface AudioCommandOptions {
   inputFile: string;
   outputDir: string;
+  printFormat?: 'json' | 'text';
+  printLogFile?: string;
+}
+
+interface MergeCommandOptions {
+  inputDir: string;
   printFormat?: 'json' | 'text';
   printLogFile?: string;
 }
@@ -226,6 +233,62 @@ export async function generateAudioToFiles({
   return { audioFolderPath, audioListPath };
 }
 
+async function mergeAudioToFile({
+  inputDir,
+  printFormat = 'text',
+  printLogFile,
+}: MergeCommandOptions) {
+  const startTime = Date.now();
+
+  console.log('🎵 뉴스캐스트 오디오 병합 시작...');
+  console.log(`   📁 입력 디렉터리: ${inputDir}`);
+
+  // 로컬 FFmpeg로 병합
+  const result = await generateNewscastLocal(inputDir);
+
+  const endTime = Date.now();
+  const elapsedSeconds = ((endTime - startTime) / 1000).toFixed(2);
+
+  // 로그 출력 생성
+  const logOutput = {
+    timestamp: result.mergeTimestamp,
+    'elapsed-time': `${elapsedSeconds}s`,
+    'input-files': result.inputFiles,
+    'output-file': result.outputFile,
+    'final-duration': result.finalDurationFormatted,
+    'file-size': result.fileSizeFormatted,
+    'output-path': join(inputDir, result.outputFile),
+    metrics: {
+      'newscast-id': result.metrics.newscastID,
+      'topic-index': result.metrics.topicIndex,
+      'merge-time': `${result.metrics.timing.mergeTime.toFixed(1)}ms`,
+      'success-rate': result.metrics.performance.successRate,
+    },
+  };
+
+  // 로그 출력
+  if (printFormat === 'json') {
+    console.log(JSON.stringify(logOutput, null, 2));
+  } else {
+    console.log(`\n✅ 뉴스캐스트 오디오 병합 완료!`);
+    console.log(`   🎬 프로그램: ${result.programName}`);
+    console.log(`   📊 입력 파일: ${result.inputFiles}개`);
+    console.log(`   🎵 최종 파일: ${result.outputFile}`);
+    console.log(`   ⏱️  재생 시간: ${result.finalDurationFormatted}`);
+    console.log(`   💾 파일 크기: ${result.fileSizeFormatted}`);
+    console.log(`   🕐 전체 소요 시간: ${elapsedSeconds}s`);
+    console.log(`   📁 저장 위치: ${join(inputDir, result.outputFile)}`);
+  }
+
+  // 로그 파일 저장
+  if (printLogFile) {
+    await mkdir(dirname(printLogFile), { recursive: true });
+    await writeFile(printLogFile, JSON.stringify(logOutput, null, 2));
+  }
+
+  return { outputFile: join(inputDir, result.outputFile), result };
+}
+
 const program = new Command();
 
 program
@@ -265,6 +328,23 @@ program
       await generateAudioToFiles({ inputFile, outputDir, printFormat, printLogFile });
     } catch (error) {
       console.error('❌ Error generating audio:', error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
+  });
+
+// Newscast Audio Merge Command (Local FFmpeg)
+program
+  .command('newscast')
+  .description('Merge audio files into final newscast using local FFmpeg')
+  .requiredOption('-i, --input-dir <path>', 'Input directory containing audio files')
+  .option('-f, --print-format <format>', 'Output format (json|text)', 'text')
+  .option('-l, --print-log-file <path>', 'File to write JSON log output')
+  .action(async (options) => {
+    try {
+      const { inputDir, printFormat, printLogFile } = options;
+      await mergeAudioToFile({ inputDir, printFormat, printLogFile });
+    } catch (error) {
+      console.error('❌ Error merging audio:', error instanceof Error ? error.message : error);
       process.exit(1);
     }
   });

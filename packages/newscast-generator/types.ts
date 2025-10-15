@@ -2,16 +2,22 @@
  * Re-export core types and add generator-specific types
  */
 
+import type {
+  AudioFileInfo,
+  AudioSegment,
+  NewscastAudioMetrics
+} from '@ai-newscast/core';
+
 export type {
   GeneratedNews,
   SelectedHosts,
   ScriptLine,
   NewscastScript,
   NewscastOutput,
-  NewscastAudioMetrics,
+  ProcessingStats,
   AudioFileInfo,
   AudioSegment,
-  ProcessingStats
+  NewscastAudioMetrics
 } from '@ai-newscast/core';
 
 // Generator-specific types

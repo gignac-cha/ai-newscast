@@ -26,31 +26,56 @@ pnpm install
 ### 스크립트 생성
 
 ```bash
-# 환경 변수 설정
-export GOOGLE_GEN_AI_API_KEY="your_gemini_api_key"
+# 루트에서 turbo를 통해 실행 (권장)
+export GOOGLE_GEN_AI_API_KEY="$(grep GOOGLE_GEN_AI_API_KEY .env | head -1 | cut -d '=' -f2)" && \
+pnpm run:generator:newscast-script -- \
+  -i ../../outputs/{TIMESTAMP}/topic-01/news.json \
+  -o ../../outputs/{TIMESTAMP}/topic-01/newscast-script.json
 
-# 스크립트 생성
-pnpm --filter @ai-newscast/newscast-generator run generate:script
+# 또는 패키지 디렉토리에서 직접 실행
+cd packages/newscast-generator && \
+export GOOGLE_GEN_AI_API_KEY="$(grep GOOGLE_GEN_AI_API_KEY ../../.env | head -1 | cut -d '=' -f2)" && \
+node command.ts script \
+  -i ../../outputs/{TIMESTAMP}/topic-01/news.json \
+  -o ../../outputs/{TIMESTAMP}/topic-01/newscast-script.json
+
+# 결과: newscast-script.json, newscast-script.md 생성
 ```
+
+**주의**: `{TIMESTAMP}`는 실제 생성된 타임스탬프로 교체하세요 (예: `2025-10-15T06-43-36-209Z`)
 
 ### 오디오 생성
 
 ```bash
-# 환경 변수 설정
-export GOOGLE_CLOUD_API_KEY="your_cloud_tts_api_key"
+# 루트에서 turbo를 통해 실행 (권장)
+export GOOGLE_CLOUD_API_KEY="$(grep GOOGLE_CLOUD_API_KEY .env | head -1 | cut -d '=' -f2)" && \
+pnpm run:generator:newscast-audio -- \
+  -i ../../outputs/{TIMESTAMP}/topic-01/newscast-script.json \
+  -o ../../outputs/{TIMESTAMP}/topic-01
 
-# TTS 오디오 생성
-pnpm --filter @ai-newscast/newscast-generator run generate:audio
+# 또는 패키지 디렉토리에서 직접 실행
+cd packages/newscast-generator && \
+export GOOGLE_CLOUD_API_KEY="$(grep GOOGLE_CLOUD_API_KEY ../../.env | head -1 | cut -d '=' -f2)" && \
+node command.ts audio \
+  -i ../../outputs/{TIMESTAMP}/topic-01/newscast-script.json \
+  -o ../../outputs/{TIMESTAMP}/topic-01
+
+# 결과: audio/ 폴더에 개별 MP3 파일 + audio-files.json 생성
 ```
 
 ### 최종 병합
 
 ```bash
-# Lambda API URL 설정
-export AWS_LAMBDA_NEWSCAST_API_URL="your_lambda_url"
+# 루트에서 turbo를 통해 실행 (권장)
+pnpm run:generator:newscast -- \
+  -i ../../outputs/{TIMESTAMP}/topic-01
 
-# 오디오 병합 (Lambda 경유)
-pnpm --filter @ai-newscast/newscast-generator run generate:newscast
+# 또는 패키지 디렉토리에서 직접 실행
+cd packages/newscast-generator && \
+node command.ts newscast \
+  -i ../../outputs/{TIMESTAMP}/topic-01
+
+# 결과: newscast.mp3 + newscast-audio-info.json 생성 (로컬 FFmpeg)
 ```
 
 ## 출력 예시

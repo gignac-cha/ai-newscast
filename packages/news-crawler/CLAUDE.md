@@ -358,6 +358,78 @@ program
 
 ---
 
+## 📖 사용 예시
+
+### CLI 명령어 실행
+
+#### 1. 토픽 추출
+```bash
+# 루트에서 turbo를 통해 실행 (권장)
+pnpm run:crawler:news-topics -- --output outputs
+# 결과: outputs/{TIMESTAMP}/topics.json (10개 고유 토픽)
+
+# 또는 패키지 디렉토리에서 직접 실행
+cd packages/news-crawler && \
+node command.ts topics --output ../../outputs
+```
+
+#### 2. 뉴스 목록 수집
+```bash
+# 루트에서 turbo를 통해 실행 (권장)
+pnpm run:crawler:news-list -- \
+  --topics-file outputs/{TIMESTAMP}/topics.json \
+  --topic-index 1 \
+  --output outputs/{TIMESTAMP}/topic-01
+# 결과: news-list.json (최대 100개 뉴스 ID)
+
+# 또는 패키지 디렉토리에서 직접 실행
+cd packages/news-crawler && \
+node command.ts list \
+  --topics-file ../../outputs/{TIMESTAMP}/topics.json \
+  --topic-index 1 \
+  --output ../../outputs/{TIMESTAMP}/topic-01
+```
+
+#### 3. 뉴스 상세정보 추출
+
+**모든 뉴스 추출 (jq 활용)**:
+```bash
+# 패키지 디렉토리에서 jq로 news-list.json에서 모든 뉴스 ID 추출
+cd packages/news-crawler && \
+node command.ts details \
+  --news-ids "$(jq -r '.newsIDs | join(",")' ../../outputs/{TIMESTAMP}/topic-01/news-list.json)" \
+  --output ../../outputs/{TIMESTAMP}/topic-01 \
+  --topic-index 1
+# 결과: news/ 폴더에 개별 JSON 파일 생성
+# 소요 시간: 약 1초 × 뉴스 개수 (rate limit)
+```
+
+**개별 뉴스 추출**:
+```bash
+cd packages/news-crawler && \
+node command.ts detail \
+  --news-id "01500051.20251015190423003" \
+  --output ../../outputs/{TIMESTAMP}/topic-01 \
+  --topic-index 1
+```
+
+### 출력 구조
+
+```
+outputs/{TIMESTAMP}/
+├── topics.html                 # HTML 원본
+├── topics.json                 # 10개 트렌딩 토픽
+├── topic-01/
+│   ├── news-list.json         # 뉴스 ID 목록
+│   ├── news-details.json      # 크롤링 메트릭스
+│   └── news/                  # 상세 크롤링 후 생성
+│       ├── {NEWS_ID}.json     # 개별 뉴스 상세정보
+│       └── ...
+└── topic-{N}/                  # N순위 토픽 (동일 구조)
+```
+
+---
+
 ## 📚 참고 문서
 
 - **프로젝트 공통 규칙**: [../../CLAUDE.md](../../CLAUDE.md)
@@ -365,4 +437,4 @@ program
 
 ---
 
-*최종 업데이트: 2025-10-11 - TypeScript 단일 구현 (Python 제거)*
+*최종 업데이트: 2025-10-15 - jq 활용 및 실전 트러블슈팅 추가*
