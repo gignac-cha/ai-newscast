@@ -1,4 +1,4 @@
-name = "ai-newscast-web"
+name = "ai-newscast"
 pages_build_output_dir = "dist"
 
 [env.production]

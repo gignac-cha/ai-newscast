@@ -13,7 +13,9 @@
     "build:profile": "vite build --profile",
     "build:perf": "node build-perf.ts",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "deploy": "pnpm build:kv && wrangler pages deploy dist --project-name ai-newscast",
+    "deploy:production": "pnpm build:kv && wrangler pages deploy dist --project-name ai-newscast --branch main"
   },
   "dependencies": {
     "@ai-newscast/core": "workspace:*",
