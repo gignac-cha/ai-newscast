@@ -321,7 +321,50 @@ jobs:
           path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
           retention-days: 7
 
-  # Job 7: Upload to R2 (parallel: 10 topics)
+  # Job 7: Upload topics data to R2
+  upload-topics-to-r2:
+    needs: [crawl-topics]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download topics data
+        uses: actions/download-artifact@v4
+        with:
+          name: topics-data
+          path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/
+
+      - name: Upload topics.json and topics.html to R2
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCESS_KEY_ID: ${{ secrets.CLOUDFLARE_ACCESS_KEY_ID }}
+          CLOUDFLARE_SECRET_ACCESS_KEY: ${{ secrets.CLOUDFLARE_SECRET_ACCESS_KEY }}
+        run: |
+          NEWSCAST_ID=${{ needs.crawl-topics.outputs.newscast-id }}
+
+          echo "📤 Uploading topics data (topics.json, topics.html) to R2"
+
+          pnpm run:uploader:upload -- \
+            --input-dir /tmp/newscast-output/${NEWSCAST_ID} \
+            --newscast-id ${NEWSCAST_ID} \
+            --topic-index 0 \
+            --test
+
+          echo "✅ Completed topics data upload"
+
+  # Job 8: Upload to R2 (parallel: 10 topics)
   upload-to-r2-matrix:
     needs: [crawl-topics, merge-newscast-matrix]
     runs-on: ubuntu-latest

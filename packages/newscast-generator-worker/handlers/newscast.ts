@@ -96,6 +96,17 @@ export async function handleNewscast(
       });
       console.log(`[NEWSCAST_HANDLER R2] Merged audio uploaded successfully`);
 
+      // Save newscast-audio-info.json to R2
+      const audioInfoPath = `newscasts/${newscastID}/topic-${topicIndexPadded}/newscast-audio-info.json`;
+      const audioInfoData = JSON.stringify(mergeResultWithoutAudio, null, 2);
+      console.log(`[NEWSCAST_HANDLER R2] Uploading audio info: ${audioInfoPath} (${audioInfoData.length} bytes)`);
+      await bucket.put(audioInfoPath, audioInfoData, {
+        httpMetadata: {
+          contentType: 'application/json',
+        },
+      });
+      console.log(`[NEWSCAST_HANDLER R2] Audio info uploaded successfully`);
+
       responseData.outputPath = mergedAudioPath;
       responseData.message = `Generated and saved newscast audio for topic ${topicIndexNumber}`;
     } else {
