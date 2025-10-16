@@ -115,6 +115,9 @@ URL: ${metadata.url}`;
     const response = await genAI.models.generateContent({
       model,
       contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+      },
     });
 
     const aiEndTime = Date.now();
