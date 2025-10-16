@@ -7,4 +7,5 @@ export interface Env {
   GOOGLE_CLOUD_API_KEY: string;
   AWS_LAMBDA_NEWSCAST_API_URL: string;
   GEMINI_MODEL?: string;
+  TTS_DELAY_MS?: string;
 }

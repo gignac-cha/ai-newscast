@@ -92,12 +92,17 @@ export async function handleAudio(
 
     console.log(`[AUDIO_HANDLER SCRIPT] Loaded script data: title="${newscastData.title}", script_lines=${newscastData.script.length}`);
 
+    // Get TTS delay from env (default: 1000ms for worker)
+    const ttsDelayMs = env.TTS_DELAY_MS ? Number.parseInt(env.TTS_DELAY_MS, 10) : 1000;
+    console.log(`[AUDIO_HANDLER CONFIG] TTS delay: ${ttsDelayMs}ms`);
+
     console.log(`[AUDIO_HANDLER TTS] Starting TTS audio generation with Google Cloud API`);
     const result = await generateNewscastAudio({
       newscastData,
       apiKey,
       newscastID,
       topicIndex: topicIndexNumber,
+      delayMs: ttsDelayMs,
     });
     console.log(`[AUDIO_HANDLER TTS] Audio generation completed: ${result.audioFiles.length} files generated, ${result.stats.successCount} successful`);
 

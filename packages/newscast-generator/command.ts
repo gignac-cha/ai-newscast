@@ -28,6 +28,7 @@ interface AudioCommandOptions {
   outputDir: string;
   printFormat?: 'json' | 'text';
   printLogFile?: string;
+  delayMs?: number;
 }
 
 interface MergeCommandOptions {
@@ -125,6 +126,7 @@ export async function generateAudioToFiles({
   outputDir,
   printFormat = 'text',
   printLogFile,
+  delayMs = 10000,
 }: AudioCommandOptions) {
   const startTime = Date.now();
 
@@ -149,6 +151,7 @@ export async function generateAudioToFiles({
     apiKey,
     newscastID: newscastData.metrics.newscastID,
     topicIndex: newscastData.metrics.topicIndex,
+    delayMs,
   });
 
   // 오디오 폴더 생성
@@ -326,10 +329,17 @@ program
   .requiredOption('-o, --output-dir <path>', 'Output directory for generated audio files')
   .option('-f, --print-format <format>', 'Output format (json|text)', 'text')
   .option('-l, --print-log-file <path>', 'File to write JSON log output')
+  .option('-d, --delay-ms <milliseconds>', 'Delay between TTS API requests in milliseconds', '10000')
   .action(async (options) => {
     try {
-      const { inputFile, outputDir, printFormat, printLogFile } = options;
-      await generateAudioToFiles({ inputFile, outputDir, printFormat, printLogFile });
+      const { inputFile, outputDir, printFormat, printLogFile, delayMs } = options;
+      await generateAudioToFiles({
+        inputFile,
+        outputDir,
+        printFormat,
+        printLogFile,
+        delayMs: Number.parseInt(delayMs, 10),
+      });
     } catch (error) {
       console.error('❌ Error generating audio:', error instanceof Error ? error.message : error);
       process.exit(1);

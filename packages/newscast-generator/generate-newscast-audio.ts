@@ -24,6 +24,7 @@ export interface GenerateNewscastAudioOptions {
   apiKey: string;
   newscastID: string;
   topicIndex: number;
+  delayMs?: number;
 }
 
 export interface GenerateNewscastAudioResult {
@@ -80,9 +81,11 @@ export async function generateNewscastAudio({
   apiKey,
   newscastID,
   topicIndex,
+  delayMs = 10000,
 }: GenerateNewscastAudioOptions): Promise<GenerateNewscastAudioResult> {
   const startTime = new Date();
   console.log(`[AUDIO_GEN START] ${startTime.toISOString()}`);
+  console.log(`[AUDIO_GEN CONFIG] TTS delay: ${delayMs}ms between requests`);
 
   if (!apiKey) {
     console.error(`[AUDIO_GEN ERROR] Google Cloud API key is required`);
@@ -149,8 +152,8 @@ export async function generateNewscastAudio({
         successCount++;
         console.log(`[AUDIO_GEN SUCCESS] ${audioFileName} generated successfully (${successCount}/${newscastData.script.length})`);
 
-        // API 요청 간격 조절 (Google Cloud TTS Chirp3 rate limit: 200/min, 3 topics parallel)
-        await new Promise(resolve => setTimeout(resolve, 10000));
+        // API 요청 간격 조절 (Google Cloud TTS Chirp3 rate limit: 200/min)
+        await new Promise(resolve => setTimeout(resolve, delayMs));
       } else {
         // 음악 파일은 생성되지 않으므로 스킵 카운트
         audioFiles.push({
