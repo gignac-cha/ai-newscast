@@ -359,8 +359,7 @@ jobs:
           pnpm run:uploader:upload -- \
             --input-dir /tmp/newscast-output/${NEWSCAST_ID} \
             --newscast-id ${NEWSCAST_ID} \
-            --topic-index 0 \
-            --test
+            --topic-index 0
 
           echo "✅ Completed topics data upload"
 
@@ -409,46 +408,44 @@ jobs:
           pnpm run:uploader:upload -- \
             --input-dir /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING} \
             --newscast-id ${NEWSCAST_ID} \
-            --topic-index ${TOPIC_INDEX} \
-            --test
+            --topic-index ${TOPIC_INDEX}
 
           echo "✅ Completed R2 upload for topic-${TOPIC_INDEX_STRING}"
 
-  # Job 8: Update latest-newscast-id (single job)
-  # TODO: Enable this after testing is complete
-  # update-latest-id:
-  #   needs: [crawl-topics, upload-to-r2-matrix]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #
-  #     - name: Setup pnpm
-  #       uses: pnpm/action-setup@v4
-  #
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: ${{ env.NODE_VERSION }}
-  #         cache: 'pnpm'
-  #
-  #     - name: Install dependencies
-  #       run: pnpm install --frozen-lockfile
-  #
-  #     - name: Update latest-newscast-id
-  #       env:
-  #         CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-  #         CLOUDFLARE_ACCESS_KEY_ID: ${{ secrets.CLOUDFLARE_ACCESS_KEY_ID }}
-  #         CLOUDFLARE_SECRET_ACCESS_KEY: ${{ secrets.CLOUDFLARE_SECRET_ACCESS_KEY }}
-  #       run: |
-  #         NEWSCAST_ID=${{ needs.crawl-topics.outputs.newscast-id }}
-  #
-  #         echo "🔄 Updating latest-newscast-id to ${NEWSCAST_ID}"
-  #
-  #         # Update latest-newscast-id (R2 or KV)
-  #         pnpm --filter @ai-newscast/newscast-latest-id run update:remote \
-  #           --newscast-id ${NEWSCAST_ID}
-  #
-  #         echo "✅ Latest newscast ID updated"
+  # Job 9: Update latest-newscast-id (single job)
+  update-latest-id:
+    needs: [crawl-topics, upload-to-r2-matrix]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Update latest-newscast-id
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCESS_KEY_ID: ${{ secrets.CLOUDFLARE_ACCESS_KEY_ID }}
+          CLOUDFLARE_SECRET_ACCESS_KEY: ${{ secrets.CLOUDFLARE_SECRET_ACCESS_KEY }}
+        run: |
+          NEWSCAST_ID=${{ needs.crawl-topics.outputs.newscast-id }}
+
+          echo "🔄 Updating latest-newscast-id to ${NEWSCAST_ID}"
+
+          # Update latest-newscast-id (R2 or KV)
+          pnpm --filter @ai-newscast/newscast-latest-id run update:remote \
+            --newscast-id ${NEWSCAST_ID}
+
+          echo "✅ Latest newscast ID updated"
 
       - name: Generate workflow summary
         run: |
