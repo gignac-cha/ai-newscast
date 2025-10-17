@@ -440,10 +440,9 @@ jobs:
           echo "🔄 Updating latest-newscast-id to ${NEWSCAST_ID}"
 
           # Update latest-newscast-id (R2 or KV)
-          pnpm --filter @ai-newscast/newscast-latest-id run update:remote \
-            --newscast-id ${NEWSCAST_ID}
+          pnpm run:update:latest-id:remote -- "${NEWSCAST_ID}"
 
-          echo "✅ Latest newscast ID updated"
+          echo "✅ Latest newscast ID updated to ${NEWSCAST_ID}"
 
       - name: Generate workflow summary
         run: |
