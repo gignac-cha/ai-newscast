@@ -226,7 +226,7 @@ jobs:
     strategy:
       matrix:
         topic: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']
-      max-parallel: 5
+      max-parallel: 10
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
@@ -252,7 +252,7 @@ jobs:
       - name: Generate TTS audio for topic-${{ matrix.topic }}
         env:
           GOOGLE_CLOUD_API_KEY: ${{ secrets.GOOGLE_CLOUD_API_KEY }}
-          TTS_DELAY_MS: '5000'
+          TTS_DELAY_MS: '500'
         run: |
           TOPIC_INDEX_STRING=${{ matrix.topic }}
           NEWSCAST_ID=${{ needs.crawl-topics.outputs.newscast-id }}
