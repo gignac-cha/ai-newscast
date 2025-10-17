@@ -177,13 +177,14 @@ async function handleUpdateLatest(request: Request, env: Env): Promise<Response>
     
     const newId = body.id;
     
-    // Validate ID format (ISO timestamp format)
-    const idPattern = /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{6}$/;
+    // Validate ID format (ISO timestamp format with milliseconds)
+    // Expected: 2025-10-17T07-17-05-101Z
+    const idPattern = /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z$/;
     if (!idPattern.test(newId)) {
       return new Response(
-        JSON.stringify({ 
-          error: 'Invalid ID format. Expected format: YYYY-MM-DDTHH-MM-SS-NNNNNN' 
-        }), 
+        JSON.stringify({
+          error: 'Invalid ID format. Expected format: YYYY-MM-DDTHH-MM-SS-MMMZ (e.g., 2025-10-17T07-17-05-101Z)'
+        }),
         { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
