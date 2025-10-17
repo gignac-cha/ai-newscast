@@ -105,17 +105,30 @@ export async function generateNewscastScript({
   });
   const text = response.text ?? '';
   console.log(`[NEWSCAST_SCRIPT GEMINI] Received response: ${text.length} characters`);
+  console.log(`[NEWSCAST_SCRIPT GEMINI] Full AI response:\n${text}`);
 
   console.log(`[NEWSCAST_SCRIPT PARSE] Extracting JSON from AI response`);
   const jsonMatch = text.match(/```json\s*(\{[\s\S]*?\})\s*```/) ?? text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
-    console.error(`[NEWSCAST_SCRIPT ERROR] No valid JSON found in generated content: ${text.substring(0, 500)}...`);
+    console.error(`[NEWSCAST_SCRIPT ERROR] No valid JSON found in generated content`);
+    console.error(`[NEWSCAST_SCRIPT ERROR] Full AI response: ${text}`);
     throw new Error('No valid JSON found in generated content');
   }
 
+  const jsonString = jsonMatch[1] ?? jsonMatch[0];
+  console.log(`[NEWSCAST_SCRIPT PARSE] Raw JSON string:\n${jsonString}`);
+
   console.log(`[NEWSCAST_SCRIPT PARSE] Parsing JSON response`);
-  const parsed: NewscastScript = JSON.parse(jsonMatch[1] ?? jsonMatch[0]);
-  console.log(`[NEWSCAST_SCRIPT PARSE] Parsed script with ${parsed.script.length} lines`);
+  let parsed: NewscastScript;
+  try {
+    parsed = JSON.parse(jsonString);
+    console.log(`[NEWSCAST_SCRIPT PARSE] Parsed script with ${parsed.script.length} lines`);
+  } catch (parseError) {
+    console.error(`[NEWSCAST_SCRIPT PARSE] JSON parsing failed`);
+    console.error(`[NEWSCAST_SCRIPT PARSE] Parse error: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+    console.error(`[NEWSCAST_SCRIPT PARSE] Failed JSON string:\n${jsonString}`);
+    throw parseError;
+  }
 
   console.log(`[NEWSCAST_SCRIPT ENHANCE] Adding voice model information to script lines`);
   const enhancedScript = parsed.script.map((line) => {

@@ -75,16 +75,46 @@ export async function handleGenerateNews(
       return response(cors(error('Not Found', `No valid news data found for topic ${topicIndex}`)));
     }
 
-    // Generate news using imported function with metrics
+    // Generate news with retry logic
     console.log(`[GENERATE AI] Starting AI news generation with model: ${model}`);
-    const result = await generateNews(
-      newsDetails,
-      newsConsolidationPrompt,
-      env.GOOGLE_GEN_AI_API_KEY,
-      newscastID,
-      parseInt(topicIndex),
-      model
-    );
+
+    const maxRetries = 3;
+    let result;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[GENERATE RETRY] Attempt ${attempt}/${maxRetries}`);
+
+        result = await generateNews(
+          newsDetails,
+          newsConsolidationPrompt,
+          env.GOOGLE_GEN_AI_API_KEY,
+          newscastID,
+          parseInt(topicIndex),
+          model
+        );
+
+        console.log(`[GENERATE RETRY] Attempt ${attempt} succeeded`);
+        break; // Success, exit retry loop
+
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        console.error(`[GENERATE RETRY] Attempt ${attempt} failed: ${lastError.message}`);
+
+        if (attempt < maxRetries) {
+          const delayMs = 3000 * attempt; // 3s, 6s, 9s
+          console.log(`[GENERATE RETRY] Waiting ${delayMs}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+      }
+    }
+
+    // If all retries failed
+    if (!result) {
+      console.error(`[GENERATE RETRY] All ${maxRetries} attempts failed`);
+      throw new Error(`Failed after ${maxRetries} attempts. Last error: ${lastError?.message}`);
+    }
 
     const generatedNews = result.generatedNews;
     console.log(`[GENERATE AI] AI generation completed - title: "${generatedNews.title}"`);

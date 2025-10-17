@@ -79,15 +79,46 @@ export async function handleScript(
     console.log(`[SCRIPT_HANDLER CONFIG] TTS hosts loaded: ${Object.keys(defaultVoices.voices).join(', ')}`);
 
     console.log(`[SCRIPT_HANDLER AI] Starting newscast script generation with Gemini API (model: ${model})`);
-    const result = await generateNewscastScript({
-      news: newsData,
-      promptTemplate: newscastScriptPrompt,
-      voices: defaultVoices,
-      apiKey,
-      newscastID,
-      topicIndex: topicIndexNumber,
-      model,
-    });
+
+    const maxRetries = 3;
+    let result;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[SCRIPT_HANDLER RETRY] Attempt ${attempt}/${maxRetries}`);
+
+        result = await generateNewscastScript({
+          news: newsData,
+          promptTemplate: newscastScriptPrompt,
+          voices: defaultVoices,
+          apiKey,
+          newscastID,
+          topicIndex: topicIndexNumber,
+          model,
+        });
+
+        console.log(`[SCRIPT_HANDLER RETRY] Attempt ${attempt} succeeded`);
+        break; // Success, exit retry loop
+
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        console.error(`[SCRIPT_HANDLER RETRY] Attempt ${attempt} failed: ${lastError.message}`);
+
+        if (attempt < maxRetries) {
+          const delayMs = 3000 * attempt; // 3s, 6s, 9s
+          console.log(`[SCRIPT_HANDLER RETRY] Waiting ${delayMs}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+      }
+    }
+
+    // If all retries failed
+    if (!result) {
+      console.error(`[SCRIPT_HANDLER RETRY] All ${maxRetries} attempts failed`);
+      throw new Error(`Failed after ${maxRetries} attempts. Last error: ${lastError?.message}`);
+    }
+
     console.log(`[SCRIPT_HANDLER AI] Script generation completed: ${result.stats.scriptLines} script lines`);
 
     const responseData: ScriptGenerationResponse = {

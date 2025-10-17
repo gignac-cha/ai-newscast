@@ -126,19 +126,30 @@ URL: ${metadata.url}`;
 
     const text = response.text ?? '';
     console.log(`[NEWS_GENERATOR AI] Generated text length: ${text.length} characters`);
+    console.log(`[NEWS_GENERATOR AI] Full AI response:\n${text}`);
 
     // Parse JSON response
     console.log(`[NEWS_GENERATOR PARSE] Extracting JSON from AI response`);
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       console.error(`[NEWS_GENERATOR PARSE] No JSON found in AI response`);
-      console.error(`[NEWS_GENERATOR PARSE] AI response preview: ${text.substring(0, 500)}...`);
+      console.error(`[NEWS_GENERATOR PARSE] Full AI response: ${text}`);
       throw new Error('No JSON found in generated content');
     }
 
     console.log(`[NEWS_GENERATOR PARSE] Found JSON block: ${jsonMatch[0].length} characters`);
-    const parsed = JSON.parse(jsonMatch[0]);
-    console.log(`[NEWS_GENERATOR PARSE] Successfully parsed JSON - title: "${parsed.title}"`);
+    console.log(`[NEWS_GENERATOR PARSE] Raw JSON string:\n${jsonMatch[0]}`);
+
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonMatch[0]);
+      console.log(`[NEWS_GENERATOR PARSE] Successfully parsed JSON - title: "${parsed.title}"`);
+    } catch (parseError) {
+      console.error(`[NEWS_GENERATOR PARSE] JSON parsing failed`);
+      console.error(`[NEWS_GENERATOR PARSE] Parse error: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+      console.error(`[NEWS_GENERATOR PARSE] Failed JSON string:\n${jsonMatch[0]}`);
+      throw parseError;
+    }
 
     // Group articles by provider with URLs
     console.log(`[NEWS_GENERATOR SOURCES] Grouping articles by provider`);
