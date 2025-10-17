@@ -169,7 +169,7 @@
 ## [3.5.1] - 2025-06-29 ☁️ Cloudflare Workers API 완성
 
 ### 🚀 Added
-- **newscast-latest-id 패키지**: TypeScript 기반 Cloudflare Workers API 완전 구현
+- **newscast-latest-id-worker 패키지**: TypeScript 기반 Cloudflare Workers API 완전 구현
 - **KV 기반 ID 관리**: 최신 뉴스캐스트 ID 저장/조회 API 완성
 - **REST API 엔드포인트**: GET /latest, POST /update, GET / (worker info) 완성
 - **타입 안전성**: Cloudflare Workers 타입 정의 및 인터페이스 완성

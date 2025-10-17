@@ -1,4 +1,4 @@
-# Newscast Latest ID Package - AI Development Guide
+# Newscast Latest ID Worker Package - AI Development Guide
 
 ## 📋 패키지 역할 및 책임
 

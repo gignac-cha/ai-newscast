@@ -148,7 +148,7 @@ packages/
 ├── newscast-generator/     # 뉴스캐스트 생성 (스크립트 + TTS + 병합)
 ├── newscast-generator-worker/ # Cloudflare Workers 생성 API
 ├── newscast-scheduler-worker/ # 전체 파이프라인 오케스트레이션
-├── newscast-latest-id/     # 최신 뉴스캐스트 ID 관리 API
+├── newscast-latest-id-worker/     # 최신 뉴스캐스트 ID 관리 API
 ├── newscast-web/           # React 웹 플레이어
 └── core/                   # 공통 타입 정의
 ```

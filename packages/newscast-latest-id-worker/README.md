@@ -1,4 +1,4 @@
-# Newscast Latest ID
+# Newscast Latest ID Worker
 
 Cloudflare Workers 기반 최신 뉴스캐스트 ID 관리 API
 

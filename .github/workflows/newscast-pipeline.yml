@@ -417,7 +417,7 @@ jobs:
     steps:
       - name: Update latest-newscast-id via Workers API
         env:
-          NEWSCAST_LATEST_ID_WORKER_URL: ${{ secrets.NEWSCAST_LATEST_ID_WORKER_URL }}
+          NEWSCAST_LATEST_ID_WORKER_URL: ${{ vars.NEWSCAST_LATEST_ID_WORKER_URL }}
         run: |
           NEWSCAST_ID=${{ needs.crawl-topics.outputs.newscast-id }}
 

@@ -1,5 +1,5 @@
 {
-  "name": "@ai-newscast/newscast-latest-id",
+  "name": "@ai-newscast/newscast-latest-id-worker",
   "version": "1.0.0",
   "description": "Cloudflare Worker for managing latest newscast ID with KV storage",
   "type": "module",

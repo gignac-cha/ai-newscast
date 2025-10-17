@@ -187,7 +187,7 @@ pnpm --filter @ai-newscast/newscast-generator build
 - news-generator
 - newscast-generator
 - newscast-generator-worker
-- newscast-latest-id
+- newscast-latest-id-worker
 - newscast-web
 
 ---

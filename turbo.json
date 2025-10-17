@@ -12,7 +12,7 @@
         "@ai-newscast/news-generator-worker#build",
         "@ai-newscast/newscast-generator-worker#build",
         "@ai-newscast/newscast-scheduler-worker#build",
-        "@ai-newscast/newscast-latest-id#build"
+        "@ai-newscast/newscast-latest-id-worker#build"
       ],
       "outputs": []
     },

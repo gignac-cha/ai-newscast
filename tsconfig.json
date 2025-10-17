@@ -123,7 +123,7 @@
     { "path": "./packages/newscast-generator" },
     { "path": "./packages/newscast-generator-lambda" },
     { "path": "./packages/newscast-generator-worker" },
-    { "path": "./packages/newscast-latest-id" },
+    { "path": "./packages/newscast-latest-id-worker" },
     { "path": "./packages/newscast-scheduler-worker" },
     { "path": "./packages/newscast-web" }
   ]

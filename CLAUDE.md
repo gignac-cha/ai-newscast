@@ -125,7 +125,7 @@ packages/
 ├── newscast-generator/      # ✅ 완성 - 스크립트 + TTS + 병합
 ├── newscast-generator-worker/ # ✅ 완성 - Cloudflare Workers API
 ├── newscast-scheduler-worker/ # ✅ 완성 - 파이프라인 오케스트레이션
-├── newscast-latest-id/      # ✅ 완성 - KV 기반 ID 관리
+├── newscast-latest-id-worker/      # ✅ 완성 - KV 기반 ID 관리
 ├── newscast-web/            # ✅ 완성 - React 19 웹 플레이어
 ├── core/                    # ✅ 완성 - 공통 타입 정의
 ├── audio-generator/         # 🚧 계획 - TTS 음성 생성
