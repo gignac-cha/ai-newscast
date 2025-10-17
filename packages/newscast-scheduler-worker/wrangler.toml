@@ -1,4 +1,4 @@
-name = "newscast-scheduler-worker"
+name = "ai-newscast-newscast-scheduler-worker"
 main = "dist/worker.js"
 compatibility_date = "2024-11-27"
 

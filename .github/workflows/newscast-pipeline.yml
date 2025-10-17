@@ -415,34 +415,34 @@ jobs:
     needs: [crawl-topics, upload-to-r2-matrix]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Update latest-newscast-id
+      - name: Update latest-newscast-id via Workers API
         env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_ACCESS_KEY_ID: ${{ secrets.CLOUDFLARE_ACCESS_KEY_ID }}
-          CLOUDFLARE_SECRET_ACCESS_KEY: ${{ secrets.CLOUDFLARE_SECRET_ACCESS_KEY }}
+          NEWSCAST_LATEST_ID_WORKER_URL: ${{ secrets.NEWSCAST_LATEST_ID_WORKER_URL }}
         run: |
           NEWSCAST_ID=${{ needs.crawl-topics.outputs.newscast-id }}
 
           echo "🔄 Updating latest-newscast-id to ${NEWSCAST_ID}"
 
-          # Update latest-newscast-id (R2 or KV)
-          pnpm run:update:latest-id:remote -- "${NEWSCAST_ID}"
+          # Call Cloudflare Workers API with curl
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "${NEWSCAST_LATEST_ID_WORKER_URL}/update" \
+            -H "Content-Type: application/json" \
+            -d "{\"id\":\"${NEWSCAST_ID}\"}")
 
-          echo "✅ Latest newscast ID updated to ${NEWSCAST_ID}"
+          # Extract HTTP status code (last line)
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+
+          # Extract response body (all lines except last)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "📊 Response: ${BODY}"
+
+          if [ "$HTTP_CODE" -eq 200 ]; then
+            echo "✅ Latest newscast ID updated to ${NEWSCAST_ID}"
+          else
+            echo "❌ Failed to update latest-newscast-id (HTTP ${HTTP_CODE})"
+            exit 1
+          fi
 
       - name: Generate workflow summary
         run: |

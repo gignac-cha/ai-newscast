@@ -1,4 +1,4 @@
-name = "ai-newscast-latest-id"
+name = "ai-newscast-newscast-latest-id-worker"
 main = "dist/index.js"
 compatibility_date = "2024-06-29"
 
