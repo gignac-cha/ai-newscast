@@ -7,7 +7,7 @@ import { handleStatus } from './handlers/status.ts';
 import type { Env } from './types/env.ts';
 
 // Import utilities
-import { createCORSPreflightResponse, response, cors, json, error } from '@ai-newscast/core-worker';
+import { createCORSPreflightResponse, response, cors, json, error, noCache } from '@ai-newscast/core-worker';
 
 export default {
   async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
@@ -20,11 +20,7 @@ export default {
 
     try {
       if (request.method === 'GET' && url.pathname === '/health') {
-        return response(cors(json({ status: 'ok', service: 'newscast-generator-worker' }, {
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-          },
-        })));
+        return response(noCache(cors(json({ status: 'ok', service: 'newscast-generator-worker' }))));
       }
 
       if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/help')) {

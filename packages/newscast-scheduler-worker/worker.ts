@@ -15,7 +15,7 @@ import { handleMergeNewscast } from './handlers/merge-newscast';
 import { handleComplete } from './handlers/complete';
 import { handleHelp } from './handlers/help';
 import type { Env } from './types/env';
-import { createCORSPreflightResponse, response, cors, json } from '@ai-newscast/core-worker';
+import { createCORSPreflightResponse, response, cors, json, noCache } from '@ai-newscast/core-worker';
 import { determineWork } from './work-scheduler';
 
 export default {
@@ -28,11 +28,7 @@ export default {
 		}
 
 		if (request.method === 'GET' && url.pathname === '/health') {
-			return response(cors(json({ status: 'ok', service: 'newscast-scheduler-worker' }, {
-				headers: {
-					'Cache-Control': 'no-cache, no-store, must-revalidate',
-				},
-			})));
+			return response(noCache(cors(json({ status: 'ok', service: 'newscast-scheduler-worker' }))));
 		}
 
 		if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/help')) {
