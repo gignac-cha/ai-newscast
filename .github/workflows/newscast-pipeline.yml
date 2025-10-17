@@ -156,7 +156,8 @@ jobs:
 
           pnpm run:generator:news -- \
             --input-folder /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/news \
-            --output-file /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/news.json
+            --output-file /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/news.json \
+            --model ${{ vars.GEMINI_MODEL }}
 
           echo "✅ Completed news generation for topic-${TOPIC_INDEX_STRING}"
 
@@ -208,7 +209,8 @@ jobs:
 
           pnpm run:generator:newscast-script -- \
             --input-file /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/news.json \
-            --output-file /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/newscast-script.json
+            --output-file /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}/newscast-script.json \
+            --model ${{ vars.GEMINI_MODEL }}
 
           echo "✅ Completed script generation for topic-${TOPIC_INDEX_STRING}"
 
