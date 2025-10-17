@@ -40,9 +40,7 @@ export async function uploadToR2(options: UploadOptions): Promise<UploadResult> 
 
   console.log('Starting R2 upload...');
   console.log(`  Input: ${validatedOptions.inputDir}`);
-  console.log(`  Newscast ID: ${validatedOptions.newscastID}`);
-  console.log(`  Topic Index: ${validatedOptions.topicIndex}`);
-  console.log(`  Base Path: ${validatedOptions.basePath}`);
+  console.log(`  Prefix: ${validatedOptions.prefix}`);
   console.log(`  Bucket: ${validatedOptions.bucketName}`);
 
   // Create S3 client configured for Cloudflare R2
@@ -72,10 +70,9 @@ export async function uploadToR2(options: UploadOptions): Promise<UploadResult> 
   // Upload files sequentially to avoid overwhelming the connection
   for (const filePath of filesToUpload) {
     const relativePath = relative(validatedOptions.inputDir, filePath);
-    const topicIndexStr = validatedOptions.topicIndex.toString().padStart(2, '0');
 
-    // Construct R2 key: {basePath}/{newscastID}/topic-{N}/{file}
-    const r2Key = `${validatedOptions.basePath}/${validatedOptions.newscastID}/topic-${topicIndexStr}/${relativePath}`;
+    // Construct R2 key: {prefix}/{relativePath}
+    const r2Key = `${validatedOptions.prefix}/${relativePath}`;
 
     try {
       // Read file content

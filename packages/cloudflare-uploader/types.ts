@@ -10,10 +10,8 @@ import { z } from 'zod';
  * Upload options for R2 uploader
  *
  * @interface UploadOptions
- * @property {string} inputDir - Input directory path (e.g., output/{newscastID}/topic-{N}/)
- * @property {string} newscastID - Newscast identifier (ISO timestamp)
- * @property {number} topicIndex - Topic index (1-10)
- * @property {string} basePath - Base path in R2 bucket ('newscasts' or 'tests/newscasts')
+ * @property {string} inputDir - Input directory path
+ * @property {string} prefix - R2 path prefix (e.g., 'newscasts/2025-10-17T01-36-12-458Z')
  * @property {string} accountID - Cloudflare Account ID
  * @property {string} accessKeyID - R2 Access Key ID
  * @property {string} secretAccessKey - R2 Secret Access Key
@@ -21,9 +19,7 @@ import { z } from 'zod';
  */
 export interface UploadOptions {
   inputDir: string;
-  newscastID: string;
-  topicIndex: number;
-  basePath: string;
+  prefix: string;
   accountID: string;
   accessKeyID: string;
   secretAccessKey: string;
@@ -67,9 +63,7 @@ export interface FileUploadMetadata {
  */
 export const UploadOptionsSchema = z.object({
   inputDir: z.string().min(1, 'Input directory is required'),
-  newscastID: z.string().min(1, 'Newscast ID is required'),
-  topicIndex: z.number().int().min(1).max(10, 'Topic index must be between 1 and 10'),
-  basePath: z.string().min(1, 'Base path is required'),
+  prefix: z.string().min(1, 'R2 prefix is required'),
   accountID: z.string().min(1, 'Cloudflare Account ID is required'),
   accessKeyID: z.string().min(1, 'R2 Access Key ID is required'),
   secretAccessKey: z.string().min(1, 'R2 Secret Access Key is required'),

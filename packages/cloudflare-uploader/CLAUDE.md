@@ -38,10 +38,8 @@ packages/cloudflare-uploader/
 #### UploadOptions
 ```typescript
 export interface UploadOptions {
-  inputDir: string;           // 입력 디렉터리 (e.g., output/{newscastID}/topic-{N}/)
-  newscastID: string;         // 뉴스캐스트 ID (ISO timestamp)
-  topicIndex: number;         // 토픽 인덱스 (1-10)
-  basePath: string;           // R2 기본 경로 ('newscasts' or 'tests/newscasts')
+  inputDir: string;           // 입력 디렉터리 (로컬 파일 시스템 경로)
+  prefix: string;             // R2 경로 접두사 (e.g., 'newscasts/2025-10-17T01-36-12-458Z')
   accountID: string;          // Cloudflare Account ID
   accessKeyID: string;        // R2 Access Key ID
   secretAccessKey: string;    // R2 Secret Access Key
@@ -76,19 +74,17 @@ export async function uploadToR2(
 - 옵션 검증 실패 시 ZodError 발생
 - S3 API 에러 시 적절한 메시지와 함께 실패
 
-#### uploadNewscast()
+**사용 예시**:
 ```typescript
-export async function uploadNewscast(
-  options: Omit<UploadOptions, 'basePath'>,
-  testMode: boolean = false
-): Promise<UploadResult>
+const result = await uploadToR2({
+  inputDir: '/local/path',
+  prefix: 'newscasts/2025-10-17T01-36-12-458Z',
+  accountID: process.env.CLOUDFLARE_ACCOUNT_ID!,
+  accessKeyID: process.env.CLOUDFLARE_ACCESS_KEY_ID!,
+  secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY!,
+  bucketName: 'ai-newscast',
+});
 ```
-
-**역할**: 테스트 모드를 지원하는 업로드 래퍼
-
-**basePath 자동 설정**:
-- `testMode === false`: `'newscasts'`
-- `testMode === true`: `'tests/newscasts'`
 
 ### Zod 검증 함수
 
@@ -121,7 +117,7 @@ export function isValidUploadOptions(options: unknown): options is UploadOptions
 ```typescript
 // ✅ CORRECT
 interface UploadOptions {
-  newscastID: string;       // ID 대문자
+  prefix: string;           // 경로 접두사
   accountID: string;        // ID 대문자
   accessKeyID: string;      // ID 대문자
   bucketName: string;       // 전체 단어
@@ -129,8 +125,8 @@ interface UploadOptions {
 
 // ❌ WRONG
 interface UploadOptions {
-  newscastId: string;       // ❌ Id 소문자
   accountId: string;        // ❌ Id 소문자
+  accessKeyId: string;      // ❌ Id 소문자
 }
 ```
 
@@ -169,17 +165,20 @@ const accountID = cmdOptions.accountId || process.env.CLOUDFLARE_ACCOUNT_ID;  //
 #### MUST: R2 키 경로 규칙
 ```typescript
 // ✅ CORRECT
-// R2 키 형식: {basePath}/{newscastID}/topic-{topicIndex}/{relativePath}
-const r2Key = `${basePath}/${newscastID}/topic-${String(topicIndex).padStart(2, '0')}/${relativePath}`;
+// R2 키 형식: {prefix}/{relativePath}
+const r2Key = `${validatedOptions.prefix}/${relativePath}`;
 
 // 예시:
-// - newscasts/2025-10-05T19-53-26-599Z/topic-01/newscast.mp3
-// - newscasts/2025-10-05T19-53-26-599Z/topic-01/audio/001-music.mp3
-// - tests/newscasts/2025-10-05T19-53-26-599Z/topic-01/newscast.mp3
+// prefix: 'newscasts/2025-10-05T19-53-26-599Z/topic-01'
+// relativePath: 'newscast.mp3'
+// r2Key: 'newscasts/2025-10-05T19-53-26-599Z/topic-01/newscast.mp3'
+
+// prefix: 'newscasts/2025-10-05T19-53-26-599Z/topic-01'
+// relativePath: 'audio/001-music.mp3'
+// r2Key: 'newscasts/2025-10-05T19-53-26-599Z/topic-01/audio/001-music.mp3'
 
 // ❌ WRONG
-const r2Key = `${newscastID}/${relativePath}`;  // ❌ basePath 누락
-const r2Key = `${basePath}/${newscastID}/topic${topicIndex}/${relativePath}`;  // ❌ 하이픈 누락
+const r2Key = relativePath;  // ❌ prefix 누락
 ```
 
 #### MUST: MIME 타입 설정
@@ -208,47 +207,35 @@ function getMimeType(filePath: string): string {
 #### MUST: 재귀 디렉터리 스캔
 ```typescript
 // ✅ CORRECT
-async function scanDirectory(
-  directory: string,
-  basePath: string,
-  newscastID: string,
-  topicIndex: number
-): Promise<FileUploadMetadata[]> {
-  const files: FileUploadMetadata[] = [];
+async function collectFiles(dirPath: string): Promise<string[]> {
+  const files: string[] = [];
 
-  // 1. 디렉터리 읽기
-  const entries = await readdir(directory, { withFileTypes: true });
+  const entries = await readdir(dirPath, { withFileTypes: true });
 
-  // 2. 재귀적으로 파일 탐색
   for (const entry of entries) {
-    const fullPath = join(directory, entry.name);
+    const fullPath = join(dirPath, entry.name);
 
     if (entry.isDirectory()) {
       // 하위 디렉터리 재귀 호출
-      const subFiles = await scanDirectory(fullPath, basePath, newscastID, topicIndex);
+      const subFiles = await collectFiles(fullPath);
       files.push(...subFiles);
     } else if (entry.isFile()) {
-      // 파일 메타데이터 생성
-      const stats = await stat(fullPath);
-      const relativePath = fullPath.replace(`${directory}/`, '');
-      const r2Key = `${basePath}/${newscastID}/topic-${String(topicIndex).padStart(2, '0')}/${relativePath}`;
-
-      files.push({
-        localPath: fullPath,
-        r2Key: r2Key,
-        size: stats.size,
-        contentType: getMimeType(fullPath),
-      });
+      files.push(fullPath);
     }
   }
 
-  return files;
+  // 정렬하여 일관된 업로드 순서 보장
+  return files.sort();
 }
 
+// R2 키 구성
+const relativePath = relative(validatedOptions.inputDir, filePath);
+const r2Key = `${validatedOptions.prefix}/${relativePath}`;
+
 // ❌ WRONG
-async function scanDirectory(directory: string): Promise<FileUploadMetadata[]> {
+async function collectFiles(directory: string): Promise<string[]> {
   const entries = await readdir(directory);
-  return entries.map(entry => ({ /* ... */ }));  // ❌ 재귀 없음, 하위 디렉터리 무시
+  return entries.map(entry => join(directory, entry));  // ❌ 재귀 없음, 하위 디렉터리 무시
 }
 ```
 
@@ -345,17 +332,16 @@ if (!secretAccessKey) {
 
 ```typescript
 // GitHub Actions workflow에서 사용 예시
-import { uploadNewscast } from '@ai-newscast/cloudflare-uploader';
+import { uploadToR2 } from '@ai-newscast/cloudflare-uploader';
 
-const result = await uploadNewscast({
+const result = await uploadToR2({
   inputDir: 'output/2025-10-05T19-53-26-599Z/topic-01',
-  newscastID: '2025-10-05T19-53-26-599Z',
-  topicIndex: 1,
+  prefix: 'newscasts/2025-10-05T19-53-26-599Z/topic-01',
   accountID: process.env.CLOUDFLARE_ACCOUNT_ID!,
   accessKeyID: process.env.CLOUDFLARE_ACCESS_KEY_ID!,
   secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY!,
   bucketName: 'ai-newscast',
-}, false);
+});
 
 console.log(`Uploaded ${result.filesUploaded} files`);
 ```
@@ -368,25 +354,21 @@ console.log(`Uploaded ${result.filesUploaded} files`);
 ```bash
 cloudflare-uploader upload \
   -i output/2025-10-05T19-53-26-599Z/topic-01 \
-  -n 2025-10-05T19-53-26-599Z \
-  -t 1
+  -p newscasts/2025-10-05T19-53-26-599Z/topic-01
 ```
 
-### 테스트 모드 업로드
+### 전체 뉴스캐스트 업로드 (토픽 목록 포함)
 ```bash
 cloudflare-uploader upload \
-  -i output/2025-10-05T19-53-26-599Z/topic-01 \
-  -n 2025-10-05T19-53-26-599Z \
-  -t 1 \
-  --test
+  -i output/2025-10-05T19-53-26-599Z \
+  -p newscasts/2025-10-05T19-53-26-599Z
 ```
 
 ### 환경 변수 대신 명령줄 옵션 사용
 ```bash
 cloudflare-uploader upload \
   -i output/2025-10-05T19-53-26-599Z/topic-01 \
-  -n 2025-10-05T19-53-26-599Z \
-  -t 1 \
+  -p newscasts/2025-10-05T19-53-26-599Z/topic-01 \
   --account-id YOUR_ACCOUNT_ID \
   --access-key-id YOUR_ACCESS_KEY_ID \
   --secret-access-key YOUR_SECRET_ACCESS_KEY
@@ -418,27 +400,23 @@ const accountID = process.env.CLOUDFLARE_ACCOUNT_ID;  // ❌ 명령줄 옵션 �
 
 ### R2 경로 규칙 (MUST)
 
-#### MUST: 프로덕션/테스트 경로 분리
+#### MUST: prefix 파라미터 활용
 ```typescript
 // ✅ CORRECT
-// 프로덕션: newscasts/{newscastID}/topic-{N}/
-// 테스트: tests/newscasts/{newscastID}/topic-{N}/
+// 프로덕션
+const prefix = `newscasts/${newscastID}/topic-01`;
 
-const basePath = testMode ? 'tests/newscasts' : 'newscasts';
+// 테스트
+const prefix = `tests/newscasts/${newscastID}/topic-01`;
 
-// ❌ WRONG
-const basePath = 'newscasts';  // ❌ 테스트 모드 무시
-```
-
-#### NEVER: 토픽 인덱스 패딩 생략
-```typescript
-// ✅ CORRECT
-const topicDir = `topic-${String(topicIndex).padStart(2, '0')}`;
-// 결과: topic-01, topic-02, ..., topic-10
+const result = await uploadToR2({
+  inputDir: './local-dir',
+  prefix: prefix,
+  // ... 기타 옵션
+});
 
 // ❌ WRONG
-const topicDir = `topic-${topicIndex}`;
-// 결과: topic-1, topic-2, ..., topic-10 (정렬 오류)
+const prefix = 'newscasts';  // ❌ 너무 일반적 (newscastID, topicIndex 누락)
 ```
 
 ### 타입 안전성 (MUST)
@@ -462,11 +440,11 @@ export async function uploadToR2(options: UploadOptions): Promise<UploadResult> 
 // ✅ CORRECT
 if (isValidUploadOptions(options)) {
   // TypeScript가 options를 UploadOptions로 인식
-  console.log(options.newscastID);
+  console.log(options.prefix);
 }
 
 // ❌ WRONG
-console.log((options as UploadOptions).newscastID);  // ❌ 런타임 검증 없음
+console.log((options as UploadOptions).prefix);  // ❌ 런타임 검증 없음
 ```
 
 ---
@@ -489,7 +467,7 @@ console.log((options as UploadOptions).newscastID);  // ❌ 런타임 검증 없
 
 ### 4. uploadToR2()
 - ✅ 전체 업로드 로직 구현
-- ✅ R2 키 형식: `{basePath}/{newscastID}/topic-{topicIndex}/{relativePath}`
+- ✅ R2 키 형식: `{prefix}/{relativePath}`
 - ✅ 순차 업로드로 안정성 보장
 - ✅ 진행 상황 로깅 및 통계 수집
 

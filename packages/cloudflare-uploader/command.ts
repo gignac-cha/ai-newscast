@@ -7,7 +7,7 @@
  */
 
 import { Command } from 'commander';
-import { uploadNewscast } from './uploader-wrapper.ts';
+import { uploadToR2 } from './uploader.ts';
 import type { UploadOptions } from './types.ts';
 import { config } from 'dotenv';
 import { existsSync } from 'fs';
@@ -25,11 +25,9 @@ program
 
 program
   .command('upload')
-  .description('Upload newscast files to R2')
-  .requiredOption('-i, --input-dir <path>', 'Input directory containing newscast files')
-  .requiredOption('-n, --newscast-id <id>', 'Newscast ID (ISO timestamp)')
-  .requiredOption('-t, --topic-index <index>', 'Topic index (1-10)', parseInt)
-  .option('--test', 'Upload to tests/newscasts instead of newscasts', false)
+  .description('Upload files to Cloudflare R2')
+  .requiredOption('-i, --input-dir <path>', 'Input directory containing files to upload')
+  .requiredOption('-p, --prefix <prefix>', 'R2 path prefix (e.g., "newscasts/2025-10-17T01-36-12-458Z")')
   .option('--account-id <id>', 'Cloudflare Account ID (or use CLOUDFLARE_ACCOUNT_ID env var)')
   .option('--access-key-id <key>', 'R2 Access Key ID (or use CLOUDFLARE_ACCESS_KEY_ID env var)')
   .option('--secret-access-key <key>', 'R2 Secret Access Key (or use CLOUDFLARE_SECRET_ACCESS_KEY env var)')
@@ -42,12 +40,6 @@ program
       // Validate input directory exists
       if (!existsSync(inputDir)) {
         throw new Error(`Input directory does not exist: ${inputDir}`);
-      }
-
-      // Validate topic index
-      const topicIndex = options.topicIndex;
-      if (isNaN(topicIndex) || topicIndex < 1 || topicIndex > 10) {
-        throw new Error(`Topic index must be a number between 1 and 10, got: ${options.topicIndex}`);
       }
 
       // Get credentials from options or environment variables
@@ -66,32 +58,26 @@ program
         throw new Error('R2 Secret Access Key is required. Provide --secret-access-key or set CLOUDFLARE_SECRET_ACCESS_KEY environment variable');
       }
 
-      // Prepare upload options (without basePath - handled by uploadNewscast)
-      const uploadOptions: Omit<UploadOptions, 'basePath'> = {
+      // Prepare upload options
+      const uploadOptions: UploadOptions = {
         inputDir,
-        newscastID: options.newscastId,
-        topicIndex,
+        prefix: options.prefix,
         accountID,
         accessKeyID,
         secretAccessKey,
         bucketName: options.bucketName,
       };
 
-      // Determine base path based on test flag
-      const basePath = options.test ? 'tests/newscasts' : 'newscasts';
-
       // Display upload information
-      console.log(`\n📤 Uploading newscast files to Cloudflare R2...`);
-      console.log(`   Newscast ID: ${uploadOptions.newscastID}`);
-      console.log(`   Topic Index: ${uploadOptions.topicIndex}`);
+      console.log(`\n📤 Uploading files to Cloudflare R2...`);
       console.log(`   Input Directory: ${uploadOptions.inputDir}`);
+      console.log(`   R2 Prefix: ${uploadOptions.prefix}`);
       console.log(`   Bucket: ${uploadOptions.bucketName}`);
-      console.log(`   Base Path: ${basePath}`);
       console.log(`   Account ID: ${uploadOptions.accountID.substring(0, 8)}...`);
       console.log('');
 
       // Perform upload
-      const result = await uploadNewscast(uploadOptions, options.test);
+      const result = await uploadToR2(uploadOptions);
 
       // Calculate statistics
       const totalSizeMB = (result.totalBytes / 1024 / 1024).toFixed(2);
@@ -110,7 +96,7 @@ program
       console.log(`   Duration: ${formatDuration(result.duration)}`);
       console.log(`   Upload speed: ${uploadSpeed} MB/s`);
       console.log(`\n📍 Files available at:`);
-      console.log(`   https://ai-newscast.r2.dev/${basePath}/${uploadOptions.newscastID}/`);
+      console.log(`   https://${uploadOptions.bucketName}.r2.dev/${uploadOptions.prefix}/`);
       console.log('\nUploaded files:');
       result.uploadedFiles.forEach(file => {
         console.log(`  - ${file}`);

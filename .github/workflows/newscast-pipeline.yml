@@ -358,8 +358,7 @@ jobs:
 
           pnpm run:uploader:upload -- \
             --input-dir /tmp/newscast-output/${NEWSCAST_ID} \
-            --newscast-id ${NEWSCAST_ID} \
-            --topic-index 0
+            --prefix newscasts/${NEWSCAST_ID}
 
           echo "✅ Completed topics data upload"
 
@@ -407,8 +406,7 @@ jobs:
 
           pnpm run:uploader:upload -- \
             --input-dir /tmp/newscast-output/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING} \
-            --newscast-id ${NEWSCAST_ID} \
-            --topic-index ${TOPIC_INDEX}
+            --prefix newscasts/${NEWSCAST_ID}/topic-${TOPIC_INDEX_STRING}
 
           echo "✅ Completed R2 upload for topic-${TOPIC_INDEX_STRING}"
 

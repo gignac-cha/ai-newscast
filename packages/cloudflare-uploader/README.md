@@ -1,13 +1,13 @@
 # @ai-newscast/cloudflare-uploader
 
-Cloudflare R2 uploader for AI Newscast files using S3-compatible API.
+Generic Cloudflare R2 uploader using S3-compatible API.
 
 ## Features
 
 - Strong TypeScript typing with Zod validation
 - S3-compatible API for Cloudflare R2
 - CLI interface with Commander.js
-- Support for test mode uploads
+- Generic prefix-based path structure
 - Comprehensive error handling
 - Progress tracking and statistics
 
@@ -33,30 +33,24 @@ CLOUDFLARE_SECRET_ACCESS_KEY=your_secret_access_key
 
 ```bash
 cloudflare-uploader upload \
-  -i output/2025-10-05T19-53-26-599Z/topic-01 \
-  -n 2025-10-05T19-53-26-599Z \
-  -t 1
+  -i /path/to/local/directory \
+  -p newscasts/2025-10-05T19-53-26-599Z
 ```
 
-### Test Mode Upload
-
-Upload to `tests/newscasts` instead of `newscasts`:
+### Topic-specific Upload
 
 ```bash
 cloudflare-uploader upload \
   -i output/2025-10-05T19-53-26-599Z/topic-01 \
-  -n 2025-10-05T19-53-26-599Z \
-  -t 1 \
-  --test
+  -p newscasts/2025-10-05T19-53-26-599Z/topic-01
 ```
 
 ### Command-line Options
 
 ```bash
 cloudflare-uploader upload \
-  -i output/2025-10-05T19-53-26-599Z/topic-01 \
-  -n 2025-10-05T19-53-26-599Z \
-  -t 1 \
+  -i /path/to/local/directory \
+  -p any/custom/prefix \
   --account-id YOUR_ACCOUNT_ID \
   --access-key-id YOUR_ACCESS_KEY_ID \
   --secret-access-key YOUR_SECRET_ACCESS_KEY \
@@ -66,17 +60,16 @@ cloudflare-uploader upload \
 ## Programmatic Usage
 
 ```typescript
-import { uploadNewscast } from '@ai-newscast/cloudflare-uploader';
+import { uploadToR2 } from '@ai-newscast/cloudflare-uploader';
 
-const result = await uploadNewscast({
+const result = await uploadToR2({
   inputDir: 'output/2025-10-05T19-53-26-599Z/topic-01',
-  newscastID: '2025-10-05T19-53-26-599Z',
-  topicIndex: 1,
+  prefix: 'newscasts/2025-10-05T19-53-26-599Z/topic-01',
   accountID: process.env.CLOUDFLARE_ACCOUNT_ID!,
   accessKeyID: process.env.CLOUDFLARE_ACCESS_KEY_ID!,
   secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY!,
   bucketName: 'ai-newscast',
-}, false);
+});
 
 console.log(`Uploaded ${result.filesUploaded} files (${result.totalBytes} bytes)`);
 console.log(`Duration: ${result.duration}ms`);
@@ -84,25 +77,33 @@ console.log(`Duration: ${result.duration}ms`);
 
 ## R2 Path Structure
 
-### Production
+The uploader preserves the directory structure from the input directory:
+
 ```
-newscasts/{newscastID}/topic-{topicIndex}/
-  ├── newscast.mp3
-  ├── newscast-audio-info.json
-  ├── newscast-script.json
-  ├── newscast-script.md
-  ├── news.json
-  ├── news.md
-  └── audio/
-      ├── 001-music.mp3
-      ├── 002-host1.mp3
-      └── audio-files.json
+{prefix}/
+  └── {files and subdirectories from inputDir}
 ```
 
-### Test Mode
+### Example
+
+Input directory:
 ```
-tests/newscasts/{newscastID}/topic-{topicIndex}/
-  └── (same structure as production)
+output/2025-10-05T19-53-26-599Z/topic-01/
+  ├── newscast.mp3
+  ├── newscast-audio-info.json
+  └── audio/
+      ├── 001-music.mp3
+      └── 002-host1.mp3
+```
+
+With prefix `newscasts/2025-10-05T19-53-26-599Z/topic-01`, results in:
+```
+newscasts/2025-10-05T19-53-26-599Z/topic-01/
+  ├── newscast.mp3
+  ├── newscast-audio-info.json
+  └── audio/
+      ├── 001-music.mp3
+      └── 002-host1.mp3
 ```
 
 ## API Reference
@@ -112,13 +113,11 @@ tests/newscasts/{newscastID}/topic-{topicIndex}/
 ```typescript
 interface UploadOptions {
   inputDir: string;           // Input directory path
-  newscastID: string;         // Newscast ID (ISO timestamp)
-  topicIndex: number;         // Topic index (1-10)
-  basePath: string;           // Base path in R2 bucket
+  prefix: string;             // R2 path prefix (e.g., "newscasts/2025-10-17T01-36-12-458Z")
   accountID: string;          // Cloudflare Account ID
   accessKeyID: string;        // R2 Access Key ID
   secretAccessKey: string;    // R2 Secret Access Key
-  bucketName: string;         // R2 bucket name
+  bucketName: string;         // R2 bucket name (default: 'ai-newscast')
 }
 ```
 
