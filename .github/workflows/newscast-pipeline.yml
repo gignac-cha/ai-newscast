@@ -1,0 +1,12 @@
+name: AI Newscast Pipeline
+
+on:
+  workflow_dispatch:     # Manual trigger support only
+
+jobs:
+  # Dummy job - all real execution happens in Cloudflare Workers
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder
+        run: echo "This workflow is disabled. Use Cloudflare Workers scheduler instead."
