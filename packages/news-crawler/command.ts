@@ -35,7 +35,7 @@ program
 
         // Save HTML file
         if (result.html) {
-          const htmlPath = path.join(outputDirectory, 'topics.html');
+          const htmlPath = path.join(outputDirectory, 'topics.raw.html');
           await fs.writeFile(htmlPath, result.html, 'utf-8');
           console.log(`💾 Saved HTML to: ${htmlPath}`);
         }
