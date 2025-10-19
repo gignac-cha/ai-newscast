@@ -2,14 +2,36 @@ import type { Env } from '../types/env';
 
 /**
  * MP3 헤더 파싱 - @ai-newscast/newscast-generator/mp3-duration-calculator.ts 기반
+ * ID3 태그를 스킵하고 실제 MP3 프레임을 찾음
  */
 function parseMP3Header(buffer: Uint8Array): { isValid: boolean } {
 	if (buffer.length < 4) {
 		return { isValid: false };
 	}
 
+	let offset = 0;
+
+	// ID3v2 태그 확인 및 스킵
+	if (buffer[0] === 0x49 && buffer[1] === 0x44 && buffer[2] === 0x33) { // "ID3"
+		if (buffer.length < 10) {
+			return { isValid: false };
+		}
+
+		// ID3 태그 크기 계산 (synchsafe integer)
+		const size = ((buffer[6] & 0x7F) << 21) |
+		             ((buffer[7] & 0x7F) << 14) |
+		             ((buffer[8] & 0x7F) << 7) |
+		             (buffer[9] & 0x7F);
+
+		offset = 10 + size; // ID3 헤더(10바이트) + 태그 크기
+
+		if (offset >= buffer.length - 4) {
+			return { isValid: false };
+		}
+	}
+
 	// 32비트 헤더 구성
-	const header = (buffer[0] << 24) | (buffer[1] << 16) | (buffer[2] << 8) | buffer[3];
+	const header = (buffer[offset] << 24) | (buffer[offset + 1] << 16) | (buffer[offset + 2] << 8) | buffer[offset + 3];
 
 	// Frame sync 확인 (첫 11비트가 모두 1인지)
 	const frameSync = (header >> 21) & 0x7FF;
