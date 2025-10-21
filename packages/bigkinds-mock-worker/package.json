@@ -1,0 +1,35 @@
+{
+  "name": "@ai-newscast/bigkinds-mock-worker",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker mock server for BigKinds API testing",
+  "type": "module",
+  "main": "dist/worker.js",
+  "scripts": {
+    "build": "node build.ts",
+    "dev": "wrangler dev",
+    "deploy": "pnpm build && wrangler deploy",
+    "tail": "wrangler tail",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-newscast/core-worker": "workspace:*"
+  },
+  "devDependencies": {
+    "wrangler": "^4.43.0",
+    "@types/node": "^24.7.2",
+    "@cloudflare/workers-types": "^4.20251011.0",
+    "esbuild": "^0.25.11",
+    "typescript": "^5.9.3"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "mock",
+    "bigkinds",
+    "testing"
+  ],
+  "authors": [
+    "AI Newscast Team"
+  ],
+  "license": "MIT"
+}
