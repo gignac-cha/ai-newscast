@@ -18,12 +18,34 @@ program
   .command('topics')
   .description('Crawl news topics from BigKinds')
   .option('-o, --output <dir>', 'Output directory (saves HTML and JSON files)')
+  .option('--offset <number>', 'Starting offset (default: 0)', '0')
+  .option('--limit <number>', 'Number of topics to extract (default: 10 if not specified)')
+  .option('--existing-topics <json>', 'Existing topics JSON string for duplicate detection')
+  .requiredOption('--test-index <number>', 'Test mode: use mock worker URL with index (1, 2, 3, etc.)')
+  .option('--newscast-id <id>', 'Reuse existing newscast ID (if not provided, generates new one)')
   .action(async (options) => {
     try {
       console.log('🔍 Crawling news topics...');
 
       const includeHTML = Boolean(options.output);
-      const result = await crawlNewsTopics({ includeHTML });
+      const offset = parseInt(options.offset, 10);
+      const limit = options.limit ? parseInt(options.limit, 10) : undefined;
+      const testIndex = parseInt(options.testIndex, 10);
+      const newscastID = options.newscastId;
+
+      // Parse existing topics if provided
+      let existingTopics = undefined;
+      if (options.existingTopics) {
+        try {
+          existingTopics = JSON.parse(options.existingTopics);
+          console.log(`📋 Loaded ${existingTopics.count ?? existingTopics.topics?.length ?? 0} existing topics for duplicate detection`);
+        } catch (error) {
+          console.error('❌ Failed to parse existing topics JSON:', error instanceof Error ? error.message : error);
+          process.exit(1);
+        }
+      }
+
+      const result = await crawlNewsTopics({ includeHTML, offset, limit, existingTopics, testIndex, newscastID });
 
       if (options.output) {
         // Use newscastID from metrics as folder name
@@ -55,7 +77,8 @@ program
         console.log(`📁 Creating ${result.topics.length} topic folders...`);
         for (let i = 0; i < result.topics.length; i++) {
           const topic = result.topics[i];
-          const topicIndex = (i + 1).toString().padStart(2, '0');
+          // topicIndex uses offset to maintain consistent numbering
+          const topicIndex = (offset + i + 1).toString().padStart(2, '0');
           const topicDirectory = path.join(outputDirectory, `topic-${topicIndex}`);
 
           // Create topic directory
@@ -64,7 +87,7 @@ program
           // Save news-list.json
           const newsListPath = path.join(topicDirectory, 'news-list.json');
           const newsListData = {
-            topicIndex: i + 1,
+            topicIndex: offset + i + 1,  // Maintain consistent numbering with offset
             newsIDs: topic.news_ids,
             count: topic.news_ids.length,
             timestamp: result.metrics?.timing.startedAt ?? new Date().toISOString()
@@ -72,6 +95,15 @@ program
           await fs.writeFile(newsListPath, JSON.stringify(newsListData, null, 2), 'utf-8');
         }
         console.log(`✅ Created ${result.topics.length} topic folders with news lists`);
+
+        // Log duplicate warnings if any
+        if (result.duplicates && result.duplicates.length > 0) {
+          console.warn(`\n⚠️  Found ${result.duplicates.length} duplicate topics:`);
+          result.duplicates.forEach(d => {
+            console.warn(`   - ${d.title} (${d.issueName})`);
+          });
+          console.warn('');
+        }
 
         console.log(`✅ Found ${result.topics.length} topics and saved to ${outputDirectory}`);
       } else {
@@ -169,16 +201,18 @@ program
   .description('Run full crawling workflow: topics -> lists -> details')
   .option('-l, --limit-topics <count>', 'Limit number of topics to process', '3')
   .option('-n, --limit-news <count>', 'Limit number of news per topic', '10')
+  .requiredOption('--test-index <number>', 'Test mode: use mock worker URL with index (1, 2, 3, etc.)')
   .action(async (options) => {
     try {
       const limitTopics = parseInt(options.limitTopics);
       const limitNews = parseInt(options.limitNews);
+      const testIndex = parseInt(options.testIndex, 10);
 
       console.log('🚀 Starting full crawling workflow...');
 
       // Step 1: Get topics
       console.log('\n📋 Step 1: Crawling topics...');
-      const result = await crawlNewsTopics();
+      const result = await crawlNewsTopics({ testIndex });
       const topics = result.topics;
       const newscastID = result.metrics?.newscastID ?? new Date().toISOString();
       console.log(`✅ Found ${topics.length} topics`);

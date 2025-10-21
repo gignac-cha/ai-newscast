@@ -64,7 +64,8 @@
       "Bash(python3 --version)",
       "Bash(uv --version)",
       "Bash(nvm --version)",
-      "Bash(pnpm typecheck)"
+      "Bash(pnpm typecheck)",
+      "Bash(gh run view:*)"
     ],
     "deny": [],
     "ask": []

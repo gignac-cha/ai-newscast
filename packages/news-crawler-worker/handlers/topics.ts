@@ -14,11 +14,24 @@ export async function handleTopics(
   // Save to R2 if ?save=true parameter is provided
   const saveToR2 = url.searchParams.get('save') === 'true';
 
-  console.log(`[TOPICS START] ${new Date().toISOString()} - saveToR2: ${saveToR2}`);
+  // Get offset, limit, and newscastID from query parameters
+  const offsetParam = url.searchParams.get('offset');
+  const limitParam = url.searchParams.get('limit');
+  const newscastID = url.searchParams.get('newscast-id') ?? undefined;
+
+  const offset = offsetParam ? parseInt(offsetParam, 10) : 0;
+  const limit = limitParam ? parseInt(limitParam, 10) : undefined;
+
+  console.log(`[TOPICS START] ${new Date().toISOString()} - saveToR2: ${saveToR2}, offset: ${offset}, limit: ${limit ?? 'none'}, newscastID: ${newscastID ?? 'auto-generate'}`);
 
   try {
-    console.log(`[TOPICS CRAWL] Starting crawlNewsTopics with includeHTML: ${saveToR2}`);
-    const result = await crawlNewsTopics({ includeHTML: saveToR2 });
+    console.log(`[TOPICS CRAWL] Starting crawlNewsTopics with includeHTML: ${saveToR2}, offset: ${offset}, limit: ${limit ?? 'none'}, newscastID: ${newscastID ?? 'auto-generate'}`);
+    const result = await crawlNewsTopics({
+      includeHTML: saveToR2,
+      offset,
+      limit,
+      newscastID
+    });
     console.log(`[TOPICS CRAWL] Completed. Found ${result.topics.length} topics`);
 
     const endTime = Date.now();
@@ -44,11 +57,11 @@ export async function handleTopics(
     if (saveToR2) {
       console.log(`[TOPICS R2] Starting R2 save operations`);
 
-      // Generate timestamp once for consistent use
+      // Use newscast ID from result metrics (already handles reuse vs new generation)
       const now = new Date();
-      const timestamp = now.toISOString().replace(/[:.]/g, '-');
+      const timestamp = result.metrics?.newscastID ?? now.toISOString().replace(/[:.]/g, '-');
       const basePath = `newscasts/${timestamp}`;
-      console.log(`[TOPICS R2] Generated newscast ID: ${timestamp}, basePath: ${basePath}`);
+      console.log(`[TOPICS R2] Using newscast ID: ${timestamp}, basePath: ${basePath}`);
 
       // Save HTML to R2
       if (result.html) {
@@ -79,12 +92,13 @@ export async function handleTopics(
       console.log(`[TOPICS R2] Saving ${result.topics.length} topic-specific news lists`);
       for (let i = 0; i < result.topics.length; i++) {
         const topic = result.topics[i];
-        const topicIndex = (i + 1).toString().padStart(2, '0');
+        // Use offset to maintain consistent topic numbering
+        const topicIndex = (offset + i + 1).toString().padStart(2, '0');
         const newsListKey = `${basePath}/topic-${topicIndex}/news-list.json`;
 
         console.log(`[TOPICS R2] Saving topic ${topicIndex} news list: ${newsListKey} (${topic.news_ids.length} items)`);
         await env.AI_NEWSCAST_BUCKET.put(newsListKey, JSON.stringify({
-          topicIndex: i + 1,
+          topicIndex: offset + i + 1,
           newsIDs: topic.news_ids,
           count: topic.news_ids.length,
           timestamp: result.metrics?.timing.startedAt ?? now.toISOString()
@@ -97,7 +111,8 @@ export async function handleTopics(
       const flattenedNewsEntries = [];
       for (let i = 0; i < result.topics.length; i++) {
         const topic = result.topics[i];
-        const topicIndex = i + 1;
+        // Use offset to maintain consistent topic numbering
+        const topicIndex = offset + i + 1;
 
         for (const newsID of topic.news_ids) {
           flattenedNewsEntries.push({

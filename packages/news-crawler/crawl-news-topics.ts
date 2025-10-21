@@ -1,8 +1,19 @@
 import * as cheerio from 'cheerio';
 import { NewsTopicsArraySchema, type NewsTopic } from './schemas.ts';
 
+export interface ExistingTopicsData {
+  timestamp: string;
+  count: number;
+  topics: NewsTopic[];
+}
+
 export interface CrawlTopicsOptions {
   includeHTML?: boolean;
+  offset?: number;  // Starting offset (default: 0)
+  limit?: number;   // Number of topics to extract (default: 10)
+  existingTopics?: ExistingTopicsData;  // Existing topics for duplicate detection
+  testIndex: number;  // Test mode: use mock worker URL with index (1, 2, 3, etc.)
+  newscastID?: string;  // Reuse existing newscast ID (if not provided, generates new one)
 }
 
 export interface CrawlTopicsMetrics {
@@ -36,15 +47,23 @@ export interface CrawlTopicsResult {
   topics: NewsTopic[];
   html?: string;
   metrics?: CrawlTopicsMetrics;
+  duplicates?: Array<{  // Duplicate topics found
+    title: string;
+    issueName: string;
+  }>;
 }
 
-export async function crawlNewsTopics(options: CrawlTopicsOptions = {}): Promise<CrawlTopicsResult> {
-  const url = 'https://www.bigkinds.or.kr/';
+export async function crawlNewsTopics(options: CrawlTopicsOptions): Promise<CrawlTopicsResult> {
+  // Use mock URL with testIndex
+  const url = `https://ai-newscast-bigkinds-mock-worker.r-s-account.workers.dev/${options.testIndex}`;
   const startTime = Date.now();
   const startedAt = new Date().toISOString();
 
+  const offset = options.offset ?? 0;
+  const limit = options.limit;  // undefined if not provided
+
   console.log(`[CRAWL_TOPICS START] ${startedAt} - URL: ${url}`);
-  console.log(`[CRAWL_TOPICS OPTIONS] includeHTML: ${options.includeHTML}`);
+  console.log(`[CRAWL_TOPICS OPTIONS] includeHTML: ${options.includeHTML}, offset: ${offset}, limit: ${limit ?? 'all remaining'}, existingTopics: ${options.existingTopics ? 'provided' : 'none'}, testIndex: ${options.testIndex}`);
 
   try {
     console.log(`[CRAWL_TOPICS FETCH] Starting fetch request to BigKinds`);
@@ -133,9 +152,45 @@ export async function crawlNewsTopics(options: CrawlTopicsOptions = {}): Promise
     topics.sort((a, b) => a.rank - b.rank);
     console.log(`[CRAWL_TOPICS SORT] Topics sorted successfully`);
 
+    // Check for duplicates if existingTopics is provided (BEFORE offset/limit)
+    let duplicates: Array<{ title: string; issueName: string }> | undefined;
+    let deduplicatedTopics = topics;
+    if (options.existingTopics) {
+      console.log(`[CRAWL_TOPICS DUPLICATES] Checking for duplicates against ${options.existingTopics.count} existing topics`);
+      const existingTitlesSet = new Set(options.existingTopics.topics.map(t => t.title));
+      const existingIssuesSet = new Set(options.existingTopics.topics.map(t => t.issue_name));
+
+      const duplicateTopics = topics.filter(t =>
+        existingTitlesSet.has(t.title) || existingIssuesSet.has(t.issue_name)
+      );
+
+      if (duplicateTopics.length > 0) {
+        duplicates = duplicateTopics.map(t => ({
+          title: t.title,
+          issueName: t.issue_name
+        }));
+        console.warn(`[CRAWL_TOPICS DUPLICATES] Found ${duplicates.length} duplicate topics:`,
+          duplicates.map(d => `${d.title} (${d.issueName})`));
+
+        // Remove duplicates from topics
+        const duplicateTitles = new Set(duplicateTopics.map(t => t.title));
+        deduplicatedTopics = topics.filter(t => !duplicateTitles.has(t.title));
+        console.log(`[CRAWL_TOPICS DUPLICATES] Removed duplicates, ${deduplicatedTopics.length} topics remaining`);
+      } else {
+        console.log(`[CRAWL_TOPICS DUPLICATES] No duplicates found`);
+      }
+    }
+
+    // Apply offset and limit (AFTER deduplication)
+    console.log(`[CRAWL_TOPICS SLICE] Applying offset=${offset}, limit=${limit ?? 'all remaining'}`);
+    const slicedTopics = limit !== undefined
+      ? deduplicatedTopics.slice(offset, offset + limit)
+      : deduplicatedTopics.slice(offset);  // Take all topics from offset to end
+    console.log(`[CRAWL_TOPICS SLICE] Selected ${slicedTopics.length} topics (from index ${offset} to ${offset + slicedTopics.length - 1})`);
+
     // Validate with Zod
     console.log(`[CRAWL_TOPICS VALIDATE] Validating topics with Zod schema`);
-    const parseResult = NewsTopicsArraySchema.safeParse(topics);
+    const parseResult = NewsTopicsArraySchema.safeParse(slicedTopics);
 
     if (!parseResult.success) {
       console.warn(`[CRAWL_TOPICS VALIDATE] Topics validation failed:`, parseResult.error.issues);
@@ -144,36 +199,49 @@ export async function crawlNewsTopics(options: CrawlTopicsOptions = {}): Promise
       console.log(`[CRAWL_TOPICS VALIDATE] Topics validation successful`);
     }
 
-    const validatedTopics = parseResult.success ? parseResult.data : topics;
+    const validatedTopics = parseResult.success ? parseResult.data : slicedTopics;
+
+    // Merge with existing topics if provided
+    let allTopics = validatedTopics;
+    if (options.existingTopics) {
+      console.log(`[CRAWL_TOPICS MERGE] Merging ${options.existingTopics.count} existing topics with ${validatedTopics.length} new topics`);
+      allTopics = [...options.existingTopics.topics, ...validatedTopics];
+      console.log(`[CRAWL_TOPICS MERGE] Total topics after merge: ${allTopics.length}`);
+    }
 
     const totalTime = Date.now() - startTime;
     const parseTime = totalTime - fetchTime;
     const completedAt = new Date().toISOString();
 
-    // Calculate content metrics
-    const newsCountsPerTopic = validatedTopics.map(t => t.news_ids.length);
+    // Calculate content metrics (using ALL topics for final result)
+    const newsCountsPerTopic = allTopics.map(t => t.news_ids.length);
     const totalNewsIDs = newsCountsPerTopic.reduce((sum, count) => sum + count, 0);
-    const averageNewsPerTopic = totalNewsIDs / validatedTopics.length;
+    const averageNewsPerTopic = totalNewsIDs / allTopics.length;
     const maximumNewsPerTopic = Math.max(...newsCountsPerTopic);
     const minimumNewsPerTopic = Math.min(...newsCountsPerTopic);
 
     // Calculate file sizes
     const htmlBytes = html.length;
-    const jsonBytes = JSON.stringify(validatedTopics).length;
+    const jsonBytes = JSON.stringify(allTopics).length;
     const totalBytes = htmlBytes + jsonBytes;
 
-    // Generate newscast ID from timestamp
-    const newscastID = startedAt.replace(/[:.]/g, '-');
-    const date = startedAt.split('T')[0];
+    // Use provided newscast ID or generate new one from timestamp
+    const newscastID = options.newscastID ?? startedAt.replace(/[:.]/g, '-');
+    const date = newscastID.split('T')[0];
 
-    // Return result based on options
+    // Return result based on options (with ALL topics merged)
     const result: CrawlTopicsResult = {
-      topics: validatedTopics
+      topics: allTopics
     };
 
     if (options.includeHTML) {
       console.log(`[CRAWL_TOPICS RESULT] Including HTML in result (${html.length} chars)`);
       result.html = html;
+    }
+
+    if (duplicates && duplicates.length > 0) {
+      console.log(`[CRAWL_TOPICS RESULT] Including ${duplicates.length} duplicates in result`);
+      result.duplicates = duplicates;
     }
 
     // Always include metrics

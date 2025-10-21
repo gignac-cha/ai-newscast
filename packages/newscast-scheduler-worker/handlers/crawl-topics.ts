@@ -9,10 +9,26 @@ export async function handleCrawlTopics(request: Request, env: Env): Promise<Res
 	console.log('[CrawlTopics] Starting...');
 
 	try {
+		// Get offset and limit from request URL
+		const requestUrl = new URL(request.url);
+		const offsetParam = requestUrl.searchParams.get('offset');
+		const limitParam = requestUrl.searchParams.get('limit');
+
 		// Service Binding을 통한 내부 호출
 		const url = new URL('http://www.example.com');
 		url.pathname = '/topics';
 		url.searchParams.set('save', 'true');
+
+		// Forward offset and limit if provided
+		if (offsetParam !== null) {
+			url.searchParams.set('offset', offsetParam);
+		}
+		if (limitParam !== null) {
+			url.searchParams.set('limit', limitParam);
+		}
+
+		console.log(`[CrawlTopics] Calling NEWS_CRAWLER_WORKER with offset=${offsetParam ?? 'none'}, limit=${limitParam ?? 'none'}`);
+
 		const response = await env.NEWS_CRAWLER_WORKER.fetch(url.toString(), {
 			method: 'POST',
 		});
