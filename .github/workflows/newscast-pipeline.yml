@@ -2,18 +2,30 @@ name: AI Newscast Pipeline
 
 on:
   # schedule:
-  #   - cron: '5 0 * * *'  # UTC 00:05 (KST 09:05) - daily execution
-  workflow_dispatch:     # Manual trigger support
+  #   - cron: '5 0 * * *'   # UTC 00:05 (KST 09:05) - daily morning execution
+  #   - cron: '5 9 * * *'   # UTC 09:05 (KST 18:05) - daily evening execution
+  workflow_dispatch:      # Manual trigger support
+    inputs:
+      newscast-id:
+        description: 'Newscast ID to append topics (optional, uses latest-newscast-id if empty)'
+        required: false
+        type: string
+      topic-limit:
+        description: 'Number of topics to crawl (optional, crawls all available if empty)'
+        required: false
+        type: string
 
 env:
   NODE_VERSION: '24'
 
 jobs:
-  # Job 1: Crawl Topics (10 topics + news lists)
+  # Job 1: Crawl Topics (dynamic topic count + news lists)
   crawl-topics:
     runs-on: ubuntu-latest
     outputs:
       newscast-id: ${{ steps.topics.outputs.newscast-id }}
+      topic-matrix: ${{ steps.generate-matrix.outputs.matrix }}
+      topic-count: ${{ steps.generate-matrix.outputs.count }}
     steps:
       - uses: actions/checkout@v4
 
@@ -29,10 +41,121 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Determine newscast ID and offset
+        id: determine-id
+        env:
+          NEWSCAST_LATEST_ID_WORKER_URL: ${{ vars.NEWSCAST_LATEST_ID_WORKER_URL }}
+          INPUT_NEWSCAST_ID: ${{ inputs.newscast-id }}
+          TOPIC_LIMIT: ${{ inputs.topic-limit }}
+        run: |
+          echo "🔍 Determining newscast ID and offset..."
+
+          # Step 1: Determine newscast ID
+          if [ -n "$INPUT_NEWSCAST_ID" ]; then
+            # Manual input
+            NEWSCAST_ID="$INPUT_NEWSCAST_ID"
+            echo "📥 Using input newscast ID: ${NEWSCAST_ID}"
+          else
+            # Check UTC hour to determine if this is morning (00:xx) or evening (09:xx)
+            HOUR=$(date -u +%H)
+
+            if [ "$HOUR" -eq 0 ]; then
+              # KST 09:xx - Create new ID
+              NEWSCAST_ID=$(date -u +%Y-%m-%dT%H-%M-%S-%3NZ)
+              echo "🆕 Created new newscast ID (KST 09:xx): ${NEWSCAST_ID}"
+            else
+              # KST 18:xx - Reuse latest-newscast-id from Worker API
+              echo "📡 Fetching latest-newscast-id from Worker API..."
+
+              LATEST_ID_RESPONSE=$(curl -s "${NEWSCAST_LATEST_ID_WORKER_URL}/latest")
+              NEWSCAST_ID=$(echo "$LATEST_ID_RESPONSE" | jq -r '."latest-newscast-id"')
+
+              if [ -z "$NEWSCAST_ID" ] || [ "$NEWSCAST_ID" == "null" ]; then
+                echo "❌ Failed to get latest-newscast-id"
+                exit 1
+              fi
+
+              echo "♻️ Reusing latest-newscast-id (KST 18:xx): ${NEWSCAST_ID}"
+            fi
+          fi
+
+          # Step 2: Try to download existing topics.json from R2
+          echo "🔍 Checking for existing topics.json in R2..."
+
+          R2_TOPICS_URL="https://pub-e6dfd515fb0c48be8713af6c609d7b60.r2.dev/newscasts/${NEWSCAST_ID}/topics.json"
+
+          HTTP_CODE=$(curl -s -w "%{http_code}" -o /tmp/existing-topics.json "$R2_TOPICS_URL")
+
+          if [ "$HTTP_CODE" -eq 200 ]; then
+            # topics.json exists - calculate offset
+            echo "✅ Found existing topics.json"
+
+            EXISTING_TOPICS=$(cat /tmp/existing-topics.json)
+            EXISTING_COUNT=$(echo "$EXISTING_TOPICS" | jq '.count')
+            OFFSET=$EXISTING_COUNT
+
+            echo "📊 Existing topics: ${EXISTING_COUNT}"
+            echo "📍 Starting offset: ${OFFSET}"
+
+            # Save existing topics for duplicate check
+            echo "$EXISTING_TOPICS" > /tmp/existing-topics-for-check.json
+          else
+            # topics.json doesn't exist - new newscast
+            echo "🆕 No existing topics.json found (HTTP ${HTTP_CODE})"
+            OFFSET=0
+            EXISTING_TOPICS=""
+
+            # For manual input with non-existent ID, fail
+            if [ -n "$INPUT_NEWSCAST_ID" ]; then
+              echo "❌ Manual newscast ID '${NEWSCAST_ID}' has no topics.json in R2"
+              exit 1
+            fi
+          fi
+
+          echo "newscast-id=${NEWSCAST_ID}" >> $GITHUB_OUTPUT
+          echo "offset=${OFFSET}" >> $GITHUB_OUTPUT
+          echo "limit=${TOPIC_LIMIT}" >> $GITHUB_OUTPUT
+
+          if [ -f "/tmp/existing-topics-for-check.json" ]; then
+            echo "has-existing=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-existing=false" >> $GITHUB_OUTPUT
+          fi
+
+          echo "✅ Newscast ID: ${NEWSCAST_ID}"
+          echo "✅ Offset: ${OFFSET}"
+          echo "✅ Limit: ${TOPIC_LIMIT}"
+
       - name: Crawl topics and news lists
         id: topics
         run: |
-          pnpm run:crawler:news-topics -- --output /tmp/newscast-output
+          NEWSCAST_ID="${{ steps.determine-id.outputs.newscast-id }}"
+          OFFSET="${{ steps.determine-id.outputs.offset }}"
+          LIMIT="${{ steps.determine-id.outputs.limit }}"
+          HAS_EXISTING="${{ steps.determine-id.outputs.has-existing }}"
+
+          echo "📰 Crawling topics with offset=${OFFSET}, limit=${LIMIT:-all available}"
+
+          # Build command
+          CMD="pnpm run:crawler:news-topics -- --output /tmp/newscast-output --offset ${OFFSET}"
+
+          # Add limit if specified
+          if [ -n "$LIMIT" ]; then
+            CMD="${CMD} --limit ${LIMIT}"
+            echo "🔢 Limit: ${LIMIT} topics"
+          else
+            echo "🔢 Limit: all available topics"
+          fi
+
+          # Add existing topics for duplicate check if available
+          if [ "$HAS_EXISTING" == "true" ]; then
+            EXISTING_TOPICS=$(cat /tmp/existing-topics-for-check.json | jq -c .)
+            CMD="${CMD} --existing-topics '${EXISTING_TOPICS}'"
+            echo "🔍 Using existing topics for duplicate detection"
+          fi
+
+          # Execute crawl
+          eval $CMD
 
           # Check where output actually was created and move to /tmp if needed
           if [ -d "packages/news-crawler/output" ]; then
@@ -40,16 +163,28 @@ jobs:
             mv packages/news-crawler/output/* /tmp/newscast-output/
           fi
 
-          # Extract newscast-id and set as output
-          NEWSCAST_ID=$(ls -t /tmp/newscast-output | head -n 1)
-
-          if [ -z "$NEWSCAST_ID" ]; then
-            echo "❌ Newscast ID is empty!"
-            exit 1
-          fi
-
           echo "✅ Newscast ID: ${NEWSCAST_ID}"
           echo "newscast-id=${NEWSCAST_ID}" >> $GITHUB_OUTPUT
+
+      - name: Generate dynamic topic matrix
+        id: generate-matrix
+        run: |
+          NEWSCAST_ID=${{ steps.topics.outputs.newscast-id }}
+
+          # Extract topic numbers from actual topic-* folders
+          cd /tmp/newscast-output/${NEWSCAST_ID}
+
+          MATRIX=$(ls -d topic-* 2>/dev/null | \
+            sed 's/topic-//' | \
+            sort -n | \
+            jq -R . | jq -s .)
+
+          TOPIC_COUNT=$(echo "$MATRIX" | jq 'length')
+
+          echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
+          echo "count=${TOPIC_COUNT}" >> $GITHUB_OUTPUT
+
+          echo "✅ Generated matrix for ${TOPIC_COUNT} topics: ${MATRIX}"
 
       - name: Upload topics data
         uses: actions/upload-artifact@v4
@@ -58,13 +193,13 @@ jobs:
           path: /tmp/newscast-output/${{ steps.topics.outputs.newscast-id }}/
           retention-days: 7
 
-  # Job 2: Crawl News Details (parallel: 10 topics)
+  # Job 2: Crawl News Details (parallel: dynamic topics)
   crawl-details-matrix:
     needs: [crawl-topics]
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        topic: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']
+        topic: ${{ fromJson(needs.crawl-topics.outputs.topic-matrix) }}
       max-parallel: 10
       fail-fast: false
     steps:
@@ -115,13 +250,13 @@ jobs:
           path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
           retention-days: 7
 
-  # Job 3: Generate Consolidated News (parallel: 10 topics)
+  # Job 3: Generate Consolidated News (parallel: dynamic topics)
   generate-news-matrix:
     needs: [crawl-topics, crawl-details-matrix]
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        topic: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']
+        topic: ${{ fromJson(needs.crawl-topics.outputs.topic-matrix) }}
       max-parallel: 10
       fail-fast: false
     steps:
@@ -168,13 +303,13 @@ jobs:
           path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
           retention-days: 7
 
-  # Job 4: Generate Newscast Script (parallel: 10 topics)
+  # Job 4: Generate Newscast Script (parallel: dynamic topics)
   generate-script-matrix:
     needs: [crawl-topics, generate-news-matrix]
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        topic: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']
+        topic: ${{ fromJson(needs.crawl-topics.outputs.topic-matrix) }}
       max-parallel: 10
       fail-fast: false
     steps:
@@ -221,13 +356,13 @@ jobs:
           path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
           retention-days: 7
 
-  # Job 5: Generate TTS Audio (parallel: 10 topics)
+  # Job 5: Generate TTS Audio (parallel: dynamic topics)
   generate-audio-matrix:
     needs: [crawl-topics, generate-script-matrix]
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        topic: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']
+        topic: ${{ fromJson(needs.crawl-topics.outputs.topic-matrix) }}
       max-parallel: 10
       fail-fast: false
     steps:
@@ -274,13 +409,13 @@ jobs:
           path: /tmp/newscast-output/${{ needs.crawl-topics.outputs.newscast-id }}/topic-${{ matrix.topic }}/
           retention-days: 7
 
-  # Job 6: Merge Newscast Audio (parallel: 10 topics)
+  # Job 6: Merge Newscast Audio (parallel: dynamic topics)
   merge-newscast-matrix:
     needs: [crawl-topics, generate-audio-matrix]
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        topic: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']
+        topic: ${{ fromJson(needs.crawl-topics.outputs.topic-matrix) }}
       max-parallel: 10
       fail-fast: false
     steps:
@@ -364,13 +499,13 @@ jobs:
 
           echo "✅ Completed topics data upload"
 
-  # Job 8: Upload to R2 (parallel: 10 topics)
+  # Job 8: Upload to R2 (parallel: dynamic topics)
   upload-to-r2-matrix:
     needs: [crawl-topics, merge-newscast-matrix]
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        topic: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']
+        topic: ${{ fromJson(needs.crawl-topics.outputs.topic-matrix) }}
       max-parallel: 10
       fail-fast: false
     steps:
@@ -417,7 +552,7 @@ jobs:
     needs: [crawl-topics, upload-to-r2-matrix]
     runs-on: ubuntu-latest
     steps:
-      - name: Update latest-newscast-id via Workers API
+      - name: Update latest-newscast-id via Worker API
         env:
           NEWSCAST_LATEST_ID_WORKER_URL: ${{ vars.NEWSCAST_LATEST_ID_WORKER_URL }}
         run: |
@@ -425,7 +560,7 @@ jobs:
 
           echo "🔄 Updating latest-newscast-id to ${NEWSCAST_ID}"
 
-          # Call Cloudflare Workers API with curl
+          # Call Worker API to update KV
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             "${NEWSCAST_LATEST_ID_WORKER_URL}/update" \
             -H "Content-Type: application/json" \
@@ -448,18 +583,20 @@ jobs:
 
       - name: Generate workflow summary
         run: |
+          TOPIC_COUNT=${{ needs.crawl-topics.outputs.topic-count }}
+
           echo "## ✅ Newscast Pipeline Completed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Newscast ID**: \`${{ needs.crawl-topics.outputs.newscast-id }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Topics processed**: 10" >> $GITHUB_STEP_SUMMARY
-          echo "**Upload location**: \`tests/newscasts/${{ needs.crawl-topics.outputs.newscast-id }}/\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Topics processed**: ${TOPIC_COUNT}" >> $GITHUB_STEP_SUMMARY
+          echo "**Upload location**: \`newscasts/${{ needs.crawl-topics.outputs.newscast-id }}/\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Job Summary" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Topic crawling completed" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ News details crawled (10 topics in parallel)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Consolidated news generated (10 topics in parallel)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Newscast scripts generated (10 topics in parallel)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ TTS audio generated (10 topics in parallel)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Audio files merged (10 topics in parallel)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Files uploaded to R2 (10 topics in parallel)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ News details crawled (${TOPIC_COUNT} topics in parallel)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Consolidated news generated (${TOPIC_COUNT} topics in parallel)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Newscast scripts generated (${TOPIC_COUNT} topics in parallel)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ TTS audio generated (${TOPIC_COUNT} topics in parallel)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Audio files merged (${TOPIC_COUNT} topics in parallel)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Files uploaded to R2 (${TOPIC_COUNT} topics in parallel)" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Latest newscast ID updated" >> $GITHUB_STEP_SUMMARY
