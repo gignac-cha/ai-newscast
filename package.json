@@ -16,6 +16,7 @@
     "run:crawler:news-topics": "turbo crawl:topics",
     "run:crawler:news-details": "turbo crawl:details",
     "run:generator:news": "turbo generate:news",
+    "run:generator:news-image": "turbo generate:image",
     "run:generator:newscast-script": "turbo generate:script",
     "run:generator:newscast-audio": "turbo generate:audio",
     "run:generator:newscast": "turbo generate:newscast",

@@ -44,6 +44,10 @@
       "outputs": ["output/**"],
       "env": ["GOOGLE_GEN_AI_API_KEY", "PATH", "VIRTUAL_ENV"]
     },
+    "generate:image": {
+      "outputs": ["output/**"],
+      "env": ["GOOGLE_GEN_AI_API_KEY"]
+    },
     "generate:script": {
       "outputs": ["output/**"],
       "env": ["GOOGLE_GEN_AI_API_KEY"]

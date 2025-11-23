@@ -65,7 +65,11 @@
       "Bash(uv --version)",
       "Bash(nvm --version)",
       "Bash(pnpm typecheck)",
-      "Bash(gh run view:*)"
+      "Bash(gh run view:*)",
+      "Skill(crawl-bigkinds-topics)",
+      "Skill(crawl-bigkinds-news-details)",
+      "Skill(generate-news)",
+      "Skill(generate-news-image)"
     ],
     "deny": [],
     "ask": []
